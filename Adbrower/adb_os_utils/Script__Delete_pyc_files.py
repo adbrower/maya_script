@@ -75,15 +75,15 @@ def move_pyc(source_path):
 ## Home Clean Up
 ##----------------------    
 
-# move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower')
-# move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_rig')
-# move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_tools')
-# move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils')
-# move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_pyQt')
-# move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils/adb_script_utils')
-# move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils/rig_utils')
-# move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/archives')
-# move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_rig')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_tools')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_pyQt')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils/adb_script_utils')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils/rig_utils')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/archives')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python')
 
 
 
