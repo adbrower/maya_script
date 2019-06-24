@@ -35,14 +35,14 @@ import maya.OpenMaya as om
 #----------------------------------- 
 
 import CollDict
-reload(CollDict)
-
 from CollDict import colordic    
 from CollDict import suffixDic       
-from CollDict import attrDic       
+from CollDict import attrDic  
+import NameConv_utils as NC
+reload(NC)
+     
 
 import ShapesLibrary as sl
-reload(sl)
 
 
 #-----------------------------------
@@ -295,7 +295,7 @@ class Adbrower(object):
                 cutsuffix = '__{}__'.format(suffix)
             except:
                 suffix, cutsuffix = '', ''
-            oRoot =  pm.group(n=each.name()+'__'+suff+'__grp__', em=True)
+            oRoot =  pm.group(n=each.name()+'_'+suff+'__{}'.format(NC.GRP), em=True)
 
             for i in xrange(4):
                 oRoot.rename(oRoot.name().replace('___','__'))
@@ -1195,7 +1195,14 @@ class Adbrower(object):
             if channel == 'r':
                 for axe in axes:
                     pm.PyNode('{}.outputRotate{}'.format(dec_matrix, axe)) >> pm.PyNode('{}.rotate{}'.format(child, axe))
-                pm.PyNode(child).rotateOrder >> pm.PyNode(dec_matrix).inputRotateOrder
+                pm.PyNode(child).rotateOrder >> pm.PyNode(dec_matrix).inputRotateOrder                
+                try:
+                    pm.PyNode(child).jointOrientX.set(0)
+                    pm.PyNode(child).jointOrientY.set(0)
+                    pm.PyNode(child).jointOrientZ.set(0)
+                except AttributeError:
+                    pass
+                
             if channel == 's':
                 for axe in axes:
                     pm.PyNode('{}.outputScale{}'.format(dec_matrix, axe)) >> pm.PyNode('{}.scale{}'.format(child, axe))
@@ -1816,6 +1823,13 @@ class Adbrower(object):
             new_name = each.split(':')[1]
             pm.PyNode(each).rename(new_name)
 
+
+
+    def addShapes(self, transform):
+        mesh = pm.PyNode(transform)
+        dup = pm.duplicate(mesh)[0]
+        pm.parent(pm.PyNode(dup).getShape(), mesh, add=1, s=1)
+        pm.delete(dup)
 
 
 

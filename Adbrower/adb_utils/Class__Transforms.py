@@ -20,9 +20,9 @@ from adbrower import undo
 #----------------------------------- 
 
 class Transform(adbAttr.NodeAttr):
-    """
+    '''
     
-    """
+    '''
     
     def __init__(self,
                 transform = pm.selected()
@@ -30,11 +30,13 @@ class Transform(adbAttr.NodeAttr):
 
         self.transform = transform         
         if isinstance(self.transform, list):
-            self.transform = transform[0]
+            self.transform = transform
         elif isinstance(self.transform, basestring):
             self.transform = [transform] 
         elif isinstance(self.transform, unicode):
-            self.transform = pm.PyNode(transform)
+            self.transform = [pm.PyNode(transform)]
+        else:
+            self.transform = [pm.PyNode(transform)]
                             
         super(Transform, self).__init__(self.transform)
         
@@ -89,8 +91,8 @@ class Transform(adbAttr.NodeAttr):
         Get the world Position of the transform 
         
         return List
-        '''
-        pos = flatList([pm.PyNode(trans).getRotatePivot(space='world') for trans in self.transform]) 
+        '''  
+        pos = [pm.PyNode(x).getRotatePivot(space='world') for x in self.transform]
         return pos
             
     def setPivotPoint(self, value = []):
@@ -188,7 +190,7 @@ class Transform(adbAttr.NodeAttr):
 
         Return the decompose Matrix Node
         """
-        parent_transform = self.transform 
+        parent_transform = self.transform[0] 
         
         if isinstance(child, list):
             child = child[0]
@@ -236,6 +238,12 @@ class Transform(adbAttr.NodeAttr):
                 for axe in axes:
                     pm.PyNode('{}.outputRotate{}'.format(dec_matrix, axe)) >> pm.PyNode('{}.rotate{}'.format(child, axe))
                 pm.PyNode(child).rotateOrder >> pm.PyNode(dec_matrix).inputRotateOrder
+                try:
+                    pm.PyNode(child).jointOrientX.set(0)
+                    pm.PyNode(child).jointOrientY.set(0)
+                    pm.PyNode(child).jointOrientZ.set(0)
+                except AttributeError:
+                    pass                    
             if channel == 's':
                 for axe in axes:
                     pm.PyNode('{}.outputScale{}'.format(dec_matrix, axe)) >> pm.PyNode('{}.scale{}'.format(child, axe))

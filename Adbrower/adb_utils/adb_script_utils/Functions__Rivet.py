@@ -3,12 +3,15 @@ import maya.cmds as mc
 import sys
 
 import adb_utils.Class__AddAttr as adbAttr
-reload (adbAttr)
-
 import adbrower
-reload(adbrower)
-
 adb = adbrower.Adbrower()
+import NameConv_utils as NC
+
+
+reload(NC)
+# reload (adbAttr)
+
+
 
 #-----------------------------------
 #  DECORATORS
@@ -23,7 +26,7 @@ from adbrower import changeColor
 
 
 '''
-import adb_utils.Functions__Rivet as adbRivet
+import adb_utils.adb_script_utils.Functions__Rivet as adbRivet
 reload(adbRivet)
 
 function's name: buildRivet
@@ -82,10 +85,12 @@ def buildRivet(scale = 0.2):
         
         pm.parent(rivet_locator, rivet_grp)
         _rivet_Attr = adbAttr.NodeAttr([rivet_locator])
-        _rivet_Attr.addAttr("edges_index", 'float2')
+        _rivet_Attr.addAttr("edges_index", 'float2', nc=2)
         _rivet_Attr.addAttr("edge_index_0", int(edgeNumber[0]), min = 0, max = edgeMaxNumber, parent = "edges_index")
         _rivet_Attr.addAttr("edge_index_1", int(edgeNumber[1]), min = 0, max = edgeMaxNumber, parent = "edges_index")
-        _rivet_Attr.addAttr("UV", 'float2')
+        
+        print _rivet_Attr
+        _rivet_Attr.addAttr("UV", 'float2', nc=2)
         _rivet_Attr.addAttr("U_pos", 0.5, min = 0, max = 1, parent = "UV")
         _rivet_Attr.addAttr("V_pos", 0.5, min = 0, max = 1, parent = "UV")
 
@@ -111,7 +116,7 @@ def buildRivet(scale = 0.2):
         rivet_locator.V_pos >> pointOnSurface_node.parameterV
 
         pos_node_attr = ['normal', 'tangentU.tangentU', 'tangentV.tangentV', 'position.position']
-        xyz = ['X','Y','Z']
+        xyz = 'XYZ'
 
         for i in range(len(pos_node_attr)):
             for j in range(3):
@@ -163,8 +168,8 @@ def createSticky(stickyName = 'Deformer', scale = 0.2):
     pm.PyNode(rivet_trans).v.set(0) 
         
     ## master and offset grp
-    deformer__sys__ = pm.createNode('transform', n = '{}__sys__'.format(stickyName))
-    deformer_offset_grp__ = pm.createNode('transform', n = '{}__offset__grp__'.format(stickyName))
+    deformer__sys__ = pm.createNode('transform', n = '{}_{}__{}'.format(stickyName, NC.SYSTEM, NC.GRP))
+    deformer_offset_grp__ = pm.createNode('transform', n = '{}__offset__{}'.format(stickyName, NC.GRP))
     pm.parent(deformer_offset_grp__, deformer__sys__)
         
     ## create locator
@@ -215,5 +220,6 @@ def sticky_from_faces(stickyName = 'Deformer', scale = 0.2):
         pm.select(pair, r =True)
         sticky = createSticky(stickyName = stickyName, scale = 0.2)        
     return sticky
+
 
 

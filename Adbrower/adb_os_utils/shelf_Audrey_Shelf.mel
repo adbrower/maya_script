@@ -6,14 +6,17 @@ global proc shelf_Audrey_Shelf () {
 
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Start Up" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "StartUp" 
@@ -31,7 +34,7 @@ global proc shelf_Audrey_Shelf () {
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "import sys\nimport traceback\nimport pymel.core as pm\nimport maya.cmds as mc\nfrom pprint import pprint\n\nriggingPythonPathList = [\n\t\t\t\t\t\t\t\"/on/work/adbrower/code/packages/onrigging/python/Adbrower\",\n\t\t\t\t\t\t\t\"/on/work/adbrower/sandbox\",\n\t\t\t\t\t\t\t\"/on/work/adbrower/code/packages/onrigging/python/Exterior_scripts\",\n\t\t\t\t\t      ]\n\nfor riggingPythonPath in riggingPythonPathList:\n  if riggingPythonPath not in sys.path:\n      sys.path.append(riggingPythonPath)\n  else:\n      # print(riggingPythonPath + ' is already loaded')\n      pass\n\n\n\n#-----------------------------------\n# IMPORT CUSTOM MODULES\n#----------------------------------- \n\nimport ShapesLibrary as sl\n\nimport adbrower as adb\nimport CollDict\nimport adb_utils\nimport adb_rig\n\n   \nreload(CollDict)\nreload(adb)\nreload(sl)\nreload(adb_utils)  \nreload(adb_rig)  \n\nfrom adb_utils.Pretty_DocString import doc_string\nreload(adb_utils.Pretty_DocString)\n\nfrom CollDict import colordic \nfrom adbrower import lprint  \n\n#-----------------------------------\n# Marking Menu et Custom Menu\n#----------------------------------- \n\nimport adb_markingMenu\nreload(adb_markingMenu)\nadb_markingMenu.markingMenu()\n\nimport ON__CustomMenu\nreload(ON__CustomMenu)\nON__CustomMenu.customMenu()\n  \n \nsys.stdout.write('Start up scripts set up \\n')" 
+        -command "import sys\nimport pymel.core as pm\nimport maya.cmds as mc\n\nriggingPythonPathList = [\n\t\t\t\t\t\t\t\"/home/adeschamps/maya/scripts/python/Adbrower\",\n\t\t\t\t\t\t\t\"/home/adeschamps/maya/scripts/python/Exterior_scripts\",\n\t\t\t\t\t\t\t\"/home/adeschamps/maya/scripts/sandbox\",\n\t\t\t\t\t      ]\n\nfor riggingPythonPath in riggingPythonPathList:\n  if riggingPythonPath not in sys.path:\n      sys.path.append(riggingPythonPath)\n  else:\n      # print(riggingPythonPath + ' is already loaded')\n      pass\n\n\n\n#-----------------------------------\n# IMPORT CUSTOM MODULES\n#----------------------------------- \n\nimport MarkingMenu_CinesiteRigBox\nimport adbrower as adb\nimport adb_markingMenu\n\n#-----------------------------------\n# Marking Menu et Custom Menu\n#----------------------------------- \n\nadb_markingMenu.markingMenu()\nMarkingMenu_CinesiteRigBox.markingMenuCinesite()\n\n \nsys.stdout.write('Start up scripts set up \\n')" 
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1
@@ -44,20 +47,24 @@ global proc shelf_Audrey_Shelf () {
         -visible 1
         -preventOverride 0
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -style "shelf" 
         -horizontal 0
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Create a polygonal sphere on the grid" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Sphere" 
@@ -82,14 +89,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Create a polygonal cube on the grid" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Cube" 
@@ -114,14 +124,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Create a polygonal plane on the grid" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Plane" 
@@ -146,14 +159,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Create a NURBS sphere on the grid" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Sphere" 
@@ -178,14 +194,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Create a NURBS circle on the grid" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Circle" 
@@ -210,14 +229,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Create a NURBS plane on the grid" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Plane" 
@@ -242,14 +264,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Create a curve on the grid or live surface specifying edit points" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "EP Curve Tool" 
@@ -274,14 +299,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Create a locator object on the grid" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Locator" 
@@ -311,20 +339,24 @@ global proc shelf_Audrey_Shelf () {
         -visible 1
         -preventOverride 0
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -style "shelf" 
         -horizontal 0
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Toggle local rotation axis visibility" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Local Rotation Axes" 
@@ -349,14 +381,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Customize the joint scale" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Joint Size..." 
@@ -381,14 +416,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Quick Distance Locator" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Js_Dist" 
@@ -413,14 +451,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Click to place joint. Click on existing joint to add to skeleton. Click-Drag to position joint." 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Create Joints" 
@@ -444,14 +485,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Select surface(s) and a joint." 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Bind Skin" 
@@ -475,14 +519,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Create IK handle on joint chain" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Create IK Handle" 
@@ -506,14 +553,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Create IK spline handle on joint chain" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Create IK Spline Handle" 
@@ -543,20 +593,24 @@ global proc shelf_Audrey_Shelf () {
         -visible 1
         -preventOverride 0
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -style "shelf" 
         -horizontal 0
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Lattice options" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "latticeDialogItem" 
@@ -580,14 +634,52 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "ngSkin" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "ngSkin" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "ngSkin" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "from ngSkinTools.ui.mainwindow import MainWindow\nMainWindow.open()" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
+        -enable 1
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Paint skin weights tool options" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "skinWeightPaintDialogItem" 
@@ -611,161 +703,381 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "Remove Unused Influences" 
+        -annotation "Paint smooth skin cluster weights for the selection" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
-        -label "Remove Unused Influences" 
+        -label "Paint Smooth Weights Tool" 
         -labelOffset 0
         -rotation 0
         -flipX 0
         -flipY 0
         -useAlpha 1
         -font "plainLabelFont" 
-        -imageOverlayLabel "RUI" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "menuIconSkinning.png" 
-        -image1 "menuIconSkinning.png" 
+        -image "brSmoothWeights.svg" 
+        -image1 "brSmoothWeights.svg" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "removeUnusedInfluences" 
+        -command "brSmoothWeightsToolCtx" 
         -sourceType "mel" 
         -commandRepeatable 1
         -flat 1
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "Paint smooth skin cluster weight for the selection" 
+        -annotation "Transfer skin cluster weights from one influence to another." 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
-        -label "Paint Smooth" 
+        -label "Paint Transfer Weights Tool" 
         -labelOffset 0
         -rotation 0
         -flipX 0
         -flipY 0
         -useAlpha 1
         -font "plainLabelFont" 
-        -imageOverlayLabel "PS" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "menuIconSkinning.png" 
-        -image1 "menuIconSkinning.png" 
+        -image "brTransferWeights.svg" 
+        -image1 "brTransferWeights.svg" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "br_smoothSkinClusterWeightPaint" 
+        -command "brTransferWeightsToolCtx" 
         -sourceType "mel" 
         -commandRepeatable 1
         -flat 1
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 32
         -enable 1
         -width 35
-        -height 35
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "Smooth skin cluster weights for the selected components" 
+        -annotation "Create, edit and manage pose space deformations" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
-        -label "Smooth Selected Components" 
+        -label "Pose Editor" 
         -labelOffset 0
         -rotation 0
         -flipX 0
         -flipY 0
         -useAlpha 1
         -font "plainLabelFont" 
-        -imageOverlayLabel "SSC" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "menuIconSkinning.png" 
-        -image1 "menuIconSkinning.png" 
+        -image "poseEditor.png" 
+        -image1 "poseEditor.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "br_smoothSkinClusterWeightFlood 0" 
+        -command "PoseEditor" 
         -sourceType "mel" 
         -commandRepeatable 1
         -flat 1
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 3
+        -flexibleWidthValue 32
         -enable 1
         -width 35
-        -height 35
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "sourceMesh = pm.selected()[0]\ntry:\n    skin_cluster = [x for x in pm.listConnections(pm.PyNode(sourceMesh).getShape()+'.inMesh', s=1)]\nexcept MayaAttributeError:\n    skin_cluster = [x for x in pm.listConnections(str(pm.PyNode(sourceMesh).getShape())+'.create', s=1)]\n\n\nbindJnt_source = [x for x in pm.listConnections(str(skin_cluster[0])+'.matrix[*]', s=1)]\n\nbindPose = pm.listConnections(bindJnt_source[0], d = True, t = 'dagPose')[0]\nsourceGeShape = pm.skinCluster(skin_cluster, q = True, geometry = True)[0]\n\npm.skinCluster(skin_cluster, e = True, unbindKeepHistory = True)\npm.skinCluster(bindJnt_source, sourceGeShape, ignoreBindPose = True, toSelectedBones = True)\npm.select(bindJnt_source, add=True)" 
+        -annotation "Adjust blend shape weights" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
-        -label "ResetSkin" 
+        -label "Shape Editor" 
         -labelOffset 0
         -rotation 0
         -flipX 0
         -flipY 0
         -useAlpha 1
         -font "plainLabelFont" 
-        -imageOverlayLabel "ResetSkin" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "pythonFamily.png" 
-        -image1 "pythonFamily.png" 
+        -image "blendShapeEditor.png" 
+        -image1 "blendShapeEditor.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "sourceMesh = pm.selected()[0]\ntry:\n    skin_cluster = [x for x in pm.listConnections(pm.PyNode(sourceMesh).getShape()+'.inMesh', s=1)]\nexcept MayaAttributeError:\n    skin_cluster = [x for x in pm.listConnections(str(pm.PyNode(sourceMesh).getShape())+'.create', s=1)]\n\n\nbindJnt_source = [x for x in pm.listConnections(str(skin_cluster[0])+'.matrix[*]', s=1)]\n\nbindPose = pm.listConnections(bindJnt_source[0], d = True, t = 'dagPose')[0]\nsourceGeShape = pm.skinCluster(skin_cluster, q = True, geometry = True)[0]\n\npm.skinCluster(skin_cluster, e = True, unbindKeepHistory = True)\npm.skinCluster(bindJnt_source, sourceGeShape, ignoreBindPose = True, toSelectedBones = True)\npm.select(bindJnt_source, add=True)" 
-        -sourceType "python" 
+        -command "ShapeEditor" 
+        -sourceType "mel" 
         -commandRepeatable 1
         -flat 1
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "ngSkin" 
+        -annotation "Smooth Tool: Even out surface detail" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
-        -label "ngSkin" 
+        -label "Smooth Tool" 
         -labelOffset 0
         -rotation 0
         -flipX 0
         -flipY 0
         -useAlpha 1
         -font "plainLabelFont" 
-        -imageOverlayLabel "ngSkin" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "commandButton.png" 
-        -image1 "commandButton.png" 
+        -image "Smooth.png" 
+        -image1 "Smooth.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "from ngSkinTools.ui.mainwindow import MainWindow\nMainWindow.open()" 
-        -sourceType "python" 
+        -command "SetMeshSmoothTool" 
+        -sourceType "mel" 
+        -doubleClickCommand "ShowMeshSmoothToolOptions" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Grab Tool: Pull a single vertex along a surface in any direction" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Grab Tool" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "Grab.png" 
+        -image1 "Grab.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "SetMeshGrabTool" 
+        -sourceType "mel" 
+        -doubleClickCommand "ShowMeshGrabToolOptions" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Sculpt Tool: Lift a surface" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Sculpt Tool" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "Sculpt.png" 
+        -image1 "Sculpt.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "SetMeshSculptTool" 
+        -sourceType "mel" 
+        -doubleClickCommand "ShowMeshSculptToolOptions" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Pinch Tool: Sharpen soft edges" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Pinch Tool" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "Pinch.png" 
+        -image1 "Pinch.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "SetMeshPinchTool" 
+        -sourceType "mel" 
+        -doubleClickCommand "ShowMeshPinchToolOptions" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Wax Tool: Build up a surface" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Wax Tool" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "Wax.png" 
+        -image1 "Wax.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "SetMeshWaxTool" 
+        -sourceType "mel" 
+        -doubleClickCommand "ShowMeshWaxToolOptions" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Bulge Tool: Inflate an area on a surface" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Bulge Tool" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "Bulge.png" 
+        -image1 "Bulge.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "SetMeshBulgeTool" 
+        -sourceType "mel" 
+        -doubleClickCommand "ShowMeshBulgeToolOptions" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Paint blendShape weights" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Blend Shape" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "paintBlendshape.png" 
+        -image1 "paintBlendshape.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "ArtPaintBlendShapeWeightsTool" 
+        -sourceType "mel" 
         -commandRepeatable 1
         -flat 1
     ;
@@ -777,20 +1089,24 @@ global proc shelf_Audrey_Shelf () {
         -visible 1
         -preventOverride 0
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -style "shelf" 
         -horizontal 0
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Select an object(s)" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Center Pivot" 
@@ -815,14 +1131,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Select an object(s)" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Freeze Transformations" 
@@ -847,46 +1166,52 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "Rename objects in scene" 
+        -annotation "Delete construction history on the selected object(s)" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
-        -label "Search and Replace Names..." 
+        -label "History" 
         -labelOffset 0
         -rotation 0
         -flipX 0
         -flipY 0
         -useAlpha 1
         -font "plainLabelFont" 
-        -imageOverlayLabel "SaRN" 
+        -imageOverlayLabel "Hist" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.5 
-        -image "menuIconModify.png" 
-        -image1 "menuIconModify.png" 
+        -image "menuIconEdit.png" 
+        -image1 "menuIconEdit.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "performSearchReplaceNames 1" 
+        -command "DeleteHistory" 
         -sourceType "mel" 
         -commandRepeatable 1
         -flat 1
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Follicule Constraint: Select target and then Geo" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Folli_Const" 
@@ -911,14 +1236,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Convert polygon edges to nurbs curves." 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Polygon Edges to Curve" 
@@ -948,20 +1276,59 @@ global proc shelf_Audrey_Shelf () {
         -visible 1
         -preventOverride 0
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -style "shelf" 
         -horizontal 0
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Create, edit and save hotkeys" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Hotkey Editor" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "HE" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "menuIconWindow.png" 
+        -image1 "menuIconWindow.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "HotkeyPreferencesWindow" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
+        -enable 1
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Edit animation curves" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Graph Editor" 
@@ -986,46 +1353,17 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
-        -manage 1
-        -visible 1
-        -preventOverride 0
-        -annotation "Set the keyable state of attributes of the selected object(s)" 
-        -enableBackground 0
-        -highlightColor 0.321569 0.521569 0.65098 
-        -align "center" 
-        -label "Channel Control" 
-        -labelOffset 0
-        -rotation 0
-        -flipX 0
-        -flipY 0
-        -useAlpha 1
-        -font "plainLabelFont" 
-        -imageOverlayLabel "CC" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.5 
-        -image "menuIconWindow.png" 
-        -image1 "menuIconWindow.png" 
-        -style "iconOnly" 
-        -marginWidth 1
-        -marginHeight 1
-        -command "ChannelControlEditor" 
-        -sourceType "mel" 
-        -commandRepeatable 1
-        -flat 1
-    ;
-    shelfButton
-        -enableCommandRepeat 1
-        -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Make connections between object attributes" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Connection Editor" 
@@ -1050,14 +1388,52 @@ global proc shelf_Audrey_Shelf () {
     ;
     shelfButton
         -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
         -enable 1
-        -width 35
-        -height 35
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Edit various component values for the selected object(s)" 
+        -enableBackground 0
+        -backgroundColor 0 0 0 
+        -highlightColor 0.321569 0.521569 0.65098 
+        -align "center" 
+        -label "Component Editor" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -imageOverlayLabel "CpEd" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "menuIconWindow.png" 
+        -image1 "menuIconWindow.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "ComponentEditor" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -flexibleWidthType 1
+        -flexibleWidthValue 32
+        -enable 1
+        -width 34
+        -height 34
         -manage 1
         -visible 1
         -preventOverride 0
         -annotation "Display relationships among nodes in your scene graphically" 
         -enableBackground 0
+        -backgroundColor 0 0 0 
         -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Node Editor" 
@@ -1077,242 +1453,6 @@ global proc shelf_Audrey_Shelf () {
         -marginHeight 1
         -command "NodeEditorWindow" 
         -sourceType "mel" 
-        -commandRepeatable 1
-        -flat 1
-    ;
-    shelfButton
-        -enableCommandRepeat 1
-        -enable 1
-        -width 35
-        -height 35
-        -manage 1
-        -visible 1
-        -preventOverride 0
-        -annotation "Create, edit and save hotkeys" 
-        -enableBackground 0
-        -highlightColor 0.321569 0.521569 0.65098 
-        -align "center" 
-        -label "Hotkey Editor" 
-        -labelOffset 0
-        -rotation 0
-        -flipX 0
-        -flipY 0
-        -useAlpha 1
-        -font "plainLabelFont" 
-        -imageOverlayLabel "HE" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.5 
-        -image "menuIconWindow.png" 
-        -image1 "menuIconWindow.png" 
-        -style "iconOnly" 
-        -marginWidth 1
-        -marginHeight 1
-        -command "HotkeyPreferencesWindow" 
-        -sourceType "mel" 
-        -commandRepeatable 1
-        -flat 1
-    ;
-    separator
-        -enable 1
-        -width 12
-        -height 35
-        -manage 1
-        -visible 1
-        -preventOverride 0
-        -enableBackground 0
-        -highlightColor 0.321569 0.521569 0.65098 
-        -style "shelf" 
-        -horizontal 0
-    ;
-    shelfButton
-        -enableCommandRepeat 1
-        -enable 1
-        -width 35
-        -height 35
-        -manage 1
-        -visible 1
-        -preventOverride 0
-        -annotation "ezMel2Python" 
-        -enableBackground 0
-        -highlightColor 0.321569 0.521569 0.65098 
-        -align "center" 
-        -label "ezMel2Python" 
-        -labelOffset 0
-        -rotation 0
-        -flipX 0
-        -flipY 0
-        -useAlpha 1
-        -font "plainLabelFont" 
-        -imageOverlayLabel "Mel2Py" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.5 
-        -image "commandButton.png" 
-        -image1 "commandButton.png" 
-        -style "iconOnly" 
-        -marginWidth 1
-        -marginHeight 1
-        -command "\nimport ezMel2Python\nezMel2Python.ezMel2Python()" 
-        -sourceType "python" 
-        -commandRepeatable 1
-        -flat 1
-    ;
-    shelfButton
-        -enableCommandRepeat 1
-        -enable 1
-        -width 35
-        -height 35
-        -manage 1
-        -visible 1
-        -preventOverride 0
-        -annotation "\nimport rjSplineIK.ui\nrjSplineIK.ui.show()" 
-        -enableBackground 0
-        -highlightColor 0.321569 0.521569 0.65098 
-        -align "center" 
-        -label "\nimport rjSplineIK.ui\nrjSplineIK.ui.show()" 
-        -labelOffset 0
-        -rotation 0
-        -flipX 0
-        -flipY 0
-        -useAlpha 1
-        -font "plainLabelFont" 
-        -imageOverlayLabel "Rope" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.5 
-        -image "commandButton.png" 
-        -image1 "commandButton.png" 
-        -style "iconOnly" 
-        -marginWidth 1
-        -marginHeight 1
-        -command "\nimport rjSplineIK.ui\nrjSplineIK.ui.show()" 
-        -sourceType "python" 
-        -commandRepeatable 1
-        -flat 1
-    ;
-    shelfButton
-        -enableCommandRepeat 1
-        -enable 1
-        -width 35
-        -height 35
-        -manage 1
-        -visible 1
-        -preventOverride 0
-        -annotation "Helios" 
-        -enableBackground 0
-        -highlightColor 0.321569 0.521569 0.65098 
-        -align "center" 
-        -label "import sys\nsys.path.append('/home/adbrower/Desktop/maya/scripts'..." 
-        -labelOffset 0
-        -rotation 0
-        -flipX 0
-        -flipY 0
-        -useAlpha 1
-        -font "plainLabelFont" 
-        -imageOverlayLabel "Helios" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.5 
-        -image "commandButton.png" 
-        -image1 "commandButton.png" 
-        -style "iconOnly" 
-        -marginWidth 1
-        -marginHeight 1
-        -command "import sys\nsys.path.append('/home/adbrower/Desktop/maya/scripts')\n\nimport Helios\nHelios.HeliosGUI()" 
-        -sourceType "python" 
-        -commandRepeatable 1
-        -flat 1
-    ;
-    shelfButton
-        -enableCommandRepeat 1
-        -enable 1
-        -width 35
-        -height 35
-        -manage 1
-        -visible 1
-        -preventOverride 0
-        -annotation "SpaceSwitch" 
-        -enableBackground 0
-        -highlightColor 0.321569 0.521569 0.65098 
-        -align "center" 
-        -label "from spaceSwitchTool import spaceSwitchSetup as switchSetup\nswit..." 
-        -labelOffset 0
-        -rotation 0
-        -flipX 0
-        -flipY 0
-        -useAlpha 1
-        -font "plainLabelFont" 
-        -imageOverlayLabel "SpaceSwitch" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.5 
-        -image "commandButton.png" 
-        -image1 "commandButton.png" 
-        -style "iconOnly" 
-        -marginWidth 1
-        -marginHeight 1
-        -command "from spaceSwitchTool import spaceSwitchSetup as switchSetup\nswitchSetup.show()\n                 " 
-        -sourceType "python" 
-        -commandRepeatable 1
-        -flat 1
-    ;
-    shelfButton
-        -enableCommandRepeat 1
-        -enable 1
-        -width 35
-        -height 35
-        -manage 1
-        -visible 1
-        -preventOverride 0
-        -annotation "Connection Tool" 
-        -enableBackground 0
-        -highlightColor 0.321569 0.521569 0.65098 
-        -align "center" 
-        -label "\nimport maya.cmds as mc\nimport pymel.core as pm\nfrom functools i..." 
-        -labelOffset 0
-        -rotation 0
-        -flipX 0
-        -flipY 0
-        -useAlpha 1
-        -font "plainLabelFont" 
-        -imageOverlayLabel "adb_CE" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.5 
-        -image "pythonFamily.png" 
-        -image1 "pythonFamily.png" 
-        -style "iconOnly" 
-        -marginWidth 1
-        -marginHeight 1
-        -command "import adb_tools.Tool__ConnectionTool\nreload(adb_tools.Tool__ConnectionTool)\n\nadb_tools.Tool__ConnectionTool.connectionTool()\n" 
-        -sourceType "python" 
-        -commandRepeatable 1
-        -flat 1
-    ;
-    shelfButton
-        -enableCommandRepeat 1
-        -enable 1
-        -width 35
-        -height 35
-        -manage 1
-        -visible 1
-        -preventOverride 0
-        -annotation "adbrower_toolbox" 
-        -enableBackground 0
-        -highlightColor 0.321569 0.521569 0.65098 
-        -align "center" 
-        -label "adbrower_toolbox" 
-        -labelOffset 0
-        -rotation 0
-        -flipX 0
-        -flipY 0
-        -useAlpha 1
-        -font "plainLabelFont" 
-        -imageOverlayLabel "adbrower_toolbox" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.5 
-        -image "pythonFamily.png" 
-        -image1 "pythonFamily.png" 
-        -style "iconOnly" 
-        -marginWidth 1
-        -marginHeight 1
-        -command "mc.adbrowerTB()" 
-        -sourceType "python" 
         -commandRepeatable 1
         -flat 1
     ;

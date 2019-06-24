@@ -2,6 +2,9 @@ import maya.cmds as mc
 import pymel.core as pm
 from functools import wraps
 
+import NameConv_utils as NC
+reload(NC)
+
 
 #-----------------------------------
 #  DECORATORS
@@ -508,7 +511,7 @@ def makeCtrls(shape_name):
         for oSel, oCtrls in zip (sel, Ctrls):
             # print (oSel, oCtrls)
             pm.matchTransform(oCtrls, oSel,  rot=True, pos = True)
-            pm.rename(oCtrls, '{}__ctrl__'.format(oSel))
+            pm.rename(oCtrls, '{}__{}'.format(oSel, NC.CTRL))
             
                                    
     NumCtrls(shape_name())

@@ -23,7 +23,6 @@ import adbrower
 adb = adbrower.Adbrower()
 
 from adbrower import lprint
-from adbrower import flatList
 from ShapesLibrary import*
 from adbrower import changeColor
 
@@ -116,8 +115,8 @@ class markingMenu():
         mc.menuItem(p=InfoMenu, l="Information", en = 0 )
         mc.menuItem(p=InfoMenu, l="Print List", c = pm.Callback(adb.List))
         mc.menuItem(p=InfoMenu, l="Print Loop List", c = lambda *args:lprint(pm.selected()))
-        mc.menuItem(p=InfoMenu, l="Print Type", c = pm.Callback(adb.Type))
-        mc.menuItem(p=InfoMenu, l="Print PyMel Type", c = pm.Callback(adb.TypePymel))
+        mc.menuItem(p=InfoMenu, l="Print Type", c = lambda *args:lprint(adb.Type(pm.selected())))
+        mc.menuItem(p=InfoMenu, l="Print PyMel Type", c =lambda *args:lprint(adb.TypePymel()))
         mc.menuItem(p=InfoMenu, l="Get Node Type", c = pm.Callback(self.NodeType))
 
         SkinMenu = mc.menuItem(p=menu, l="Skinning", rp="N", i ='paintSkinWeights.png',subMenu=1)
@@ -132,8 +131,9 @@ class markingMenu():
         mc.menuItem(p=SkinMenu, l="UNLOCK All Weights", c = pm.Callback(self.lock_unlock_All_Weight, lock = 0))
         mc.menuItem(p=SkinMenu, l="Mirror Weight", c = lambda *args:adb.quickMirrorWeights(), rp = 'N' )
         mc.menuItem(p=SkinMenu,  d = True)
-        mc.menuItem(p=SkinMenu, l="Solve Btw", c = lambda *args:skn.Skinning(pm.selected()[0]).solveBtwn() )
+        mc.menuItem(p=SkinMenu, l="Solve Btw", c = lambda *args:skin.Skinning(pm.selected()[0]).solveBtwn() )
         mc.menuItem(p=SkinMenu, l="Conform Weights", c = pm.Callback(self.conform_weights))
+        mc.menuItem(p=SkinMenu, l="Label Joints", c = pm.Callback(self.label_jnts))
 
         ## List
         mc.menuItem(p=menu, l=" --- Create ---", en = 0 )
@@ -380,6 +380,25 @@ class markingMenu():
         pm.select(oColl)
 
 
+    def label_jnts(self, left_side='L_', right_side='R_'):       
+        for sel in pm.ls(type='joint'):
+            short = sel.split('|')[-1].split(':')[-1]
+            if short.startswith(left_side):
+                side = 1
+                other = short.split(left_side)[-1]
+            elif short.startswith(right_side):
+                side = 2
+                other = short.split(right_side)[-1]
+            else:
+                side = 0
+                other = short
+            pm.setAttr('{0}.side'.format(sel), side)
+            pm.setAttr('{0}.type'.format(sel), 18)
+            pm.setAttr('{0}.otherType'.format(sel), other, type='string')
+        sys.stdout.write('// Result: Joints are label')
+
+
+
     def centre_joint(self):
         """
         Creates a joint in the centre of the selection. You can select objects, components...
@@ -495,4 +514,4 @@ class markingMenu():
             each.rename(each.name().replace('pasted__',''))
 
 
-markingMenu()          
+markingMenu()

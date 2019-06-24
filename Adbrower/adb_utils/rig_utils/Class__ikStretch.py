@@ -11,21 +11,44 @@ import traceback
 import pymel.core as pm
 import maya.cmds as mc
 from pprint import pprint
+import NameConv_utils as NC
+reload(NC)
 
+
+MODULE_NAME = 'ik_stretch'
+METADATA_grp_name = '{}_METADATA'.format(MODULE_NAME)
 
 class stretchyIK(object):
-    def __init__(self,        
-                 _selection = pm.selected(),
-                 scaleAxe = 'Z'                 
-                 ):
-       selection = [pm.PyNode(x) for x in _selection]        
-       self.start_jnt = selection[0]
-       self.hinge_jnt = selection[1:-2]
-       self.end_jnt = selection[-2]
-       self.ik_ctrl = selection[-1]
-       self.scaleAxe = scaleAxe,        
+    '''
+    Add stretch to any IK chain
+    
+    @param ik_joints: (list) List of Ik joints chain
+    @param ik_ctrl: transform
+    @scaleAxe: (string) Axis in which the joints will be scaled
+    
+    # example
+    leg = stretchyIK(  ik_joints = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6', 'joint7'],
+                 ik_ctrl = 'joint7__loc__',
+                 scaleAxe = 'Y' )
+    leg.stretchyIKSetUp()
 
-       self.settingsGrp_creation()
+    
+    '''
+    def __init__(self,        
+                 ik_joints = pm.selected(),
+                 ik_ctrl = None,
+                 scaleAxe = 'Y'                 
+                 ):
+                    
+                    
+       _ik_joints = [pm.PyNode(x) for x in ik_joints]        
+       self.start_jnt = _ik_joints[0]
+       self.hinge_jnt = _ik_joints[1:-1]
+       self.end_jnt = _ik_joints[-1]
+       self.ik_ctrl = pm.PyNode(ik_ctrl)
+       self.scaleAxe = scaleAxe,       
+
+       self.create_metaData_GRP()
        
     @property
     def stretchAxis(self):
@@ -78,38 +101,30 @@ class stretchyIK(object):
         
     @property
     def setting_grp(self):
-        return(self.ik_sys_grp)
+        return(self.metaData_GRP)
 
 
-    def settingsGrp_creation(self):
+    def create_metaData_GRP(self):
         ''' Create the sys group for the ikStretch sys'''
         
-        self.ik_sys_grp = pm.group(n='setting_ik_grp', em=True)
+        if pm.objExists(METADATA_grp_name):
+            pm.delete(METADATA_grp_name)
         
-        ## Lock and Hide all parameters #            
-        self.ik_sys_grp.setAttr("tx", lock=True, channelBox=False, keyable=False)
-        self.ik_sys_grp.setAttr("ty", lock=True, channelBox=False, keyable=False)
-        self.ik_sys_grp.setAttr("tz", lock=True, channelBox=False, keyable=False)
-        self.ik_sys_grp.setAttr("rx", lock=True, channelBox=False, keyable=False)
-        self.ik_sys_grp.setAttr("ry", lock=True, channelBox=False, keyable=False)
-        self.ik_sys_grp.setAttr("rz", lock=True, channelBox=False, keyable=False)
-        self.ik_sys_grp.setAttr("sx", lock=True, channelBox=False, keyable=False)
-        self.ik_sys_grp.setAttr("sy", lock=True, channelBox=False, keyable=False)
-        self.ik_sys_grp.setAttr("sz", lock=True, channelBox=False, keyable=False)
+        self.metaData_GRP = pm.shadingNode('network', au=1, n='{}_{}'.format(self.ik_ctrl, METADATA_grp_name))
+                
+        pm.PyNode(self.metaData_GRP).addAttr('Ik_Handle', at='message', keyable = False )
+        pm.PyNode(self.metaData_GRP).addAttr('Ik_Distance', at='double', dv=0, keyable = False )
+        pm.PyNode(self.metaData_GRP).addAttr('Original_joint_distance', at='double', dv=0, keyable = False )
+        pm.PyNode(self.metaData_GRP).addAttr('Joint_Axis', dt='string',  keyable = False )
         
-        pm.PyNode(self.ik_sys_grp).addAttr('Ik_Handle', at='message', keyable = False )
-        pm.PyNode(self.ik_sys_grp).addAttr('Ik_Distance', at='double', dv=0, keyable = False )
-        pm.PyNode(self.ik_sys_grp).addAttr('Original_joint_distance', at='double', dv=0, keyable = False )
-        pm.PyNode(self.ik_sys_grp).addAttr('Joint_Axis', dt='string',  keyable = False )
+        pm.PyNode(self.metaData_GRP).addAttr('Connecting_Start_Joint', at='message',  keyable = False)
+        pm.PyNode(self.metaData_GRP).addAttr('Connecting_End_Joint', at='message',  keyable = False)
+        pm.PyNode(self.metaData_GRP).addAttr('Connecting_Hinge_Joint', dt='string',  keyable = False)
         
-        pm.PyNode(self.ik_sys_grp).addAttr('Connecting_Start_Joint', at='message',  keyable = False)
-        pm.PyNode(self.ik_sys_grp).addAttr('Connecting_End_Joint', at='message',  keyable = False)
-        pm.PyNode(self.ik_sys_grp).addAttr('Connecting_Hinge_Joint', dt='string',  keyable = False)
-        
-        pm.PyNode(self.ik_sys_grp).addAttr('Distance_Node', at='message',  keyable = False)
-        pm.PyNode(self.ik_sys_grp).addAttr('Proportion_MDV_Node', at='message',  keyable = False)
-        pm.PyNode(self.ik_sys_grp).addAttr('Stretch_MDV_Node', at='message',  keyable = False)
-        pm.PyNode(self.ik_sys_grp).addAttr('Condition_Node', at='message',  keyable = False)
+        pm.PyNode(self.metaData_GRP).addAttr('Distance_Node', at='message',  keyable = False)
+        pm.PyNode(self.metaData_GRP).addAttr('Proportion_MDV_Node', at='message',  keyable = False)
+        pm.PyNode(self.metaData_GRP).addAttr('Stretch_MDV_Node', at='message',  keyable = False)
+        pm.PyNode(self.metaData_GRP).addAttr('Condition_Node', at='message',  keyable = False)
 
 
     def stretchyIKSetUp(self):
@@ -127,7 +142,7 @@ class stretchyIK(object):
 
             locs = []
             for sel in sub:                           
-                loc_align = pm.spaceLocator(n='{}__pos_loc__'.format(sel))
+                loc_align = pm.spaceLocator(n='{}__pos__LOC__'.format(sel))
                 locs.append(loc_align)
                 pm.matchTransform(loc_align,sel,rot=True, pos=True)
                 pm.select(locs, add = True)
@@ -158,17 +173,17 @@ class stretchyIK(object):
         max_distance = getMaxDistance()
 
         ## condition node
-        self.cond_node = pm.shadingNode('condition',asUtility=1, n= (self.start_jnt).replace(self.start_jnt.split('__')[2], 'cond'))
+        self.cond_node = pm.shadingNode('condition',asUtility=1, n= '{}__{}'.format(MODULE_NAME, NC.CONDITION_SUFFIX))
         self.cond_node.operation.set(3)
         self.cond_node.colorIfFalseR.set(1)
         self.cond_node.secondTerm.set(1)
 
         ## multiply Divide strech
-        self.md_strech_node = pm.shadingNode('multiplyDivide',asUtility=1, n=(self.start_jnt).replace(self.start_jnt.split('__')[2], 'strech_md'))
+        self.md_strech_node = pm.shadingNode('multiplyDivide',asUtility=1, n='{}_strech__MD'.format(MODULE_NAME, NC.MULTIPLY_DIVIDE_SUFFIX))
         self.md_strech_node.operation.set(1)
 
         ## multiply Divide proportion
-        self.md_prp_node = pm.shadingNode('multiplyDivide',asUtility=1, n=(self.start_jnt).replace(self.start_jnt.split('__')[2],'prp_md'))
+        self.md_prp_node = pm.shadingNode('multiplyDivide',asUtility=1, n= '{}_proportion__{}'.format(MODULE_NAME, NC.MULTIPLY_DIVIDE_SUFFIX))
         self.md_prp_node.operation.set(2)
         self.md_prp_node.input2X.set(max_distance)
 
@@ -193,34 +208,33 @@ class stretchyIK(object):
         posLocs[0].v.set(0)
         posLocs[1].v.set(0)
         self.DistanceLoc.getParent().v.set(0)
-        oRoot_grp = pm.group(n='{}__main_strech__grp__'.format(self.startJoint.split('__')[1]), em = True)   
-        pm.parent(self.start_jnt, self.ik_sys_grp, self.DistanceLoc.getParent(), pm.PyNode(self.ik_ctrl).getParent(), posLocs[0], oRoot_grp)  
-
-
-        def set_settingGrp():
-            pm.PyNode(self.ikHandle).translate >> pm.PyNode(self.ik_sys_grp).Ik_Handle 
-            pm.PyNode(self.distanceNode).distance >> pm.PyNode(self.ik_sys_grp).Ik_Distance 
-            pm.PyNode(self.distanceNode).distance >> pm.PyNode(self.ik_sys_grp).Distance_Node 
-           
-            pm.PyNode(self.startJoint).translate >> pm.PyNode(self.ik_sys_grp).Connecting_Start_Joint 
-            pm.PyNode(self.endJoint).translate >> pm.PyNode(self.ik_sys_grp).Connecting_End_Joint 
-            
-            pm.PyNode(self.ik_sys_grp).Connecting_Hinge_Joint.set(str(self.hingeJoint).replace('nt.Joint','').replace("u'","'").replace("('","").replace("')",""), lock = True)
-            
-            pm.PyNode(self.prop_mdv).message >> pm.PyNode(self.ik_sys_grp).Proportion_MDV_Node 
-            pm.PyNode(self.stretch_mdv).message >> pm.PyNode(self.ik_sys_grp).Stretch_MDV_Node 
-            pm.PyNode(self.condition_node).message >> pm.PyNode(self.ik_sys_grp).Condition_Node 
-            
-            pm.PyNode(self.ik_sys_grp).Joint_Axis.set(self.stretchAxis, lock=True) 
-            pm.PyNode(self.ik_sys_grp).Original_joint_distance.set(self.originalDistance, lock=True) 
         
-        set_settingGrp()
+        NC.setFinalHiearchy(MODULE_NAME,
+                            RIG_GRP_LIST = [self.DistanceLoc.getParent(), posLocs[0]],
+                            INPUT_GRP_LIST = [pm.PyNode(self.ik_ctrl).getParent() ],
+                            OUTPUT_GRP_LIST = [])     
+
+
+
+        def set_metaData_GRP():
+            pm.PyNode(self.ikHandle).translate >> pm.PyNode(self.metaData_GRP).Ik_Handle 
+            pm.PyNode(self.distanceNode).distance >> pm.PyNode(self.metaData_GRP).Ik_Distance 
+            pm.PyNode(self.distanceNode).distance >> pm.PyNode(self.metaData_GRP).Distance_Node 
+           
+            pm.PyNode(self.startJoint).translate >> pm.PyNode(self.metaData_GRP).Connecting_Start_Joint 
+            pm.PyNode(self.endJoint).translate >> pm.PyNode(self.metaData_GRP).Connecting_End_Joint 
+
+            pm.PyNode(self.metaData_GRP).Connecting_Hinge_Joint.set(str([str(joint) for joint in self.hingeJoint]), lock = True)
+            
+            pm.PyNode(self.prop_mdv).message >> pm.PyNode(self.metaData_GRP).Proportion_MDV_Node 
+            pm.PyNode(self.stretch_mdv).message >> pm.PyNode(self.metaData_GRP).Stretch_MDV_Node 
+            pm.PyNode(self.condition_node).message >> pm.PyNode(self.metaData_GRP).Condition_Node 
+            
+            pm.PyNode(self.metaData_GRP).Joint_Axis.set(self.stretchAxis, lock=True) 
+            pm.PyNode(self.metaData_GRP).Original_joint_distance.set(self.originalDistance, lock=True) 
+        
+        set_metaData_GRP()
           
-
-
-    
-leg = stretchyIK()
-leg.stretchyIKSetUp()
 
 
 

@@ -15,7 +15,7 @@ from adbrower import undo
 
 
 
-class SquashStrech():
+class SquashStrech(object):
     '''
     Squash and Strech for a ribbon system
     

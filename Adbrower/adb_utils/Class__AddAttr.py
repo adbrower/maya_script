@@ -13,7 +13,7 @@ import maya.cmds as mc
 from adbrower import undo
 
 #-----------------------------------
-# Functions
+# FUNCTIONS
 #----------------------------------- 
 
 
@@ -130,18 +130,20 @@ class NodeAttr(object):
         for methods in self.list_methods:                
             setattr(NodeAttr, methods, self.list_methods[methods])
                                                         
-    def addAttr(self, name, attr, dv = None, min = None, max=None, eName = None, keyable = True , lock = False, parent = None):        
+    def addAttr(self, name, attr, dv = None, min = None, max=None, eName = None, keyable = True , lock = False, parent = None, nc=None):        
         '''
         Function Adding a new attribute according to the type of the default value argument
           
-        @param name: String giving the name of the attribute
+        @param name: (String) giving the name of the attribute
         @param attr : It is given by the type of de default value (dv) argument
         @param dv: data which will determine the type of the attribute. Default value is None
-        @param min: Integer to determine the minimum of the attribute. The attribute type needs to be Float or Integer. Default value is None
-        @param max: Integer to determine the maximum of the attribute. The attribute type needs to be Float or Integer. Default value is None 
+        @param min: (Integer) to determine the minimum of the attribute. The attribute type needs to be Float or Integer. Default value is None
+        @param max: (Integer) to determine the maximum of the attribute. The attribute type needs to be Float or Integer. Default value is None 
         @param eName : eName = "Green:Blue:", enumName of an attribute of type 
-        @param keyable: Boolean to determine if the parameter is keyable or not. Default value is True
-        @param lock: Boolean to determine if all the default attributes will be locked. Calls the methods: lockAttribute()
+        @param keyable: (Boolean) to determine if the parameter is keyable or not. Default value is True
+        @param lock: (Boolean) to determine if all the default attributes will be locked. Calls the methods: lockAttribute()
+        @param parent: (string) name of the parent
+        @param nc: (int) Number of children
         
         '''
 
@@ -158,9 +160,8 @@ class NodeAttr(object):
         self.attr = attr
 
         def addParent_Attr():
-            print ('gooo parent')
             for node in self.node:
-                node.addAttr(name, at = self.attr, keyable= keyable)
+                node.addAttr(name, at = self.attr, keyable= keyable, nc=nc)
         
         def addFloat_int():
             ''' Add an attribute of type Float or integer'''
@@ -189,6 +190,7 @@ class NodeAttr(object):
                         node.addAttr(name, at = nodeTypeDic[_type]['dt'], dv = attr,  min = min, max = max, keyable= keyable, )             
             else:
                 if parent != None:
+                    print 'caca'
                     for node in self.node:
                         node.addAttr(name,at = nodeTypeDic[_type]['dt'], dv = attr, keyable= keyable, parent = parent )
                 else:
@@ -199,15 +201,24 @@ class NodeAttr(object):
                                                 
         def addBool():
             ''' Add an attribute of type Boolean'''
+            
             for node in self.node:
-                node.addAttr(name,at = nodeTypeDic[_type]['dt'], dv = attr, keyable= keyable)            
+                if parent != None:  
+                    node.addAttr(name,at = nodeTypeDic[_type]['dt'], dv = attr, keyable= keyable, parent = parent )        
+                else:
+                    node.addAttr(name,at = nodeTypeDic[_type]['dt'], dv = attr, keyable= keyable) 
             #self.addMethods()
 
         def addString():
             ''' Add an attribute of type String'''
-            for node in self.node:
-                node.addAttr(name, dt = nodeTypeDic[_type]['dt'], keyable= keyable)
-                pm.PyNode((str(node) + '.' + name)).set(attr)
+            if parent != None: 
+                for node in self.node:
+                    node.addAttr(name, dt = nodeTypeDic[_type]['dt'], keyable= keyable, parent=parent)
+                    pm.PyNode((str(node) + '.' + name)).set(attr)
+            else:
+                for node in self.node:
+                    node.addAttr(name, dt = nodeTypeDic[_type]['dt'], keyable= keyable)
+                    pm.PyNode((str(node) + '.' + name)).set(attr)
             #self.addMethods()
  
                        
@@ -216,15 +227,23 @@ class NodeAttr(object):
             Add an attribute of type Enum.
             ex: node.addAttr('test', 'enum',  eName = "Green:Blue:")
             '''
-            
-            for node in self.node:
-                node.addAttr(name, at = nodeTypeDic[_type]['dt'], enumName=eName, keyable= keyable)
+            if parent != None:             
+                for node in self.node:
+                    node.addAttr(name, at = nodeTypeDic[_type]['dt'], enumName=eName, keyable= keyable, parent=parent) 
+            else:
+                for node in self.node:
+                    node.addAttr(name, at = nodeTypeDic[_type]['dt'], enumName=eName, keyable= keyable)
             #self.addMethods()
+                     
                      
         def addMessage():
             ''' Add an attribute of type Message'''
-            for node in self.node:
-                node.addAttr(name, at = nodeTypeDic[_type]['dt'], keyable= keyable)            
+            if parent != None:  
+                for node in self.node:
+                    node.addAttr(name, at = nodeTypeDic[_type]['dt'], keyable= keyable, parent=parent)        
+            else:
+                 for node in self.node:
+                    node.addAttr(name, at = nodeTypeDic[_type]['dt'], keyable= keyable)                   
             #self.addMethods()
             
         _type = attr        
@@ -244,7 +263,10 @@ class NodeAttr(object):
             _type = 'double2'   
                 
         elif _type == 'double3':
-            _type = 'double3'        
+            _type = 'double3'  
+                 
+        elif _type == 'compound':
+            _type = 'compound'        
         else:
             _type = str(type(attr))
         
@@ -255,10 +277,9 @@ class NodeAttr(object):
                 "<type 'float'>" : addFloat_int,
                 "enum" : addEnum,
                 'message' : addMessage,
+                'compound' : addParent_Attr,
                 'float3' : addParent_Attr,
                 'float2' : addParent_Attr,
-                'double2' : addParent_Attr,
-                'double3' : addParent_Attr,
                 }         
 
         addAttrDic[_type]() ## runs the dictionnary
@@ -461,8 +482,7 @@ class NodeAttr(object):
             if _min != None:
                 pm.addAttr(target_attr, e = True, min = _min)
             elif _max != None:
-                pm.addAttr(target_attr, e=True, max = _max)
-           
+                pm.addAttr(target_attr, e=True, max = _max)           
             else:
                 pass        
 
@@ -517,6 +537,19 @@ class NodeAttr(object):
 
         resetPuppetControl()  
 
+
+    @staticmethod
+    @undo
+    def addRotationOrderAttr(nurbs_ctrl=pm.selected()):    
+        for ctrl in nurbs_ctrl:
+            pm.addAttr(ctrl, ln="rotationOrder", en="xyz:yzx:zxy:xzy:yxz:zyx:", at="enum")
+            pm.setAttr((str(ctrl) + ".rotationOrder"), 
+                e=1, keyable=True)
+            pm.connectAttr((str(ctrl) + ".rotationOrder"), (str(ctrl) + ".rotateOrder"))
+            
+        
+
+
     
 
 
@@ -524,11 +557,15 @@ class NodeAttr(object):
 #   IN CLASS BUILD
 # -----------------------------------
 
-# node = NodeAttr()
 
-# node.addAttr('Volume_Preservation', True)
-# node.addAttr('sim', True)
-# node.addAttr('test', 'enum',  eName = "Green:Blue:")
+# node = NodeAttr([pm.selected()[0]])
+# node.addAttr("UV", 'compound', nc=2)
+# node.addAttr("zipper", 0, min = 0, max = 100, parent = "UV")
+# node.addAttr("zipper", 0, min = 0, max = 100)
+# node.addAttr("V_pos", 0.5, min = 0, max = 1, parent = "UV")
+
+# node.addAttr('adb', 50)
+# node.addAttr('BowTie_Vis', 'enum',  eName = "off:on:")
 
 # -----------------------------------
 #   EXEMPLE  EXTERIOR CLASS BUILD
@@ -541,3 +578,29 @@ class NodeAttr(object):
 # node.addAttr('adb', 50)
 # node.addAttr('sim', True)
 # node.addAttr('test', 'enum',  eName = "Green:Blue:")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

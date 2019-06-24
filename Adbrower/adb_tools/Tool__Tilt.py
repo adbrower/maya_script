@@ -23,7 +23,9 @@ import CollDict
 from CollDict import colordic
 import adbrower
 adb = adbrower.Adbrower()
-import adb_rig.Class__Tilt_Setup as adb_tilt 
+import adb_rig.Class__Tilt_Setup as adb_tilt
+# reload(adb_tilt)
+
 
 #-----------------------------------
 #  DECORATORS
@@ -45,7 +47,7 @@ class TiltTool():
         self.userName = getpass.getuser() 
         
         self.path_window = 'C:/Users/'+ self.userName + '/AppData/Roaming'
-        self.path_linux = '/on/work/'+ self.userName + '/'
+        self.path_linux = '/home/'+ self.userName + '/'
         self.folder_name ='.config/adb_Setup'
         self.file_name = 'Tilt_Tool_confi.ini'
 
@@ -432,4 +434,3 @@ class TiltTool():
 
 
 # myTool = TiltTool()
-

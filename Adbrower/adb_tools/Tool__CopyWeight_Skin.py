@@ -16,7 +16,6 @@ except:
     from PySide.QtCore import *
     from PySide.QtGui import *
     from PySide import QtGui
-
 try:
     # future proofing for Maya 2017.
     from shiboken2 import wrapInstance
@@ -37,16 +36,12 @@ import ConfigParser
 import maya.cmds as mc
 import maya.mel as mel
 import sys
-import CollDict
 from CollDict import pysideColorDic as pyQtDic
 
 import adbrower
-reload(adbrower)
 adb = adbrower.Adbrower()
-
 import adb_utils.Class__Skinning as skin
 import adb_utils.deformers.Class__Blendshape as bs
-# reload(skin)
 
 
 VERSION = 3.0
@@ -68,7 +63,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def __init__(self,parent=None):                
         super(SkinCopyWEIGHTS, self).__init__(parent = maya_main_window())           
         self.setObjectName('test')      
-        self.starting_height = 760  
+        self.starting_height = 810  
         self.starting_width = 390  
         self.setWindowTitle('adbrower - Copy Weights Tool' +  ' v' + str(VERSION))
         self.setWindowFlags(QtCore.Qt.Tool)        
@@ -351,8 +346,8 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.frameLayoutAndFunctions = [
                 # name,           collapse
                 ['WEIGHTS',        True     ],                                                 
-                ['BLENDSHAPES',    False    ],                                                      
-                ['JOINTS',         False    ],                                                      
+                ['BLENDSHAPES',    True    ],                                                      
+                ['JOINTS',         True    ],                                                      
                            
         ]
         self.framelayout = {}        
@@ -367,9 +362,9 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         ''' Create the buttons  '''  
         self.buttonAndFunctions = [
                 # name,                  function ,     group number,                   labelColor,            backgroundColor,                      layout,              layout_coordinate     width
-                ['expand',               self.qList_expand_plus,       0,        pyQtDic['colorLightGrey'],         '',                    self.hlayout['icons'],                    '',         20],
-                ['minus',                self.qList_expand_moins,      0,        pyQtDic['colorLightGrey'],         '',                    self.hlayout['icons'],                    '',         20],
-                ['reverse',              self.swap_data,               0,        pyQtDic['colorLightGrey'],         '',                    self.hlayout['icons'],                    '',         20],
+                ['expand',               self.qList_expand_plus,       0,        pyQtDic['colorLightGrey'],         '',                    self.hlayout['icons'],                    '',         30],
+                ['minus',                self.qList_expand_moins,      0,        pyQtDic['colorLightGrey'],         '',                    self.hlayout['icons'],                    '',         30],
+                ['reverse',              self.swap_data,               0,        pyQtDic['colorLightGrey'],         '',                    self.hlayout['icons'],                    '',         30],
                 
                 ['Load Sources',         self.add_sources,             1,        pyQtDic['colorLightGrey'],   pyQtDic['colorDarkGrey3'],   self.hlayout['add_meshes_01'],            '',         ''],
                 ['Load Targets',         self.add_targets,             1,        pyQtDic['colorLightGrey'],   pyQtDic['colorDarkGrey3'],   self.hlayout['add_meshes_01'],            '',         ''],    
@@ -380,15 +375,16 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                 ['Add',                  self.addJointManuallyAB,      2,        pyQtDic['colorDarkGrey3'],   pyQtDic['colorOrange'],      self.hlayout['manually_joint_button'],    '',         60],  
                 ['Verify',               self.verifyReplaceJnts,       2,        pyQtDic['colorDarkGrey3'],   pyQtDic['colorOrange'],      self.hlayout['manually_joint_button'],    '',         60], 
                 
-                ['copy',                 self.copySkinAB,              4,      pyQtDic['colorYellowlabel'],   pyQtDic['colorDarkGrey3'],   self.glayout['apply'],                    '0,0,0,0',         ''],        
-                ['Joint_transfer',       self.transferJointSkinAB,     4,      pyQtDic['colorYellowlabel'],   pyQtDic['colorDarkGrey3'],   self.glayout['apply'],                    '1,0,0,0',         ''],                 
-                ['Mirror Skin',          self.mirrorSkinAB,            4,      pyQtDic['colorYellowlabel'],   pyQtDic['colorDarkGrey3'],   self.glayout['apply'],                    '2,0,0,0',         ''],                                   
+                ['copy',                 self.copySkinAB,              4,      pyQtDic['colorYellowlabel'],   pyQtDic['colorDarkGrey3'],   self.glayout['apply'],                    '0,0,0,0',  ''],        
+                ['Joint_transfer',       self.transferJointSkinAB,     4,      pyQtDic['colorYellowlabel'],   pyQtDic['colorDarkGrey3'],   self.glayout['apply'],                    '1,0,0,0',  ''],                 
+                ['Mirror Skin',          self.mirrorSkinAB,            4,      pyQtDic['colorYellowlabel'],   pyQtDic['colorDarkGrey3'],   self.glayout['apply'],                    '2,0,0,0',  ''],                                   
                 
                 ['Label Joints',         self.labelJointsAB,           3,      pyQtDic['colorLightGrey'],     pyQtDic['colorDarkGrey3'],   self.framelayout['JOINTS'],               '',         ''],  
                 ['Select skn Joints',    self.selectSknJntsAB,         3,      pyQtDic['colorLightGrey'],     pyQtDic['colorDarkGrey3'],   self.framelayout['JOINTS'],               '',         ''],  
-                
                 ['Verify Joint Sides',   self.verifyJointSideAB,       3,      pyQtDic['colorLightGrey'],     pyQtDic['colorDarkGrey3'],   self.framelayout['JOINTS'],               '',         ''],  
 
+                ['Create BLS',           self.test,                    3,      pyQtDic['colorLightGrey'],     pyQtDic['colorDarkGrey3'],   self.framelayout['BLENDSHAPES'],          '',         ''],  
+                ['Add Target',           self.addTargetsAB,            3,      pyQtDic['colorLightGrey'],     pyQtDic['colorDarkGrey3'],   self.framelayout['BLENDSHAPES'],          '',         ''],  
                 ['Mirror BLS',           self.mirrorBSAB,              3,      pyQtDic['colorLightGrey'],     pyQtDic['colorDarkGrey3'],   self.framelayout['BLENDSHAPES'],          '',         ''],  
 
         ]
@@ -398,14 +394,14 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         for buttonName, buttonFunction, _, labColor, bgColor, layout, layout_coord, width, in self.buttonAndFunctions:
             self.buttons[buttonName] = QtWidgets.QPushButton(buttonName)
             self.buttons[buttonName].clicked.connect(buttonFunction) 
-            self.buttons[buttonName].setFixedHeight(25)
+            self.buttons[buttonName].setFixedHeight(27)
             if width == '':
                 pass
             else:
                 self.buttons[buttonName].setFixedWidth(width)
             
             self.buttons[buttonName].setStyleSheet(
-                    'padding:4px; text-align:Center; font: normal; color:{}; border: none ; background-color:{};'.format(labColor,bgColor))
+                    'padding:4px; text-align:Center; font: normal; color:{};  background-color:{};'.format(labColor,bgColor))
             try:
                 layout.addWidget(self.buttons[buttonName], int(layout_coord.split(',')[0]), int(layout_coord.split(',')[1]))
             except ValueError:
@@ -670,6 +666,8 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.mirror_across_text.setVisible(True) 
         self.keep_same_joints_checked()
 
+       
+
     #-------------------------------------
     # UI MANAGEMENT
 
@@ -778,7 +776,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             for each in hide_list:
                 each.setVisible(False)
             for each in show_list:
-                each.setVisible(True)
+                each.setVisible(True)                   
                    
         elif self.same_jnts_Chbx.checkState() == QtCore.Qt.Unchecked:
             for each in hide_list:
@@ -789,7 +787,6 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     
 
     def add_sources(self):
-
         self.refresh_sources()
         _sources = pm.selected()
         self.sources = [item for item in _sources]    
@@ -974,6 +971,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def verifyJointSideAB(self):
         if not pm.selected():
             msgBox = QtWidgets.QMessageBox()
+            msgBox.setIcon(QMessageBox.Warning)
             msgBox.setText('Nothing is selected!!!')
             msgBox.setInformativeText('Select a mesh')
             msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
@@ -1005,6 +1003,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         except:
             print ("// Warning: Nothing Selected! //")
             msgBox = QtWidgets.QMessageBox()
+            msgBox.setIcon(QMessageBox.Warning)
             msgBox.setText('Nothing is selected!!!')
             msgBox.setInformativeText('Select a your joints')
             msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
@@ -1014,7 +1013,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         
 
     def labelJointsAB(self):       
-        for sel in pm.ls(type='joint'):
+        for sel in mc.ls(type='joint'):
             short = sel.split('|')[-1].split(':')[-1]
             if short.startswith('L_'):
                 side = 1
@@ -1025,14 +1024,22 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             else:
                 side = 0
                 other = short
-            pm.setAttr('{0}.side'.format(sel), side)
-            pm.setAttr('{0}.type'.format(sel), 18)
-            pm.setAttr('{0}.otherType'.format(sel), other, type='string')
+            mc.setAttr('{0}.side'.format(sel), side)
+            mc.setAttr('{0}.type'.format(sel), 18)
+            mc.setAttr('{0}.otherType'.format(sel), other, type='string')
 
+        msgBox = QtWidgets.QMessageBox()
+        msgBox.setText('Joints are label')
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msgBox.setDefaultButton(QtWidgets.QMessageBox.Ok)
+        ret = msgBox.exec_()
+            
     
     def transferJointSkinAB(self):
         if not pm.selected():
             msgBox = QtWidgets.QMessageBox()
+            msgBox.setIcon(QMessageBox.Warning)
             msgBox.setText('Nothing is selected!!!')
             msgBox.setInformativeText('Select a mesh')
             msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
@@ -1094,6 +1101,13 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def mirrorBSAB(self):
         bls = bs.Blendshape.fromSelected()[0]
         bs.mirror_left_to_right_poses(bls.bs_node)
+        
+    
+    def addTargetsAB(self):
+        for target in self.targets:
+            bs.Blendshape.fromMesh(self.sources[0]).add_target([target])
+
+
 
 
 # ===============================
@@ -1118,32 +1132,17 @@ def showUI():
     
 # showUI()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+        

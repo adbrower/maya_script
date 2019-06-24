@@ -20,7 +20,7 @@ import sys
 
 
 import ShapesLibrary as sl
-reload(sl)
+# reload(sl)
 
 import adbrower
 reload(adbrower)
@@ -30,7 +30,9 @@ adb = adbrower.Adbrower()
 import CollDict
 reload(CollDict)
 from CollDict import colordic
+
 from CollDict import suffixDic
+
 
 import adb_utils.Class__Transforms
 import adb_utils.Class__AddAttr as adbAttr
@@ -134,6 +136,10 @@ class AudreyToolBox():
         pm.button(l = "Shift Up", h = 25, w = 65, backgroundColor = colordic['grey1'], command  = pm.Callback(self.shiftAtt,1))
         pm.button(l = "Shift Down", h = 25, w = 65, backgroundColor = colordic['grey1'], command  = pm.Callback(self.shiftAtt,0))
         pm.button(l = "Separator", h = 25, w = 65, backgroundColor = colordic['grey1'], command  = pm.Callback(self.addSeparator))
+        pm.popupMenu()
+        pm.menuItem(l=' Add Rotation Order', c =lambda * args: adbAttr.NodeAttr.addRotationOrderAttr(pm.selected()))      
+        pm.menuItem(l=' Set preset Default Value', c = pm.Callback(self.set_AttDefault))
+
         pm.setParent('..')
         
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=4)
@@ -153,6 +159,10 @@ class AudreyToolBox():
         
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=2)        
         pm.button(l = "Select By ", backgroundColor = colordic['grey'], command = pm.Callback(self._selectBy))
+        pm.popupMenu()
+        pm.menuItem (l = "joint",  command  = lambda *args:adb.selectType('joint'))
+        pm.menuItem (l = "nurbsCurve",   command  = lambda *args:adb.selectType('nurbsCurve'))  
+        pm.menuItem (l = "mesh",   command  = lambda *args:adb.selectType('mesh'))  
         self.select_by = pm.textField(w = 138, tx = 'joint')
         pm.setParent('..') 
 
@@ -1291,6 +1301,19 @@ class AudreyToolBox():
                     if attrLock:
                         for alck in attrLock:
                             mc.setAttr(eachObj + '.' + alck,lock=1)
+
+
+    def set_AttDefault(self):
+        ''' 
+        Change default value of an attribute
+        '''
+        sel = pm.selected()        
+        for each in sel:
+            attr = each.name() + '.' +(pm.channelBox("mainChannelBox", q=1, selectedMainAttributes = 1)[0])
+            defaultValue =  pm.getAttr(attr)
+            pm.addAttr(str(attr), e=True,  dv=defaultValue)
+            print defaultValue
+
 
     ### DEF TOOLS ###
     def ToolAB(self, tool):

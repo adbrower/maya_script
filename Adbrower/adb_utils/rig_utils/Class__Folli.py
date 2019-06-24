@@ -20,12 +20,22 @@ import maya.mel as mel
 
 
 import adbrower
-
+reload(adbrower)
 adb = adbrower.Adbrower()
 
 from adbrower import lprint
 from adbrower import flatList
 import ShapesLibrary as sl
+import NameConv_utils as NC
+import adb_utils.Class__Transforms
+# reload(adb_utils.Class__Transforms)
+from adb_utils.Class__Transforms import Transform
+import adb_utils.Class__AddAttr as adbAttr
+import NameConv_utils as NC
+
+
+
+# reload(NC)
 
 #-----------------------------------
 #  DECORATORS
@@ -38,6 +48,9 @@ from adbrower import changeColor
 #-----------------------------------
 # CLASS
 #----------------------------------- 
+
+MODULE_NAME = 'Folli'
+METADATA_grp_name = '{}_METADATA'.format(MODULE_NAME)
 
 class Folli(object):
     '''
@@ -55,7 +68,10 @@ class Folli(object):
     reload (adbFolli)    
 
     # example:
-    test =  adbFolli.Folli(1, 8, radius = 0.5, sub = 'pPlane1')    
+    bendy = Folli(1, 5, radius = 0.5, sub = 'X__test__MSH') 
+    print bendy.getJoints
+    bendy.add_folli(1, radius = 0.5)
+
     '''
     def __init__(self, 
                  countU,
@@ -71,6 +87,7 @@ class Folli(object):
         self.radius = radius
         self.all_foll_list = []
         self.all_joints_list = []
+        self.all_jointsGrp_list = []
         
         if self.sub.getShape().type() == 'nurbsSurface':
             plugs = pm.listConnections(str(self.sub.getShape())+ '.local',d=True, sh = True)
@@ -79,9 +96,15 @@ class Folli(object):
         current_numb_foll = len([x for x in plugs if x.type() == 'follicle']) or []
        
         if current_numb_foll == []:
-            self.many_follicles(self.sub, self.countU, self.countV, self.vDir, self.radius)
+            self.many_follicles(self.sub, self.countU, self.countV, self.vDir)
+            self.setFinal_hiearchy()
+            self.set_TAGS()
         else:
             self.add_folli(self.countV, mesh = self.sub)
+            
+        
+            
+        
 
     def __repr__(self):
         return str('{} : {} \n {}'.format(self.__class__.__name__, self.sub, self.__class__))
@@ -100,6 +123,8 @@ class Folli(object):
         ''' Returns the joints ''' 
         return self.all_joints_list
 
+    def getJoints_grps(self):
+        return self.all_jointsGrp_list
 
     def create_follicle(self, oNurbs, count, uPos=0.0, vPos=0.0):
         # manually place and connect a follicle onto a nurbs surface.
@@ -172,16 +197,16 @@ class Folli(object):
         return oMult
      
 
-    def many_follicles(self, myObject, countU, countV, vDir='U', radius =1):
+    def many_follicles(self, myObject, countU, countV, vDir='U'):
         self.countU = countU
         self.countV = countV
         self.vDir = vDir
-        self.radius = radius
+        
         obj = self.sub
         pm.select(obj, r = True)
         # myObject = pm.selected()[0]
-        pName = str(myObject)
-        self.oRoot = pm.spaceLocator(n=pName.replace('_ribbon','') + '_follicles')
+        pName = '{}{}'.format(NC.getSideFromName(obj), NC.getBasename(obj))
+        self.oRoot = pm.spaceLocator(n= '{}{}_FOLLI_{}__{}'.format(NC.getSideFromName(obj), NC.getBasename(obj), NC.SYSTEM, NC.GRP))
         pm.delete(self.oRoot.getShape())
         currentFollNumber = 0      
           
@@ -205,14 +230,17 @@ class Folli(object):
                     oFoll = create_follicle(myObject, currentFollNumber, uPos, vPos)
                     self.all_foll_list.append(oFoll)
                     
-                pm.rename(oFoll.getParent(), '{}_0{}__foll__'.format(pName, currentFollNumber))
+                pm.rename(oFoll.getParent(), '{}_0{}__{}'.format(pName, currentFollNumber, NC.FOLL_SUFFIX))
                 pm.rename(oFoll, '{}_{}__foll__Shape'.format(pName, currentFollNumber))
-                oLoc = pm.group(em=True, n='{}_0{}__grp__'.format(pName, currentFollNumber))
+                oLoc = pm.group(em=True, n='{}_0{}__{}'.format(pName, currentFollNumber, NC.GRP))
+                self.all_jointsGrp_list.append(oLoc)
                 oLoc.setTranslation(oFoll.getParent().getTranslation(space='world'), space='world')
+                
         
-                oJoint = pm.joint(n=pName + '_0{}__jnt__'.format(currentFollNumber), rad = radius)
+                oJoint = pm.joint(n=pName + '_foll_0{}__{}'.format(currentFollNumber, NC.JOINT), rad = self.radius)
                 self.all_joints_list.append(oJoint)
                 oJoint.setTranslation(oFoll.getParent().getTranslation(space='world'), space='world')
+                pm.matchTransform(oJoint,oLoc, rot=1)
                 
                 # connect the UV params to the joint so you can move the follicle by selecting the joint directly.
                 uParam = self.add_keyable_attribute(oJoint, 'double', 'u_param', oMin=-100, oMax=100, oDefault=0)
@@ -221,8 +249,7 @@ class Folli(object):
                 vParam.set(oFoll.getParent().v_param.get())
                 uParam.connect(oFoll.getParent().u_param)
                 vParam.connect(oFoll.getParent().v_param)
-        
-                #pm.parent(oJoint, oLoc)
+
                 pm.parent(oLoc, oFoll.getParent())
                 pm.parent(oFoll.getParent(), self.oRoot)
                 oLoc.rx.set(0.0)
@@ -238,24 +265,28 @@ class Folli(object):
         ''' add Controls to the follicules ''' 
         pm.select(self.getJoints, r = True)
         self.create_ctrls = flatList(sl.makeCtrls(shape))
+        [pm.rename(ctrl, '{}__{}__{}'.format(ctrl.split('__')[0], ctrl.split('__')[1], NC.CTRL)) for ctrl in self.create_ctrls]
         
         ## get the scale of the joint to add 0.5 on the scale of the controller
         [x.scaleX.set((pm.PyNode(self.getJoints[0]).radius.get()) + 0.5) for x in self.create_ctrls]
         [x.scaleY.set((pm.PyNode(self.getJoints[0]).radius.get()) + 0.5) for x in self.create_ctrls]
         [x.scaleZ.set((pm.PyNode(self.getJoints[0]).radius.get()) + 0.5) for x in self.create_ctrls]
         
-        for joints, ctrls in zip (self.getJoints, self.create_ctrls):
-            pm.parent(ctrls, pm.PyNode(joints).getParent() )       
+        for foll, ctrls in zip (self.all_foll_list,  self.create_ctrls ):
+            offset = adb.makeroot_func(ctrls, 'OFFSET')    
+            pm.rename(offset, '{}'.format(offset).replace('__CTRL', ''))
+            Transform(foll.getTransform()).matrixConstraint(offset, channels = 'trh', mo=True)
+            pm.parent(offset, '{}_INPUT__GRP'.format('{}{}_{}'.format(NC.getSideFromName(self.sub), NC.getBasename(self.sub),MODULE_NAME)) )
                         
-        for joints, ctrls in zip (self.getJoints, self.create_ctrls):
-            pm.parent(joints,ctrls)
+        for grp, ctrls in zip (self.all_jointsGrp_list, self.create_ctrls):
+            pm.parent(grp,ctrls)
          
         [pm.makeIdentity(x, n=0, s=1, r=1, t=1, apply=True, pn=1) for x in self.create_ctrls]
         
         return self.create_ctrls
             
 
-    def add_folli(self, add_value):   
+    def add_folli(self, add_value, radius=0.2):   
         '''
         add follicules to an already existing system    
         
@@ -271,17 +302,17 @@ class Folli(object):
             plugs = pm.listConnections(str(mesh_shape)+ '.outMesh',d=True, sh = True)
             current_numb_foll = len([x for x in plugs if x.type() == 'follicle'])
             oFoll = self.create_follicle(pm.PyNode(mesh), (current_numb_foll+1), 1)
-            pName = str(oFoll.getParent()).split('_')[0]
+            pName = '{}{}'.format(NC.getSideFromName(mesh), NC.getBasename(mesh))
             oRoot = [x for x in plugs if x.type() == 'follicle'][0].getParent().getParent()
             
-            pm.rename(oFoll.getParent(), '{}_0{}__foll__'.format(pName, current_numb_foll+1))
+            pm.rename(oFoll.getParent(), '{}_0{}__{}'.format(pName, current_numb_foll+1, NC.FOLL_SUFFIX))
             pm.rename(oFoll, '{}_{}__foll__Shape'.format(pName, current_numb_foll))
 
             oLoc = pm.group(em=True)
             oLoc.setTranslation(oFoll.getParent().getTranslation(space='world'), space='world')
 
-            oJoint = pm.joint( rad = 1)
-            # self.all_joints_list.append(oJoint)
+            oJoint = pm.joint( rad = radius)
+            self.all_joints_list.append(oJoint)
             oJoint.setTranslation(oFoll.getParent().getTranslation(space='world'), space='world')
 
             # connect the UV params to the joint so you can move the follicle by selecting the joint directly.
@@ -292,17 +323,38 @@ class Folli(object):
             uParam.connect(oFoll.getParent().u_param)
             vParam.connect(oFoll.getParent().v_param)
 
-            pm.rename(oJoint, '{}_0{}__jnt__'.format(pName, current_numb_foll+1))
-            pm.rename(oJoint.getParent(), '{}_0{}__grp__'.format(pName, current_numb_foll+1))
+            pm.rename(oJoint, '{}_foll_0{}_{}'.format(pName, current_numb_foll+1, NC.JOINT))
+            pm.rename(oJoint.getParent(), '{}_0{}__{}'.format(pName, current_numb_foll+1, NC.GRP))
 
             pm.parent(oLoc, oFoll.getParent())
             pm.parent(oFoll.getParent(), oRoot)
             oLoc.rx.set(0.0)
             oLoc.ry.set(0.0)
             oLoc.rz.set(0.0)
+            
+            Transform(oFoll.getTransform().getChildren(type='transform')[0]).matrixConstraint(oJoint,channels = 'trh', mo=True)
+            pm.parent(oJoint, '{}_OUTPUT__GRP'.format('{}{}_{}'.format(NC.getSideFromName(self.sub), NC.getBasename(self.sub),MODULE_NAME)) )
             pm.select(None)
+
+       
+    def setFinal_hiearchy(self):
+        self.final_grp = NC.setFinalHiearchy('{}{}_{}'.format(NC.getSideFromName(self.sub), NC.getBasename(self.sub),MODULE_NAME),
+                    RIG_GRP_LIST = [self.getFolliGrp],
+                    INPUT_GRP_LIST = [],
+                    OUTPUT_GRP_LIST = [self.getJoints])     
+        
+        for a, b in zip(self.getJoints, self.all_jointsGrp_list):
+            Transform(b).matrixConstraint(a, mo=True)
             
+
+    def set_TAGS(self):
+        MOD_GRP, RIG_GRP, INPUT_GRP, OUTPUT_GRP = self.final_grp
+        [Transform(grp) for grp in self.final_grp]        
+        Transform(str(INPUT_GRP)).addAttr(NC.TAG_GlOBAL_SCALE, '')
+        
+       
+
             
-            
-            
-# Folli(1, 5, radius = 0.5, sub = 'proxy') 
+# bendy = Folli(1, 5, radius = 0.5, sub = 'X__test__MSH') 
+# bendy.addControls()
+

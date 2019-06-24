@@ -3,15 +3,15 @@ import maya.cmds as mc
 import pymel.core as pm
 
 suffixDic = {                     
-             'nurbsCurve':  '__ctrl__',
-             'mesh':  '__msh__',
-             'joint':  '__jnt__',
-             'transform':  '__grp__',
-             'nurbsSurface':  '__nrbs__',
-             'locator':  '__loc__',
-             'clusterHandle':  '__cls__',
-             'nRigid':  '__nRigid__',
-             'nCloth':  '__nCloth__',
+             'nurbsCurve':  '__CTRL',
+             'mesh':  '__MSH',
+             'joint':  '__JNT',
+             'transform':  '__GRP',
+             'nurbsSurface':  '__NRBS',
+             'locator':  '__LOC',
+             'clusterHandle':  '__CLS',
+             'nRigid':  '__nRigid',
+             'nCloth':  '__nCloth',
 }      
  
 

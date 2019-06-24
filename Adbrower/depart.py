@@ -5,9 +5,16 @@ from pprint import pprint
 
 riggingPythonPathList = [
                         "C:/Users/Audrey/Google Drive/[SCRIPT]/python",
-                        'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower'
-
+                        'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower',
+                        'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_os_utils',
+                        'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_rig',
+                        'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_tools',
+                        'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils',
+                        'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils/adb_script_utils',
+                        'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils/deformers',
+                        'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils/rig_utils',
                         ]
+                        
 for riggingPythonPath in riggingPythonPathList:
   if riggingPythonPath not in sys.path:
       sys.path.append(riggingPythonPath)
