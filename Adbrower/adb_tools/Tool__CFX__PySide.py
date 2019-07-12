@@ -232,7 +232,7 @@ class cfxToolbox(QtWidgets.QDialog):
         self.blendshapeValue_LineEdit = QtWidgets.QLineEdit('1.00')
         self.blendshapeValue_LineEdit.setMaximumSize(QtCore.QSize(50, 20))
         
-        self.path_LineEdit = QtWidgets.QLineEdit('/on/work/adbrower/sandbox/movies') 
+        self.path_LineEdit = QtWidgets.QLineEdit('C:\Users\Audrey\Documents\maya') 
         self.path_LineEdit.setStyleSheet("QLineEdit { background-color : #2E2E2E; }") 
 
                          
@@ -342,8 +342,8 @@ class cfxToolbox(QtWidgets.QDialog):
                 ['...',                         self.selectPath,             2,    pysideColorDic['colorLightGrey'],   pysideColorDic['colorDarkGrey3'],   self.path_layout,                    ''],
 
                 ['Expand / Collapse All',       self.expandAll,              2,    pysideColorDic['colorBlue'],        pysideColorDic['colorDarkGrey3'],   self.bottons_layout,                 ''],
-                ['Delete',                      self.messageSelDelete,       2,    pysideColorDic['colorBlue'],        pysideColorDic['colorDarkGrey3'],   self.bottons_layout2,                ''],
-                ['Delete All',                  self.messageAllDelete,       2,    pysideColorDic['colorBlue'],        pysideColorDic['colorDarkGrey3'],   self.bottons_layout2,                ''],
+                # ['Delete',                      self.messageSelDelete,       2,    pysideColorDic['colorBlue'],        pysideColorDic['colorDarkGrey3'],   self.bottons_layout2,                ''],
+                # ['Delete All',                  self.messageAllDelete,       2,    pysideColorDic['colorBlue'],        pysideColorDic['colorDarkGrey3'],   self.bottons_layout2,                ''],
                                                                           
                 ['Refresh',                     self.refreshCam,             3,    pysideColorDic['colorLightGrey'],   pysideColorDic['colorDarkGrey3'],   self.cameraFunctions_Hlayout,        ''],
                 ['Reset',                       self.presetListRight.clear,  3,    pysideColorDic['colorLightGrey'],   pysideColorDic['colorDarkGrey3'],   self.cameraFunctions_Hlayout,        ''],

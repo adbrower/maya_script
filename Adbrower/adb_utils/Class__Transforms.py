@@ -10,8 +10,8 @@ import pymel.core as pm
 import maya.cmds as mc
 import maya.OpenMaya as om
 import maya.mel as mel
-import adb_utils.Class__AddAttr as adbAttr
 
+import adb_utils.Class__AddAttr as adbAttr
 from adbrower import flatList
 from adbrower import undo
 

@@ -49,7 +49,7 @@ class Match_IkFk(QtWidgets.QDialog):
 
         self.userName = getpass.getuser()         
         self.path_window = 'C:/Users/'+ self.userName + '/AppData/Roaming'
-        self.path_linux = '/on/work/'+ self.userName + '/'
+        self.path_linux = '/home/'+ USERNAME + '/'
         self.folder_name ='.config/adb_Setup'
         self.file_name = 'ik_fk_match_confi.ini'
         

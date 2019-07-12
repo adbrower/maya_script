@@ -39,9 +39,11 @@ def getSkinCluster(_transform):
         if pm.nodeType(elem) == 'skinCluster':
             result.append(elem)
     pm.select(result, r = True)    
-    result_node = pm.selected()[0]
-    return result_node
-     
+    result_node = pm.selected()
+    if len(result_node) > 1:
+        return result_node
+    else:return result_node[0]
+ 
 
 def getBindJoints(_transform):
     '''
@@ -52,6 +54,33 @@ def getBindJoints(_transform):
     all_binds_jnts =  [x for x in pm.listConnections(str(_skinCls)+'.matrix[*]', s=1)]
     return all_binds_jnts
 
+
+def resetSkinnedJoints(joint):
+    """ 
+    Reset skin deformation for selected joint(s) 
+    @param Joints.
+    """
+
+    # Get connected skinCluster nodes
+    skinClusterPlugs = pm.listConnections(joint + ".worldMatrix[0]", type="skinCluster", p=1)
+    if skinClusterPlugs:
+        # for each skinCluster connection
+        for skinClstPlug in skinClusterPlugs:
+            index = skinClstPlug.split('[')[-1].split(']')[0]
+            skinCluster = pm.PyNode(skinClstPlug.split('.')[0])
+            curInvMat = mc.getAttr(joint + ".worldInverseMatrix")
+            preBind_connections = pm.listConnections(skinCluster + ".bindPreMatrix[*]", type="joint", p=1) or []
+            _preBind_sources = pm.listConnections(skinCluster + ".bindPreMatrix[*]", type="joint", s=1) 
+            preBind_sources = [x for x in _preBind_sources if joint in _preBind_sources]
+            if preBind_sources != []:
+                pm.disconnectAttr(pm.PyNode(joint).parentInverseMatrix, skinCluster.bindPreMatrix[index])            
+                pm.setAttr( skinCluster + ".bindPreMatrix[{}]".format(index), type="matrix", *curInvMat )
+                pm.warning('PreBind Attriubte had connections :  {}'.format(preBind_connections))
+            else:
+                pm.setAttr( skinCluster + ".bindPreMatrix[{}]".format(index), type="matrix", *curInvMat )
+
+    else:
+        print "No skinCluster attached to {0}".format(joint)
 
 #-----------------------------------
 # CLASS
@@ -76,6 +105,7 @@ class Skinning(object):
         self._tranformToCheck = _tranformToCheck
     
     
+    
     def getSkinCluster(self):
         '''
         Find a SkinCluster from a transform        
@@ -92,21 +122,72 @@ class Skinning(object):
                 result.append(elem)
         pm.select(result, r = True)
 
-        result_node = pm.selected()[0]
-        return result_node
+        result_node = pm.selected()
+        if len(result_node) > 1:
+            return result_node
+        else:
+            return result_node[0]
+        
          
     
-    def getBindJoints(self):
+    def getBindJoints(self, skinCluster_index=0):
         '''
         Find all bind joints from a mesh with a skin cluster        
         Returns: List of joints       
         '''
-        _skinCls = self.getSkinCluster()        
+        _skinCls = self.getSkinCluster()
+        if isinstance(_skinCls, list):
+            _skinCls = self.getSkinCluster()[skinCluster_index]             
+        else:
+            _skinCls = self.getSkinCluster()  
         all_binds_jnts =  [x for x in pm.listConnections(str(_skinCls)+'.matrix[*]', s=1)]
         return all_binds_jnts
+        
+
+
+    @staticmethod
+    def setPreBind(transform, custom_skinCluster=None):
+        pm.select(transform, r=1)
+
+        if isinstance(pm.selected()[0], pm.nodetypes.SkinCluster):
+            skinCluster = pm.PyNode(transform)
+            all_binds_jnts =  [x for x in pm.listConnections(str(skinCluster)+'.matrix[*]', s=1)]
+            
+            for joint in all_binds_jnts:
+                translation_validator = list(pm.PyNode(joint).getTranslation())
+                if translation_validator == [0.0, 0.0, 0,0]:
+                    skinClusterPlugs = pm.listConnections(joint + ".worldMatrix[0]", type="skinCluster", p=1)
+                    for skinClstPlug in skinClusterPlugs:
+                        index = skinClstPlug.split('[')[-1].split(']')[0]
+                        pm.connectAttr(joint.parentInverseMatrix, pm.PyNode(skinCluster).bindPreMatrix[index], f=1)
+                else:
+                    pm.warning('JOINTS DONT HAVE 0 TRANSLATIONS')
+
+
+        if isinstance(pm.selected()[0], pm.nodetypes.Joint):
+            translation_validator = list(pm.PyNode(transform).getTranslation())
+            if translation_validator == [0.0, 0.0, 0,0]:
+                joint = pm.PyNode(transform)
+                skinClusterPlugs = pm.listConnections(joint + ".worldMatrix[0]", type="skinCluster", p=1)
+                for skinClstPlug in skinClusterPlugs:
+                    skinCluster = pm.PyNode(skinClstPlug.split('.')[0])
+                    index = skinClstPlug.split('[')[-1].split(']')[0]
+                    pm.connectAttr(joint.parentInverseMatrix, pm.PyNode(skinCluster).bindPreMatrix[index], f=1)
+            else:
+                pm.warning('JOINTS DONT HAVE 0 TRANSLATIONS')
+
+        elif isinstance (transform, list):   
+            skinCluster = custom_skinCluster
+            all_binds_jnts =  [x for x in pm.listConnections(str(skinCluster)+'.matrix[*]', s=1)]
+            
+            for joint, trans in zip(all_binds_jnts, transform):
+                skinClusterPlugs = pm.listConnections(joint + ".worldMatrix[0]", type="skinCluster", p=1)
+                for skinClstPlug in skinClusterPlugs:
+                    index = skinClstPlug.split('[')[-1].split(']')[0]
+                    pm.connectAttr(pm.PyNode(trans).parentInverseMatrix, pm.PyNode(skinCluster).bindPreMatrix[index], f=1)
                 
         
-    @staticmethod                                                          
+    @staticmethod
     @undo
     def solveBtwn():
         def _getWeights(skcls):        
@@ -446,6 +527,31 @@ class Skinning(object):
         pm.copySkinWeights(surfaceAssociation= _surfaceAssociation, influenceAssociation=_influenceAssociation, noMirror=1)
 
 
+
+    def extractWeight(self, target_mesh, skinCluster_index= 0, _surfaceAssociation='closestPoint', _influenceAssociation=['oneToOne', 'oneToOne']):
+        '''
+        Extract a skin Cluster weights on a multi skin mesh
+        Creates a new skinCluster with the same weights
+        '''
+        
+        skincluster_list= self.getSkinCluster()
+        skincluster = skincluster_list[skinCluster_index]
+        bind_joints = self.getBindJoints(skinCluster_index)
+
+        ## Skinning
+        pm.select(target_mesh, r = 1)
+        pm.select(bind_joints, add = True)
+        mc.SmoothBindSkin()
+        destination_skin = str(getSkinCluster(target_mesh))
+
+        # Copy Weight Skin        
+        pm.select(self._tranformToCheck, r = True)
+        pm.select(target_mesh, add = True)     
+        
+        pm.copySkinWeights(ss=str(skincluster), ds = destination_skin, surfaceAssociation= _surfaceAssociation, influenceAssociation=_influenceAssociation, noMirror=1)
+        
+
+
     def transferMeshSkinWeights(self, target_mesh, target_joints):
         '''
         Transfer skin from a mesh to another with new set of joints
@@ -496,6 +602,7 @@ class Skinning(object):
             replace_skin_joints = [x.replace(search,replace) for x in original_jnts]
         return replace_skin_joints
 
+
     def mirrorSkinWeight(self, 
                         target_mesh, 
                         _mirrorMode = 'YZ', 
@@ -536,11 +643,10 @@ class Skinning(object):
 #   IN CLASS BUILD
 # -----------------------------------  
 
-# target_joints =  ['L_frontHoof_armature_0_JNT', 'L_frontHoof_armature_1_JNT', 'L_frontHoof_armature_2_JNT', 'L_frontHoof_armature_3_JNT', 'L_frontHoof_armature_4_JNT', 'L_frontHoof_armature_5_JNT']
-# source_joints = ['L_frontHoofOff_out_0_JNT', 'L_frontHoofOff_out_1_JNT', 'L_frontHoofOff_out_2_JNT', 'L_frontHoofOff_out_3_JNT', 'L_frontHoofOff_out_4_JNT', 'L_frontHoofOff_out_5_JNT']
+                                                                                                         
+# node = Skinning('pSphere1')
+# print node.getSkinCluster()
+# node.extractWeight('pSphere2', 2)
 
-                                                                                                                       
-# node = Skinning('mat_C_body_0001_high_GES')
-# node.transferSkinWeights('mat_C_body_0001_high_GES', source_joints, target_joints)
 
-   
+# Skinning.setPreBind('toto')

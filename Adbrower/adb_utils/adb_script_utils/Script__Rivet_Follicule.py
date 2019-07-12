@@ -7,7 +7,7 @@ reload(adbrower)
 
 adb = adbrower.Adbrower()
 
-import adb_utils.Class__Folli as adbFolli
+import adb_utils.rig_utils.Class__Folli as adbFolli
 reload (adbFolli)   
 
 import adb_utils.Class__AddAttr as adbAttr
@@ -82,7 +82,8 @@ def follicule_rivet(
     return follicules, follicule_locs
 
 
-    
-follicule_rivet([ 'locator1'], 'pPlane1'  )
+
+aaa = ['L_eyeBrow_Foll1']    
+follicule_rivet(aaa, 'L__blendshape_Head'  )
 
     

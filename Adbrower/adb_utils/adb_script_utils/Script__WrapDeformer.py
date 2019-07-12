@@ -1,14 +1,14 @@
 import traceback
-import maya.cmds as mc
-import pymel.core as pm
 import sys
 
-import adbrower
-reload(adbrower)
-adb = adbrower.Adbrower()
+import maya.cmds as mc
+import pymel.core as pm
 
+import adbrower
+# reload(adbrower)
+adb = adbrower.Adbrower()
 import adb_utils.Class__AddAttr as adbAttr
-reload(adbAttr)
+# reload(adbAttr)
 
 
 def wrapDeformer(_HiRez = pm.selected(), _LoRez=pm.selected()):
@@ -27,7 +27,7 @@ def wrapDeformer(_HiRez = pm.selected(), _LoRez=pm.selected()):
     from adb_utils.Script__WrapDeformer import wrapDeformer              
     '''
     ## Define Variable type
-    if str(type(_HiRez)) and str(type(_LoRez)) == "<type 'str'>":
+    if isinstance(_HiRez, str) and isinstance(_LoRez, str):
         print('a')
         HiRez = _HiRez
         LoRez = _LoRez       

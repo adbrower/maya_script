@@ -334,8 +334,9 @@ class AudreyToolBox():
         pm.setParent('..')
 
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=4)        
-        pm.iconTextButton(l = "R. Hiearchy", i='outliner.png', style='iconAndTextVertical',   command  = lambda * args: [pm.reorder(x, back=True) for x in pm.selected()], 
-        dcc = lambda * args:adb.hiearchyBuilder(pm.selected(),'ctrl'), ann ='dcc : Hiearchy Builder')     
+        pm.iconTextButton(l = "R. Hiearchy", i='outliner.png', style='iconAndTextVertical',   command  = lambda * args: [pm.reorder(x, back=True) for x in pm.selected()])
+        pm.popupMenu() 
+        pm.menuItem(l='Hiearchy Builder', c = lambda * args:adb.hiearchyBuilder(pm.selected(),'ctrl'))
         
         pm.iconTextButton(l = "     Material",  style='iconAndTextVertical', i= imageColorLambert, c =  lambda*args:mc.hyperShade( assign= "lambert1" ), ann='popup meunu available')  
         pm.popupMenu()

@@ -68,6 +68,9 @@ def move_pyc(source_path):
 # move_pyc('/home/adeschamps/maya/scripts/python/Adbrower/adb_rig')
 # move_pyc('/home/adeschamps/maya/scripts/python/Adbrower/adb_tools')
 # move_pyc('/home/adeschamps/maya/scripts/python/Adbrower/adb_utils')
+# move_pyc('/home/adeschamps/maya/scripts/python/Adbrower/adb_utils/adb_script_utils')
+# move_pyc('/home/adeschamps/maya/scripts/python/Adbrower/adb_utils/rig_utils')
+# move_pyc('/home/adeschamps/maya/scripts/python/Adbrower/adb_utils/deformers')
 # move_pyc('/home/adeschamps/maya/scripts/python/Archives')
 # move_pyc('/home/adeschamps/maya/scripts/python')
 
@@ -82,9 +85,19 @@ move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils')
 move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_pyQt')
 move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils/adb_script_utils')
 move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils/rig_utils')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils/deformers')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_os_utils')
 move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/archives')
 move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python')
 
-
-
+## git folder
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_rig')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_tools')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_utils')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_pyQt')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_utils/adb_script_utils')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_utils/rig_utils')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_utils/deformers')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_os_utils')
 

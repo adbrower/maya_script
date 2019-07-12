@@ -412,6 +412,7 @@ class Tilt(object):
         
         pm.parent(self.pivotloc,self.driverloc)
         mc.parentConstraint(str(self.objPosloc),self.target_parent_grp, mo=True)
+        mc.scaleConstraint(str(self.objPosloc),self.target_parent_grp, mo=True)
         mc.parent(str(self.objPosloc),str(self.driverloc))
                       
         geo_name = str(self.geo)
@@ -425,7 +426,8 @@ class Tilt(object):
 
         driver_loc_grp = adb.makeroot_func(self.driverloc)
         pm.parentConstraint(self.mesh_ctrl_offset,driver_loc_grp, mo=True)
-        pm.PyNode(self.target_parent_grp).v.set(0)
+        pm.scaleConstraint(self.mesh_ctrl_offset,driver_loc_grp, mo=True)
+        pm.PyNode(self.target_parent_grp).getChildren()[0].getShape().v.set(0)
 
 
 

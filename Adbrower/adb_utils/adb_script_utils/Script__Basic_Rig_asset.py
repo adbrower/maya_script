@@ -3,13 +3,9 @@ import maya.cmds as mc
 import pymel.core as pm
 
 import adbrower
-reload(adbrower)
-
 adb = adbrower.Adbrower()
 
 import ShapesLibrary as sl
-reload(sl)
-
 from adbrower import lprint
 from adbrower import flatList
 

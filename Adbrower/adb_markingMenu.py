@@ -20,6 +20,7 @@ import sys
 #-----------------------------------
 
 import adbrower
+# reload(adbrower)
 adb = adbrower.Adbrower()
 
 from adbrower import lprint

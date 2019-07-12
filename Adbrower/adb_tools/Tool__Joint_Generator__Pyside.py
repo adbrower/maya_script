@@ -46,12 +46,15 @@ import os
 # CUSTOM IMPORT
 #----------------------------------- 
 
+
 import adbrower
 adb = adbrower.Adbrower()
 
 import adb_utils.rig_utils.Class__FkShapes as adbFkShape
-from adb_utils.adb_script_utils.Script__LocGenerator import locGenerator
+import adb_utils.Class__Locator as adbLoc
 from adbrower import lprint  
+
+reload(adbLoc)
 
 #-----------------------------------
 #  DECORATORS
@@ -142,7 +145,7 @@ class JointGeneratorTool(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
 
         self.buttons = {}        
-        for buttonName,buttonFunction, _,labColor, bgColor in self.buttonAndFunctions:
+        for buttonName,buttonFunction, _, labColor, bgColor in self.buttonAndFunctions:
             self.buttons[buttonName] = QtWidgets.QPushButton(buttonName)
             self.buttons[buttonName].clicked.connect(buttonFunction)
             self.buttons[buttonName].setFixedHeight(30)
@@ -436,9 +439,10 @@ class JointGeneratorTool(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.intervals = int(self.slider_int_LineEdit.text())
         self.Naming = self.name_LineEdit.text()
         
-        GuideLocList = locGenerator(self.intervals, pm.selected()[0], pm.selected()[1])
+        selection = pm.selected()
+        GuideLocList = adbLoc.Locator.in_between_base(self.intervals, *selection).locators
 
-        ## renaming
+        # renaming
         for loc in GuideLocList:
             pm.rename(loc, '{}_loc_01'.format(str(self.Naming)))
             
@@ -607,7 +611,7 @@ class JointGeneratorTool(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def fk_shape_setup(self):
         '''
         Fk chain setup by parenting the shape to the joint 
-        Source: adb_utils.Class__FkShapes script            
+        Source: adb_utils.rig_utils.Class__FkShapes script            
         '''        
         RadiusCtrl = float(self.slider_ctrl_rad_LineEdit.text())
         normals = self.ctrl_normals_lineEdit.text()
@@ -624,7 +628,7 @@ class JointGeneratorTool(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def delete_fk_shape_setup(self):
         '''
         Delete the Fk chain setup
-        Source: adb_utils.Class__FkShapes script            
+        Source: adb_utils.rig_utils.Class__FkShapes script            
         ''' 
         adb.fk_shape_setup(type = "delete", listJoint = pm.selected())
                 

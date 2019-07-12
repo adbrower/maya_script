@@ -141,7 +141,10 @@ class connectionTool():
                                     with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=6):
                                         button(label="BlendShapes", w=170, h=30, bgc = (0.349, 0.478, 0.349),c = pm.Callback(self.BlendShape_connect))    
                                         button(label="Parent",  w=170, h=30, bgc = (0.349, 0.478, 0.349), c = pm.Callback(self.parent_2List)) 
-                                        button(label="Match Transform",  w=170, h=30, bgc = (0.349, 0.478, 0.349), c = pm.Callback(self.MatchTransformRT))                                                                               
+                                        button(label="Match Transform",  w=170, h=30, bgc = (0.349, 0.478, 0.349), c = pm.Callback(self.MatchTransformRT))  
+                                        popupMenu()
+                                        menuItem('Match Postion', c = pm.Callback(self.MatchTransformRT, False, True))                                                                             
+                                        menuItem('Match Rotation', c = pm.Callback(self.MatchTransformRT, True, False))   
                             
                                                                                            
                                 tabLayout( tabs, edit=True, tabLabel=((child1, 'BY CONNECTIONS'),(child2, 'BY CONSTRAINTS'),(child3, 'OTHER OPTIONS')) )
@@ -227,7 +230,7 @@ class connectionTool():
             '''
             
             # Define Variable type
-            if str(type(source)) and str(type(target)) == "<type 'list'>":
+            if isinstance(source, list) and isinstance(target, list):
                 inputs = [x for x in source]
                 outputs = [x for x in target]   
             else:    
@@ -247,7 +250,7 @@ class connectionTool():
         connect_bls(Driver,Targets)
                              
 
-    def MatchTransformRT(self):
+    def MatchTransformRT(self, rot, pos):
         '''Match the Rotation and Position of 2 objects '''
 
         Driver = self.DriverList
@@ -255,12 +258,12 @@ class connectionTool():
 
         if len(Driver) != len(Targets):            
             for oTargets in Targets:
-                mc.matchTransform(oTargets,Driver,rot=True, pos=True)  
+                mc.matchTransform(oTargets,Driver,rot=rot, pos=pos)  
         else:            
             for oDriver, oTargets in zip (Driver,Targets):
-                mc.matchTransform(oTargets,oDriver,rot=True, pos=True)   
+                mc.matchTransform(oTargets,oDriver,rot=rot, pos=pos)   
         
-        sys.stdout.write('// Result: Match Transformed! //')        
+        sys.stdout.write('// Result: Match Transformed! //')          
 
 
     def PointCons(self):

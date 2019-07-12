@@ -39,7 +39,7 @@ from CollDict import colordic
 from CollDict import suffixDic       
 from CollDict import attrDic  
 import NameConv_utils as NC
-reload(NC)
+# reload(NC)
      
 
 import ShapesLibrary as sl
@@ -243,9 +243,8 @@ def flatList(ori_list = ''):
     Flatten a list 
     '''
     flat_list = []
-    for item in ori_list:
-        item_type = str(type(item))       
-        if item_type == "<type 'list'>":
+    for item in ori_list:       
+        if isinstance(item, list):
             for sub_item in item:
                 flat_list.append(sub_item)            
         else:
@@ -477,7 +476,7 @@ class Adbrower(object):
         '''
         ## Define Variable type
         ## --------------------------        
-        if str(type(source)) and str(type(target)) == "<type 'list'>":
+        if isinstance(source, list) and isinstance(target, list):
             ## for pm.selected()[0], pm.selected()[1]
             if len(source) == 2:
                 print('default')
@@ -511,7 +510,7 @@ class Adbrower(object):
                         pm.warning('{} already Exist'.format(blendShapeNode))            
 
         ## for strings     
-        elif str(type(source)) and str(type(target)) == "<type 'str'>": 
+        elif isinstance(source, str) and isinstance(target, str):
             print ('string')      
             try:       
                 blendShapeNode = (('{}_BLS'.format(source)).split('|')[-1]).split(':')[1] ## remove namespace if one
@@ -536,24 +535,26 @@ class Adbrower(object):
 
 
 
-    def add_target(self, target, shape_to_add, bls_node = []):
+    def add_target(self, shape_to_add, target,  bls_node=None):
         '''
         Add a shape as a target 
         
-        @shape_to_add : List. Shape to add to the target
-        @target : String. Mesh getting the blendshape         
+        @shape_to_add : (List) Shape to add to the target
+        @target :      (String) Mesh getting the blendshape         
         '''                
-        numb_target = len(self.getBlendShapeTargetsNames([target]))
+
+        if not bls_node:
+            bls_node = self.findBlendShape(target)[0]                
+        else:
+            bls_node = bls_node
+        targets_dic= {i: pm.aliasAttr('{}.w[{}]'.format(bls_node, i), q=1) for i in pm.getAttr('{}.w'.format(bls_node), multiIndices=1)}                    
+        numb_target = len(targets_dic.values())
+        
         if numb_target == 0:
             numb_target = 1
 
-        if bls_node == []:
-            bls_node = self.findBlendShape(target)
-            for index, shape in enumerate(shape_to_add):
-                pm.blendShape(bls_node, e=1, target=(target, index+numb_target, shape, 1))
-        else:
-            for index, shape in enumerate(shape_to_add):
-                pm.blendShape(bls_node, e=1, target=(target, index+numb_target, shape, 1))   
+        for index, shape in enumerate(shape_to_add):
+            pm.blendShape(bls_node, e=1, target=(target, index+numb_target, shape, 1))  
         sys.stdout.write('// Result: targets added // \n ')     
 
 
@@ -563,7 +564,7 @@ class Adbrower(object):
         Add a shape as a target from selection
         Source function: add_target()
         '''
-        self.add_target(pm.selected()[-1], pm.selected()[0:-1])
+        self.add_target(pm.selected()[0:-1], pm.selected()[-1],)
 
 
     def blendshape(self, selection = pm.selected(), origin = "world"):
@@ -580,7 +581,8 @@ class Adbrower(object):
         target = selection[-1]
         
         self.connect_bls(source[0], target, origin = origin)
-        self.add_target(target, source[1:])
+        self.add_target(source[1:], target)
+
 
 
         
@@ -1349,7 +1351,7 @@ class Adbrower(object):
         pm.select(sel,r=True)
             
         
-    def _scaleVertex(self,scale, subject = pm.selected(), valuePos = 1.1, valueNeg = 0.9 ):
+    def _scaleVertex(self,scale, subject = pm.selected(), valuePos = 1.2, valueNeg = 0.8 ):
         if len(subject) == 1:
             _shapes = pm.PyNode(subject[0]).getShapes()
             pm.select('{}.cv[:]'.format(_shapes[0]),r=True)
@@ -1825,11 +1827,6 @@ class Adbrower(object):
 
 
 
-    def addShapes(self, transform):
-        mesh = pm.PyNode(transform)
-        dup = pm.duplicate(mesh)[0]
-        pm.parent(pm.PyNode(dup).getShape(), mesh, add=1, s=1)
-        pm.delete(dup)
 
 
 

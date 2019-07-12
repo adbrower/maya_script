@@ -26,7 +26,7 @@ def wrapSetUp(_HiRez = pm.selected(), _LoRez=pm.selected()):
     '''
 
     ## Define Variable type
-    if str(type(_HiRez)) and str(type(_LoRez)) == "<type 'str'>":
+    if isinstance(_HiRez, str) and isinstance(_LoRez, str):
         hi = _HiRez
         lo = _LoRez       
     elif len(_HiRez) == 2:    

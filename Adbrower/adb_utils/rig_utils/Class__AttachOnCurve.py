@@ -133,6 +133,39 @@ class PointToCurveJnt(object):
         self.interval = actual_intv - 1
      
    
-# ptc = PointToCurveJnt(3)
+# ptc = PointToCurveJnt(13)
+
+# ptc.radius = 0.2
+
+
+
+
+# nodes = ptc.all_pointOnCurve_nodes
+
+
+
+# jnts =['L_lowerEyeLid_01', 'L_lowerEyeLid_02', 'L_lowerEyeLid_03', 'L_lowerEyeLid_04', 'L_lowerEyeLid_05', 'L_lowerEyeLid_06', 'L_lowerEyeLid_07', 'L_lowerEyeLid_08', 'L_lowerEyeLid_09', 'L_lowerEyeLid_010', 'L_lowerEyeLid_011', 'L_lowerEyeLid_012', 'L_lowerEyeLid_013']
+
+
+# for each, node in zip(jnts, nodes) :   
+#     pm.matchTransform('cpConstraintIn', each, pos=1)
+#     par = pm.PyNode('nearestPointOnCurve1').parameter.get()
+#     pm.PyNode(node).parameter.set(par)
+    
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
 
 

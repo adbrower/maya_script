@@ -7,6 +7,7 @@
 # -------------------------------------------------------------------
 
 import sys
+
 import pymel.core as pm
 import maya.cmds as mc
 
@@ -55,10 +56,12 @@ class NodeAttr(object):
                  _node = pm.selected(),
                  ):       
                                           
-        self._nodeType = type(_node)        
-        if self._nodeType == str:            
+        self._nodeType = type(_node)   
+                 
+        if isinstance(self._nodeType, str):
             self.node = [pm.PyNode(_node)]    
-        elif self._nodeType == list:
+
+        elif isinstance(self._nodeType, list):
             self.node = [pm.PyNode(x) for x in _node]
         else: 
             self.node =  pm.PyNode(_node)
@@ -72,8 +75,11 @@ class NodeAttr(object):
         return str('Class name:{} | Object:{} \n {}'.format(self.__class__.__name__, self.node, self.__class__))
 
 
-    def __getattr__(self, att):
-        return 'NodeAttr does NOT have \'{}\' attribute.'.format(str(att))
+    def __getattr__(self, name):   
+        try:
+            return self.list_methods[name]
+        except:
+            raise AttributeError('object has no attribute {}'.format(name))
 
     
     def __setattr__(self, name, value):                    

@@ -156,7 +156,7 @@ class MotionPathJnt(object):
         self.interval = actual_intv - 1
    
     
-# mpj = MotionPathJnt(20)
+# mpj = MotionPathJnt(14)
 # mpj.radius = 0.2
 
 

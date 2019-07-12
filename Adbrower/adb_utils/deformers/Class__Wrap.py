@@ -8,19 +8,18 @@
 # -------------------------------------------------------------------
 
 import sys
-import pymel.core as pm
-import maya.cmds as mc
 from functools import wraps
 
+import pymel.core as pm
+import maya.cmds as mc
+
+
 import adbrower
-reload(adbrower)
-
+# reload(adbrower)
 adb = adbrower.Adbrower()
-
 from adbrower import flatList
-
 import adb_utils.Class__AddAttr as adbAttr
-reload(adbAttr)
+# reload(adbAttr)
 
 #-----------------------------------
 # DECORATORS
@@ -126,7 +125,7 @@ class Wrap(object):
         '''
         
         ## Define Variable type
-        if str(type(_HiRez)) and str(type(_LoRez)) == "<type 'str'>":
+        if isinstance(_HiRez, str) and isinstance(_LoRez, str):
             print('string')
             HiRez = _HiRez
             LoRez = _LoRez       
@@ -172,7 +171,7 @@ class Wrap(object):
         from adb_utils.Script__WrapDeformer import wrapDeformer              
         '''
         ## Define Variable type
-        if str(type(_HiRez)) and str(type(_LoRez)) == "<type 'str'>":
+        if isinstance(_HiRez, str) and isinstance(_LoRez, str):
             # print('a')
             HiRez = _HiRez
             LoRez = _LoRez       
