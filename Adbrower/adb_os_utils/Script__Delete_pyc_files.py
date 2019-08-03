@@ -7,6 +7,7 @@ PATH_WINDOW = 'C:/Users/'+ USERNAME + '/AppData/Roaming'
 PATH_LINUX = '/home/'+ USERNAME
 FOLDER_NAME = '.config/adb_Setup/pyc_scripts'
 
+
 def move_pyc(source_path):
     def finalPath():
         if not os.path.exists(PATH_LINUX):

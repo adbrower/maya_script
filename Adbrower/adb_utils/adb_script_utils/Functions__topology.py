@@ -519,9 +519,9 @@ def _resetDeltaSelection(vert_indices, base_geometry, delta_geometry, percentage
 
 
 def resetDelta(base_geometry, delta_geometry, percentage=1.0, axis = 'xyz'):
-    '''
+    """
     ex: resetDelta(str(pm.selected()[0]), str(pm.selected()[1]))
-    '''
+    """
     [_resetDelta(base_geometry, delta_geometry, percentage=percentage, axis = letter) for letter in axis]
     
 

@@ -315,7 +315,7 @@ class SpineSetUp():
 
 
     def makeConnections(self):
-        ''' Connections for the fk reverse set up '''
+        """ Connections for the fk reverse set up """
                
         ## set orientation order for all groups for rev chain
         for each in self.rev_FK_ctrls_offset_rev:
@@ -448,7 +448,7 @@ class SpineSetUp():
                 
         @changeColor(col=(0.540, 0.286, 0.325))
         def create_ik_jnts(basename = 'spine_ik',type ='jnt'):
-            '''creates the ik joints'''
+            """creates the ik joints"""
              
             self.all_ik_jnts = []            
             nameStructure = {

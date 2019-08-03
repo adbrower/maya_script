@@ -22,7 +22,7 @@ from adbrower import makeroot
 #----------------------------------- 
 
 class Tilt(object):
-    '''    
+    """    
     Class that builds a tilt systeme
 
     @param geo: Mesh that will tilt
@@ -56,7 +56,7 @@ class Tilt(object):
     tilt.buildGuide()   
     tilt.buildRig()   
 
-    '''
+    """
         
     def __init__(self,  
                 geo, 

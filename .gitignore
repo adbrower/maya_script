@@ -4,3 +4,5 @@ Exterior_scripts
 sh.exe.stackdump
 *.json
 Archives
+.idea
+*.xml

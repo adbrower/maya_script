@@ -33,7 +33,7 @@ ICONS_FOLDER = 'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_icons/
 #----------------------------------- 
 
 class TopoTool():
-    '''This Tool makes a tilt fonction on any object  '''
+    """This Tool makes a tilt fonction on any object  """
 
     def __init__(self, **kwargs): 
         self.name = 'Topology Tool'

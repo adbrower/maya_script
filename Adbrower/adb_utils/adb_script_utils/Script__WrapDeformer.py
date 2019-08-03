@@ -12,7 +12,7 @@ import adb_utils.Class__AddAttr as adbAttr
 
 
 def wrapDeformer(_HiRez = pm.selected(), _LoRez=pm.selected()):
-    '''
+    """
     Custom wrapDeformer
     Select target - HiRez first, then the source - LoRez
     @param Hirez: Target which will receive the wrap : str or selection
@@ -25,7 +25,7 @@ def wrapDeformer(_HiRez = pm.selected(), _LoRez=pm.selected()):
 
     #or
     from adb_utils.Script__WrapDeformer import wrapDeformer              
-    '''
+    """
     ## Define Variable type
     if isinstance(_HiRez, str) and isinstance(_LoRez, str):
         print('a')

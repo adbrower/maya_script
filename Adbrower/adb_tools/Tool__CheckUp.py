@@ -132,7 +132,7 @@ class CheckUp():
 
         pm.select(None)
         def cleaninMesh():
-            '''Puts all the meshes constraints under a group '''
+            """Puts all the meshes constraints under a group """
             
             cons = "*msh**Constraint1*"
             oParent = "*x__constraints__grp__*"
@@ -360,8 +360,8 @@ class CheckUp():
             pm.PyNode(ctrl).sz.set(keyable=False, cb=False, lock=True)
         
         pm.textScrollList(self.outputWin, edit=True, append = ['Result: Controls has been Lock and Hide']) 
-        print "// Result: //"
-        print "// Result: Controls has been Lock and Hide //"
+        print("// Result: //")
+        print( "// Result: Controls has been Lock and Hide //")
  
 
 
@@ -616,10 +616,10 @@ class CheckUp():
 
     def ResetAttr(self):    
         def main(selectedChannels=True, transformsOnly=False, excludeChannels=None):
-            '''
+            """
             Resets selected channels in the channel box to default, or if nothing's
             selected, resets all keyable channels to default.
-            '''
+            """
             gChannelBoxName = mm.eval('$temp=$gChannelBoxName')
             
             sel = mc.ls(sl=True)

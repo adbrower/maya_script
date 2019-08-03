@@ -25,15 +25,15 @@ from adbrower import changeColor
 #-----------------------------------
 
 
-'''
+"""
 import adb_utils.adb_script_utils.Functions__Rivet as adbRivet
 reload(adbRivet)
 
 function's name: buildRivet
-'''
+"""
 
 def oppositeEdgesFromFaces():
-    ''' Return 2 opposite edges from a face selection  '''
+    """ Return 2 opposite edges from a face selection  """
     face_select = pm.selected()
     faces = pm.filterExpand(selectionMask = 34) ## Edge
     facesfromObject = faces[0].split('.')[0]
@@ -50,12 +50,12 @@ def oppositeEdgesFromFaces():
 
 
 def buildRivet(scale = 0.2):
-    ''' 
+    """ 
     Creates a Rivet Between 2 edges
     Returns : - Rivet locator, 
               - List of the 2 edge from curves nodes 
               - Mesh Name
-    '''
+    """
     
     if not (pm.pluginInfo('matrixNodes', q=True, loaded=True)):
         pm.loadPlugin( 'matrixNodes' )        
@@ -138,9 +138,9 @@ def buildRivet(scale = 0.2):
 
 
 def rivet_from_faces(scale = 0.2):
-    '''
+    """
     Creates rivet from faces selection
-    ''' 
+    """ 
     edge_pair = oppositeEdgesFromFaces()
     for pair in edge_pair:
         pm.select(pair, r =True)
@@ -148,19 +148,19 @@ def rivet_from_faces(scale = 0.2):
 
 
 def rivet_constraint(geo):
-    '''
+    """
     Rivet Constraint:
         Select the subject then two edges
-    '''    
+    """    
     rivetLoc = buildRivet()[0]
     pm.parentConstraint(rivetLoc, geo, mo = True)
 
 
 def createSticky(stickyName = 'Deformer', scale = 0.2):   
-    '''
+    """
     Sticky : Creates a rivet with a softmod deformer 
     Returns the sticky locator   
-    '''  
+    """  
     rivetData = buildRivet()
     rivet_trans = rivetData[0]
     curveFromMeshEdgeList = rivetData[1]
@@ -212,9 +212,9 @@ def createSticky(stickyName = 'Deformer', scale = 0.2):
 
 
 def sticky_from_faces(stickyName = 'Deformer', scale = 0.2):
-    '''
+    """
     Creates sticky from faces selection
-    ''' 
+    """ 
     edge_pair = oppositeEdgesFromFaces()
     for pair in edge_pair:
         pm.select(pair, r =True)

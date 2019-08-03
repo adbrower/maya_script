@@ -1,11 +1,11 @@
 
 
-'''
+"""
 import adb_utils.Pretty_DocString
 reload(adb_utils.Pretty_DocString)
 
 from adb_utils.Pretty_DocString import doc_string
-'''
+"""
 
 # def docString(func):
 #   def wrap(*args, **kwargs):
@@ -15,7 +15,7 @@ from adb_utils.Pretty_DocString import doc_string
 #   return wrap
 
 def docString(func):
-    ''' doc string decorator'''
+    """ doc string decorator"""
     def wrap(*args, **kwargs):
         print("\n===========================================================================================")
         print('\nDOC STRING:')

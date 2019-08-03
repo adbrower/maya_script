@@ -279,7 +279,7 @@ class FootSetUp(object):
                  leg_options_ctrl = None,
                  leg__ankle_fk__ctrl__ = None,
                  ):
-        '''Connect The Foot Set up to the Leg Set up '''
+        """Connect The Foot Set up to the Leg Set up """
         def ik_set_up_to_leg():
             pm.pointConstraint(leg_ik_ankle_jnt, self.ik_foot_chain[0], mo=True)        
             pm.parentConstraint(self.rev_foot_chain[0],leg_ikHandle)        

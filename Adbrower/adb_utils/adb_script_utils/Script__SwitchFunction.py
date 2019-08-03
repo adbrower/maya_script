@@ -20,7 +20,7 @@ def ik_fk_switch(ctrl_name = '',
                lenght_blend = 1,
            ):
             
-    '''
+    """
     Function to create an Ik - Fk rotation based script
     
     @param ctrl_name            : (str) Name of the control having the switch attribute
@@ -37,7 +37,7 @@ def ik_fk_switch(ctrl_name = '',
                 fk_joints = ['fk_01', 'fk_02', 'fk_03'],
             )
     
-    '''
+    """
 
     ## add attribute message
     switch_ctrl = adbAttr.NodeAttr([ctrl_name])

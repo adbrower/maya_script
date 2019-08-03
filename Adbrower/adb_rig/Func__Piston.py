@@ -18,12 +18,12 @@ def createPiston(
                  low_ctrl,
                  top_ctrl,
                  ):
-    '''
+    """
     Creates a piston system   
     
     import adb_rig.Func__Piston as adbPiston
     reload (adbPiston)
-    '''   
+    """   
     ## create a root group over the controller
     rootGrp_low = adb.makeroot_func(low_ctrl)
     rootGrp_top = adb.makeroot_func(top_ctrl)

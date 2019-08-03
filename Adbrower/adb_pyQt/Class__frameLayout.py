@@ -53,7 +53,7 @@ class frameLayout(QtWidgets.QFrame):
         self.contentFrame.setLayout(self.contentLayout)
 
     def expandCollapseRect(self):
-        ''' area where the toggle happen'''
+        """ area where the toggle happen"""
         return QtCore.QRect(0,0,self.titleFrame.rect().width(),self.titleFrame.rect().height())
       
     def mousePressEvent(self,event):

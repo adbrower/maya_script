@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------
 # adb Class FK SHAPE SET UP
-# -- Version 1.0.0    
+# -- Version 1.0.0
 #
 # By: Audrey Deschamps-Brower
 #     audreydb23@gmail.com
@@ -8,28 +8,18 @@
 
 import adbrower
 import pymel.core as pm
+from adbrower import changeColor, flatList, makeroot
 
-# -----------------------------------
-# IMPORT CUSTOM MODULES
-# -----------------------------------
 reload(adbrower)
 adb = adbrower.Adbrower()
 
-from adbrower import flatList
-
-#-----------------------------------
-#  DECORATORS
-#----------------------------------- 
-
-from adbrower import changeColor
-from adbrower import makeroot
-
-#-----------------------------------
+# -----------------------------------
 # CLASS
-#----------------------------------- 
+# -----------------------------------
+
 
 class FkShape(object):
-    '''    
+    """
     Class thats creates a Fk Shape Setup on joints
 
     @oaram listJoint: List. Joints on which we run the script. Default value is pm.selected().
@@ -39,21 +29,21 @@ class FkShape(object):
     import adb_utils.Class__FkShapes as adbFkShape
     reload (adbFkShape)
 
-    fk = adbFkShape.FkShape(pm.selected())   
+    fk = adbFkShape.FkShape(pm.selected())
     fk.shapeSetup()
-    '''
-        
-    def __init__(self, listJoint = pm.selected()):
+    """
+
+    def __init__(self, listJoint=pm.selected()):
         self.listJoint = listJoint
         self.controls = None
         self._curve = None
-        
+
     @property
     def getJointsGrp(self):
         parent = [pm.PyNode(x).getParent() for x in self.getJoints]
         parent_list = flatList(parent)
         return parent_list
-        
+
     @property
     def getJoints(self):
         return self.controls
@@ -65,80 +55,81 @@ class FkShape(object):
     @cradidus.setter
     def cradidus(self, rad):
         self.deleteSetup()
-        self._radius  = rad
+        self._radius = rad
         self.shapeSetup()
-        self._radius  = rad
+        self._radius = rad
 
     @property
-    def jradius(self):               
+    def jradius(self):
         return self._radius
 
     @jradius.setter
-    def jradius(self, rad):        
+    def jradius(self, rad):
         for joint in self.getJoints:
-            pm.PyNode(joint).radius.set(rad)            
+            pm.PyNode(joint).radius.set(rad)
         self._radius = rad
 
     @property
     def getNormals(self):
         return self.normalsCtrl
-        
+
     @getNormals.setter
     def getNormals(self, norm):
         self.deleteSetup()
-        self.normalsCtrl  = norm
+        self.normalsCtrl = norm
         self.shapeSetup()
-        self.normalsCtrl  = norm
-                           
+        self.normalsCtrl = norm
+
     @changeColor()
     @makeroot()
-    def shapeSetup(self,  _radius = 1, normalsCtrl = (1,0,0)):
-        '''
+    def shapeSetup(self,  _radius=1, normalsCtrl=(1, 0, 0)):
+        """
         Fk chain setUp by parenting the shape to the joint
-    
+
         @param _radius: Interger. Radius of the circle controller
         @param normalsCtrl: Tuple. Normals value of the circle controller
 
-        '''        
+        """
 
         self._radius = _radius
         self.normalsCtrl = normalsCtrl
 
-        subject = [pm.PyNode(x) for x in self.listJoint]        
+        subject = [pm.PyNode(x) for x in self.listJoint]
+
         def CreateCircles():
             CurveColl = []
             for joint in subject:
                 myname = '{}'.format(joint)
-                new_name = myname.split('__jnt__')[0] + '_fk__ctrl__'                
-                self._curve = pm.circle(nr=self.normalsCtrl, r = self._radius )
+                new_name = myname.split('__jnt__')[0] + '_fk__ctrl__'
+                self._curve = pm.circle(nr=self.normalsCtrl, r=self._radius)
 
                 curveShape = pm.PyNode(self._curve[0]).getShape()
-                CurveColl.extend(self._curve)            
+                CurveColl.extend(self._curve)
                 tras = pm.xform(joint, ws=True, q=True, t=True)
                 pivot = pm.xform(joint, ws=True, q=True, rp=True)
-                
-                pm.xform(self._curve, ws=True, t=tras, rp=pivot)            
-                pm.parent(curveShape,joint, r=True, s=True)            
-                pm.delete(self._curve)            
-                pm.rename(joint,new_name)        
+
+                pm.xform(self._curve, ws=True, t=tras, rp=pivot)
+                pm.parent(curveShape, joint, r=True, s=True)
+                pm.delete(self._curve)
+                pm.rename(joint, new_name)
             return(subject)
 
-        controls =  CreateCircles()  
+        controls = CreateCircles()
         self.controls = controls
-        return(controls)  
-    
-    def deleteSetup(self):      
-        '''Delete the Setup'''  
+        return(controls)
+
+    def deleteSetup(self):
+        """Delete the Setup"""
         groups = self.getJointsGrp
-        pm.parent(self.getJoints, w=True)        
-        pm.delete(groups)               
+        pm.parent(self.getJoints, w=True)
+        pm.delete(groups)
         child = [x.getChildren() for x in self.getJoints]
         children = flatList(child)
-        pm.delete(children)        
+        pm.delete(children)
         adb.ChainParent(self.getJoints)
         for joint in self.getJoints:
-            pm.PyNode(joint).rename(str(joint).replace('_fk__ctrl__','__jnt__'))
-       
+            pm.PyNode(joint).rename(str(joint).replace('_fk__ctrl__', '__jnt__'))
 
-# fk = FkShape(pm.selected())   
+
+# fk = FkShape(pm.selected())
 # fk.shapeSetup(_radius = 5, normalsCtrl = (0,1,0))

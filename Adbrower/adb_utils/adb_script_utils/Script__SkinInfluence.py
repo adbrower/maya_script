@@ -8,9 +8,9 @@ def find_vertexInfluences(prunes = False, prune_value = 0.01000, formating = Fal
     print selection
 
     def find_single_vertexInfluences(vtx, _formating = formating):
-        '''
+        """
         Returns a dictionnary of the influences of a vertex         
-        '''
+        """
         _influenceDic = {}
         mesh_transform = pm.PyNode(vtx.split('.')[0]).getTransform()
         skin_cluster = pm.mel.eval('findRelatedSkinCluster {}'.format(str(mesh_transform)))

@@ -1,5 +1,5 @@
 # -------------------------------------------------------------------
-# Class Attribute Module  
+# Class Attribute Module
 # -- Method Rigger (Maya)
 #
 # By: Audrey Deschamps-Brower
@@ -13,32 +13,33 @@ import maya.cmds as mc
 
 from adbrower import undo
 
-#-----------------------------------
+# -----------------------------------
 # FUNCTIONS
-#----------------------------------- 
+# -----------------------------------
 
 
 def unhideAll(transform):
-    ''' 
+    """
     Unhide and Unlock all channelBox attributes
-    '''
+    """
     for sub in transform:
-        att_to_lock = ['tx','ty','tz','rx','ry','rz','sx','sy','sz', 'v']
-        for att in  att_to_lock:
-            pm.PyNode(sub).setAttr(att, lock=False, keyable=True)   
+        att_to_lock = ['tx', 'ty', 'tz', 'rx',
+                       'ry', 'rz', 'sx', 'sy', 'sz', 'v']
+        for att in att_to_lock:
+            pm.PyNode(sub).setAttr(att, lock=False, keyable=True)
 
 
-#-----------------------------------
+# -----------------------------------
 # CLASS
-#----------------------------------- 
+# -----------------------------------
 
 
 class NodeAttr(object):
-    ''' 
+    """
     A Module for creating attributes easier based on the type of the argument passed as the default value (dv)
-    
+
     @param _node: Single string or a list. Default value is pm.selected()
-    
+
     ## EXTERIOR CLASS BUILD
     #------------------------
     import adb_utils.Class__AddAttr as adbAttr
@@ -50,294 +51,298 @@ class NodeAttr(object):
     node.addAttr('sim', True)
     node.addAttr('test', 'enum',  eName = "Green:Blue:")
 
-    '''
-    
-    def __init__(self, 
-                 _node = pm.selected(),
-                 ):       
-                                          
-        self._nodeType = type(_node)   
-                 
+    """
+
+    def __init__(self,
+                 _node=pm.selected(),
+                 ):
+
+        self._nodeType = type(_node)
+
         if isinstance(self._nodeType, str):
-            self.node = [pm.PyNode(_node)]    
+            self.node = [pm.PyNode(_node)]
 
         elif isinstance(self._nodeType, list):
             self.node = [pm.PyNode(x) for x in _node]
-        else: 
-            self.node =  pm.PyNode(_node)
-            
+        else:
+            self.node = pm.PyNode(_node)
+
         self.name = None
         self.attr = None
         self.list_methods = {}
 
-
     def __repr__(self):
         return str('Class name:{} | Object:{} \n {}'.format(self.__class__.__name__, self.node, self.__class__))
 
-
-    def __getattr__(self, name):   
+    def __getattr__(self, name):
         try:
             return self.list_methods[name]
         except:
             raise AttributeError('object has no attribute {}'.format(name))
 
-    
-    def __setattr__(self, name, value):                    
-        self.__dict__[name] = value          
-        if hasattr(self, name):           
-            object.__setattr__(self, name, value)  ## inital setAttr  
+    def __setattr__(self, name, value):
+        self.__dict__[name] = value
+        if hasattr(self, name):
+            object.__setattr__(self, name, value)  # inital setAttr
             try:
-                pm.setAttr(self.subject+'.'+ name, value)
-            except :
-                pass               
+                pm.setAttr(self.subject + '.' + name, value)
+            except:
+                pass
         else:
             raise AttributeError('object has no attribute {}'.format(name))
-        
+
     @property
     def subject(self):
-        ''' Returns the subject on which the attributes are added'''
+        """ Returns the subject on which the attributes are added"""
         return str(self.node[0])
-   
+
     @property
     def getValue(self):
-        ''' Returns the value of the attribute'''
+        """ Returns the value of the attribute"""
         return self.attr
-        
+
     @property
     def attrName(self):
-        ''' Returns the attribute's name'''
+        """ Returns the attribute's name"""
         return self.name
 
     @property
     def listMethods(self):
-        ''' Returns the list of all the new methods / attributes added'''
-        return self.list_methods 
+        """ Returns the list of all the new methods / attributes added"""
+        return self.list_methods
 
     @property
     def getAttrConnection(self):
-        ''' 
+        """
         Returns the attribute name for making a connection
         Returns: List
-        ''' 
-        all_attr = []   
-        for each in self.subject:    
-             attr = '{}.{}'.format(each, self.attrName)
-             all_attr.append(attr)
+        """
+        all_attr = []
+        for each in self.subject:
+            attr = '{}.{}'.format(each, self.attrName)
+            all_attr.append(attr)
         return all_attr
 
     def convertAttr(self, attrName):
-        '''  Convert an existing attribute to the module'''
+        """  Convert an existing attribute to the module"""
         for attribute in attrName:
-            self.list_methods.update({attribute:pm.getAttr('{}.{}'.format(pm.selected()[0],attribute))})
-            #self.addMethods()
-        
+            self.list_methods.update({attribute: pm.getAttr(
+                '{}.{}'.format(pm.selected()[0], attribute))})
+            # self.addMethods()
+
     def addMethods(self):
-        ''' Add all the new attributes as methods of the class'''
-        for methods in self.list_methods:                
+        """ Add all the new attributes as methods of the class"""
+        for methods in self.list_methods:
             setattr(NodeAttr, methods, self.list_methods[methods])
-                                                        
-    def addAttr(self, name, attr, dv = None, min = None, max=None, eName = None, keyable = True , lock = False, parent = None, nc=None):        
-        '''
+
+    def addAttr(self, name, attr, dv=None, min=None, max=None, eName=None, keyable=True, lock=False, parent=None, nc=None):
+        """
         Function Adding a new attribute according to the type of the default value argument
-          
+
         @param name: (String) giving the name of the attribute
-        @param attr : It is given by the type of de default value (dv) argument
+        @param attr: It is given by the type of de default value (dv) argument
         @param dv: data which will determine the type of the attribute. Default value is None
         @param min: (Integer) to determine the minimum of the attribute. The attribute type needs to be Float or Integer. Default value is None
-        @param max: (Integer) to determine the maximum of the attribute. The attribute type needs to be Float or Integer. Default value is None 
-        @param eName : eName = "Green:Blue:", enumName of an attribute of type 
+        @param max: (Integer) to determine the maximum of the attribute. The attribute type needs to be Float or Integer. Default value is None
+        @param eName: eName = "Green:Blue:", enumName of an attribute of type
         @param keyable: (Boolean) to determine if the parameter is keyable or not. Default value is True
         @param lock: (Boolean) to determine if all the default attributes will be locked. Calls the methods: lockAttribute()
         @param parent: (string) name of the parent
         @param nc: (int) Number of children
-        
-        '''
 
-        nodeTypeDic =  {
-                "<type 'str'>" : {'dt':'string'},
-                "<type 'bool'>": { 'dt':'bool'},
-                "<type 'int'>" : {'dt':'float'},
-                "<type 'float'>" : {'dt':'float'},
-                "enum" : {'dt':'enum'},
-                'message' : {'dt':'message'},
-                }                 
-                
+        """
+
+        nodeTypeDic = {
+            "<type 'str'>": {'dt': 'string'},
+            "<type 'bool'>": {'dt': 'bool'},
+            "<type 'int'>": {'dt': 'float'},
+            "<type 'float'>": {'dt': 'float'},
+            "enum": {'dt': 'enum'},
+            'message': {'dt': 'message'},
+        }
+
         self.name = name
         self.attr = attr
 
         def addParent_Attr():
             for node in self.node:
-                node.addAttr(name, at = self.attr, keyable= keyable, nc=nc)
-        
+                node.addAttr(name, at=self.attr, keyable=keyable, nc=nc)
+
         def addFloat_int():
-            ''' Add an attribute of type Float or integer'''
+            """ Add an attribute of type Float or integer"""
             max_val = max or []
             min_val = min or []
-                
+
             def _getValue():
                 if max_val:
                     val1 = True
                 else:
-                    val1 = False  
+                    val1 = False
                 if min_val:
                     val2 = True
                 else:
-                    val2 = False                        
-                value = val1 or val2                
+                    val2 = False
+                value = val1 or val2
                 return value
-            val = _getValue() 
+            val = _getValue()
 
-            if val :    
-                if parent != None:                
+            if val:
+                if parent is not None:
                     for node in self.node:
-                        node.addAttr(name, at = nodeTypeDic[_type]['dt'], dv = attr,  min = min, max = max, keyable= keyable , parent = parent )   
+                        node.addAttr(
+                            name, at=nodeTypeDic[_type]['dt'], dv=attr,  min=min, max=max, keyable=keyable, parent=parent)
                 else:
                     for node in self.node:
-                        node.addAttr(name, at = nodeTypeDic[_type]['dt'], dv = attr,  min = min, max = max, keyable= keyable, )             
+                        node.addAttr(
+                            name, at=nodeTypeDic[_type]['dt'], dv=attr,  min=min, max=max, keyable=keyable,)
             else:
-                if parent != None:
-                    print 'caca'
+                if parent is not None:
                     for node in self.node:
-                        node.addAttr(name,at = nodeTypeDic[_type]['dt'], dv = attr, keyable= keyable, parent = parent )
+                        node.addAttr(
+                            name, at=nodeTypeDic[_type]['dt'], dv=attr, keyable=keyable, parent=parent)
                 else:
                     for node in self.node:
-                        node.addAttr(name,at = nodeTypeDic[_type]['dt'], dv = attr, keyable= keyable)                            
-            #self.addMethods()
+                        node.addAttr(
+                            name, at=nodeTypeDic[_type]['dt'], dv=attr, keyable=keyable)
+            # self.addMethods()
 
-                                                
         def addBool():
-            ''' Add an attribute of type Boolean'''
-            
+            """ Add an attribute of type Boolean"""
+
             for node in self.node:
-                if parent != None:  
-                    node.addAttr(name,at = nodeTypeDic[_type]['dt'], dv = attr, keyable= keyable, parent = parent )        
+                if parent is not None:
+                    node.addAttr(
+                        name, at=nodeTypeDic[_type]['dt'], dv=attr, keyable=keyable, parent=parent)
                 else:
-                    node.addAttr(name,at = nodeTypeDic[_type]['dt'], dv = attr, keyable= keyable) 
-            #self.addMethods()
+                    node.addAttr(
+                        name, at=nodeTypeDic[_type]['dt'], dv=attr, keyable=keyable)
+            # self.addMethods()
 
         def addString():
-            ''' Add an attribute of type String'''
-            if parent != None: 
+            """ Add an attribute of type String"""
+            if parent is not None:
                 for node in self.node:
-                    node.addAttr(name, dt = nodeTypeDic[_type]['dt'], keyable= keyable, parent=parent)
+                    node.addAttr(
+                        name, dt=nodeTypeDic[_type]['dt'], keyable=keyable, parent=parent)
                     pm.PyNode((str(node) + '.' + name)).set(attr)
             else:
                 for node in self.node:
-                    node.addAttr(name, dt = nodeTypeDic[_type]['dt'], keyable= keyable)
+                    node.addAttr(
+                        name, dt=nodeTypeDic[_type]['dt'], keyable=keyable)
                     pm.PyNode((str(node) + '.' + name)).set(attr)
-            #self.addMethods()
- 
-                       
-        def addEnum():  
-            ''' 
+            # self.addMethods()
+
+        def addEnum():
+            """
             Add an attribute of type Enum.
             ex: node.addAttr('test', 'enum',  eName = "Green:Blue:")
-            '''
-            if parent != None:             
+            """
+            if parent is not None:
                 for node in self.node:
-                    node.addAttr(name, at = nodeTypeDic[_type]['dt'], enumName=eName, keyable= keyable, parent=parent) 
+                    node.addAttr(
+                        name, at=nodeTypeDic[_type]['dt'], enumName=eName, keyable=keyable, parent=parent)
             else:
                 for node in self.node:
-                    node.addAttr(name, at = nodeTypeDic[_type]['dt'], enumName=eName, keyable= keyable)
-            #self.addMethods()
-                     
-                     
+                    node.addAttr(
+                        name, at=nodeTypeDic[_type]['dt'], enumName=eName, keyable=keyable)
+            # self.addMethods()
+
         def addMessage():
-            ''' Add an attribute of type Message'''
-            if parent != None:  
+            """ Add an attribute of type Message"""
+            if parent is not None:
                 for node in self.node:
-                    node.addAttr(name, at = nodeTypeDic[_type]['dt'], keyable= keyable, parent=parent)        
+                    node.addAttr(
+                        name, at=nodeTypeDic[_type]['dt'], keyable=keyable, parent=parent)
             else:
-                 for node in self.node:
-                    node.addAttr(name, at = nodeTypeDic[_type]['dt'], keyable= keyable)                   
-            #self.addMethods()
-            
-        _type = attr        
+                for node in self.node:
+                    node.addAttr(
+                        name, at=nodeTypeDic[_type]['dt'], keyable=keyable)
+            # self.addMethods()
+
+        _type = attr
         if _type == 'enum':
             _type = 'enum'
-            
+
         elif _type == 'message':
             _type = 'message'
-            
+
         elif _type == 'float2':
             _type = 'float2'
 
         elif _type == 'float3':
-            _type = 'float3'   
-                 
+            _type = 'float3'
+
         elif _type == 'double2':
-            _type = 'double2'   
-                
+            _type = 'double2'
+
         elif _type == 'double3':
-            _type = 'double3'  
-                 
+            _type = 'double3'
+
         elif _type == 'compound':
-            _type = 'compound'        
+            _type = 'compound'
         else:
             _type = str(type(attr))
-        
-        addAttrDic =  {
-                "<type 'str'>" : addString,
-                "<type 'bool'>":addBool,
-                "<type 'int'>" : addFloat_int,
-                "<type 'float'>" : addFloat_int,
-                "enum" : addEnum,
-                'message' : addMessage,
-                'compound' : addParent_Attr,
-                'float3' : addParent_Attr,
-                'float2' : addParent_Attr,
-                }         
 
-        addAttrDic[_type]() ## runs the dictionnary
-        self.list_methods.update({self.attrName:self.getValue}) ## add the methods to the dictionnary
-        #self.addMethods()
-        if lock == True:
+        addAttrDic = {
+            "<type 'str'>": addString,
+            "<type 'bool'>": addBool,
+            "<type 'int'>": addFloat_int,
+            "<type 'float'>": addFloat_int,
+            "enum": addEnum,
+            'message': addMessage,
+            'compound': addParent_Attr,
+            'float3': addParent_Attr,
+            'float2': addParent_Attr,
+        }
+
+        addAttrDic[_type]()  # runs the dictionnary
+        # add the methods to the dictionnary
+        self.list_methods.update(
+            {self.attrName: self.getValue})  # self.addMethods()
+        if lock is True:
             self.lockAttribute()
         else:
-            pass               
+            pass
         return(self.node)
-    
 
     def set(self, attr, value):
-        '''
-        Function to set a new value of an attribute        
-        
+        """
+        Function to set a new value of an attribute
+
         @param attr: String returning the name of the attribute you want to change
         @param value: The new value you want to give to the attribute
 
-        '''
+        """
         for node in self.node:
             node.setAttr(attr, value)
 
-        
-    def lockAttribute(self, att_to_lock = ['tx','ty','tz','rx','ry','rx','rz','sx','sy','sz'], cb=False):
-        '''
-        Function to lock all default attribute except visibility                
-        '''
+    def lockAttribute(self, att_to_lock=['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz'], cb=False):
+        """
+        Function to lock all default attribute except visibility
+        """
         for sub in self.node:
-            for att in  att_to_lock:
-                pm.PyNode(sub).setAttr(att, lock=True, channelBox=cb, keyable=False)            
+            for att in att_to_lock:
+                pm.PyNode(sub).setAttr(att, lock=True,
+                                       channelBox=cb, keyable=False)
 
-
-    def unlockAttribute(self, att_to_lock = ['tx','ty','tz','rx','ry','rx','rz','sx','sy','sz']):
-        '''
-        Function to unlock all default attribute except visibility                
-        '''
+    def unlockAttribute(self, att_to_lock=['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz']):
+        """
+        Function to unlock all default attribute except visibility
+        """
         for sub in self.node:
-            for att in  att_to_lock:
-                pm.PyNode(sub).setAttr(att, lock=False, keyable=True)  
+            for att in att_to_lock:
+                pm.PyNode(sub).setAttr(att, lock=False, keyable=True)
 
-    
     def unhideAll(self):
-        ''' 
+        """
         Unhide and Unlock all channelBox attributes
-        '''
+        """
         for sub in self.node:
-            att_to_lock = ['tx','ty','tz','rx','ry','rz','sx','sy','sz', 'v']
-            for att in  att_to_lock:
-                pm.PyNode(sub).setAttr(att, lock=False, keyable=True)   
-                
-                                    
+            att_to_lock = ['tx', 'ty', 'tz', 'rx',
+                           'ry', 'rz', 'sx', 'sy', 'sz', 'v']
+            for att in att_to_lock:
+                pm.PyNode(sub).setAttr(att, lock=False, keyable=True)
+
     @staticmethod
     def getLock_attr(subject):
         """
@@ -348,180 +353,185 @@ class NodeAttr(object):
         # print attrLock
         return attrLock
 
-        
     @staticmethod
-    def ShiftAtt(mode, _obj = mc.channelBox('mainChannelBox',q=True,mol=True), _attr=  mc.channelBox('mainChannelBox',q=True,sma=True)):
-        '''  
-        Shift an attribute in the channelBox  
-        @param mode: {0:1}     
+    def ShiftAtt(mode, _obj=mc.channelBox('mainChannelBox', q=True, mol=True), _attr=mc.channelBox('mainChannelBox', q=True, sma=True)):
+        """
+        Shift an attribute in the channelBox
+        @param mode: {0:1}
             if 0: shift Down
             if 1: shift Up
-        '''
-        
+        """
+
         obj = _obj
         if obj:
             attr = _attr
             if attr:
                 for eachObj in obj:
-                    udAttr = mc.listAttr(eachObj,ud=True)
+                    udAttr = mc.listAttr(eachObj, ud=True)
                     if not attr[0] in udAttr:
-                        sys.exit('selected attribute is static and cannot be shifted')
-                    #temp unlock all user defined attributes
-                    attrLock = mc.listAttr(eachObj,ud=True,l=True)
+                        sys.exit(
+                            'selected attribute is static and cannot be shifted')
+                    # temp unlock all user defined attributes
+                    attrLock = mc.listAttr(eachObj, ud=True, l=True)
                     if attrLock:
                         for alck in attrLock:
-                            mc.setAttr(eachObj + '.' + alck,lock=0)
+                            mc.setAttr(eachObj + '.' + alck, lock=0)
 
-                    #shift down
+                    # shift down
                     if mode == 0:
                         if len(attr) > 1:
                             attr.reverse()
                             sort = attr
                         if len(attr) == 1:
-                            sort = attr 
+                            sort = attr
                         for i in sort:
-                            attrLs = mc.listAttr(eachObj,ud=True)
+                            attrLs = mc.listAttr(eachObj, ud=True)
                             attrSize = len(attrLs)
                             attrPos = attrLs.index(i)
-                            mc.deleteAttr(eachObj,at=attrLs[attrPos])
+                            mc.deleteAttr(eachObj, at=attrLs[attrPos])
                             mc.undo()
-                            for x in range(attrPos+2,attrSize,1):
-                                mc.deleteAttr(eachObj,at=attrLs[x])
+                            for x in range(attrPos + 2, attrSize, 1):
+                                mc.deleteAttr(eachObj, at=attrLs[x])
                                 mc.undo()
-                    #shift up 
+                    # shift up
                     if mode == 1:
                         for i in attr:
-                            attrLs = mc.listAttr(eachObj,ud=True)
+                            attrLs = mc.listAttr(eachObj, ud=True)
                             attrSize = len(attrLs)
                             attrPos = attrLs.index(i)
-                            if attrLs[attrPos-1]:
-                                mc.deleteAttr(eachObj,at=attrLs[attrPos-1])
+                            if attrLs[attrPos - 1]:
+                                mc.deleteAttr(eachObj, at=attrLs[attrPos - 1])
                                 mc.undo()
-                            for x in range(attrPos+1,attrSize,1):
-                                mc.deleteAttr(eachObj,at=attrLs[x])
+                            for x in range(attrPos + 1, attrSize, 1):
+                                mc.deleteAttr(eachObj, at=attrLs[x])
                                 mc.undo()
 
-                    #relock all user defined attributes			
+                    # relock all user defined attributes
                     if attrLock:
                         for alck in attrLock:
-                            mc.setAttr(eachObj + '.' + alck,lock=1)
-                            
-    @staticmethod					
-    def AddSeparator(_transform):
-        '''
-        Add a seperator in the Channel Box 
-        '''
-        if type(_transform) == str:
-            # print('a')
-            node = _transform    
-        elif type(_transform) == list:
-            # print('b')
-            node = _transform[0]       
-        else:
-            # print('c')
-            node = _transform                    
-        name="__________"
-
-        i=0
-        for i in range(0,100):
-            if i == 100:
-                pm.pm.mel.error("There are more than 20 seperators. Why would you even need that many.")
-                
-            if pm.mel.attributeExists(name, node):
-                name=str(pm.mel.stringAddPrefix("_", name))                            
-            else:
-                break
-                            
-        en="..................................................................................:"
-        pm.addAttr(node, ln=name, keyable=False, en=en, at="enum", nn=en)
-        pm.setAttr((node + "." + name), channelBox=True, keyable=False, lock=True)   
-
+                            mc.setAttr(eachObj + '.' + alck, lock=1)
 
     @staticmethod
-    def enumAttr(sel = pm.selected(), name='name', en="On:Off"): 
-        ''' 
-        Create an enum On:Off
-        '''
-        for each in sel:
-            pm.PyNode(each).addAttr(name, keyable=True, attributeType='enum', en=en) 
+    def AddSeparator(_transform):
+        """
+        Add a seperator in the Channel Box
+        """
+        if type(_transform) == str:
+            # print('a')
+            node = _transform
+        elif type(_transform) == list:
+            # print('b')
+            node = _transform[0]
+        else:
+            # print('c')
+            node = _transform
+        name = "__________"
 
+        i = 0
+        for i in range(0, 100):
+            if i == 100:
+                pm.pm.mel.error(
+                    "There are more than 20 seperators. Why would you even need that many.")
+
+            if pm.mel.attributeExists(name, node):
+                name = str(pm.mel.stringAddPrefix("_", name))
+            else:
+                break
+
+        en = "..................................................................................:"
+        pm.addAttr(node, ln=name, keyable=False, en=en, at="enum", nn=en)
+        pm.setAttr((node + "." + name), channelBox=True,
+                   keyable=False, lock=True)
+
+    @staticmethod
+    def enumAttr(sel=pm.selected(), name='name', en="On:Off"):
+        """
+        Create an enum On:Off
+        """
+        for each in sel:
+            pm.PyNode(each).addAttr(name, keyable=True,
+                                    attributeType='enum', en=en)
 
     @staticmethod
     @undo
     def copyAttr(targets):
-        ''' 
-        Select mesh and the attribute(s) to copy            
-        Needs to put the targets into a list        
-        '''
-        _type = type(targets)    
+        """
+        Select mesh and the attribute(s) to copy
+        Needs to put the targets into a list
+        """
+        _type = type(targets)
 
         if _type == str:
             targets = [targets]
-        elif _type == list:        
+        elif _type == list:
             pass
 
-        def copyAttrLoop(attribute, targets):           
-            sources = pm.selected()[0]           
+        def copyAttrLoop(attribute, targets):
+            sources = pm.selected()[0]
             source_attr = sources.name() + '.' + attribute
             attr = attribute
 
-            _at = pm.addAttr(source_attr, q = True, at=True)
-            _ln = pm.addAttr(source_attr, q = True, ln=True) 
-            _min = pm.addAttr(source_attr, q = True, min=True) 
-            _max = pm.addAttr(source_attr, q = True, max=True) 
-            _dv = pm.addAttr(source_attr, q = True, dv=True)
-            enList = [] 
-            
+            _at = pm.addAttr(source_attr, q=True, at=True)
+            _ln = pm.addAttr(source_attr, q=True, ln=True)
+            _min = pm.addAttr(source_attr, q=True, min=True)
+            _max = pm.addAttr(source_attr, q=True, max=True)
+            _dv = pm.addAttr(source_attr, q=True, dv=True)
+            enList = []
+
             try:
-                _en = pm.attributeQuery(str(attr), node = sources.name(), listEnum=True)[0] 
+                _en = pm.attributeQuery(
+                    str(attr), node=sources.name(), listEnum=True)[0]
                 enList.append(_en)
             except:
                 pass
 
             if _at == 'enum':
-                pm.addAttr(target, ln=str(_ln), at='enum',  en= str(enList[0]), keyable= True)
+                pm.addAttr(target, ln=str(_ln), at='enum',
+                           en=str(enList[0]), keyable=True)
 
             else:
-                pm.addAttr(target, ln=str(_ln), at=str(_at),  dv = _dv, keyable= True)
-                    
+                pm.addAttr(target, ln=str(_ln), at=str(
+                    _at),  dv=_dv, keyable=True)
+
             target_attr = target + '.' + attr
-            if _min != None:
-                pm.addAttr(target_attr, e = True, min = _min)
-            elif _max != None:
-                pm.addAttr(target_attr, e=True, max = _max)           
+            if _min is not None:
+                pm.addAttr(target_attr, e=True, min=_min)
+            elif _max is not None:
+                pm.addAttr(target_attr, e=True, max=_max)
             else:
-                pass        
+                pass
 
-        all_attr = [ x for x in pm.channelBox("mainChannelBox", q=1, selectedMainAttributes = 1)]        
+        all_attr = [x for x in pm.channelBox(
+            "mainChannelBox", q=1, selectedMainAttributes=1)]
         for att in all_attr:
             for target in targets:
                 copyAttrLoop(att, target)
 
-
     @staticmethod
     @undo
-    def ResetAttr():    
-        '''
+    def ResetAttr():
+        """
         Resets selected channels in the channel box to default, or if nothing's
         selected, resets all keyable channels to default.
-        '''
-        import maya.mel as mm    
+        """
+        import maya.mel as mm
+
         def main(selectedChannels=True, transformsOnly=False, excludeChannels=None):
             gChannelBoxName = mm.eval('$temp=$gChannelBoxName')
-            
+
             sel = mc.ls(sl=True)
             if not sel:
                 return
-            
+
             if excludeChannels and not isinstance(excludeChannels, (list, tuple)):
                 excludeChannels = [excludeChannels]
-            
+
             chans = None
             if selectedChannels:
                 chans = mc.channelBox(gChannelBoxName, query=True, sma=True)
-            
-            testList = ['translateX','translateY','translateZ','rotateX','rotateY','rotateZ','scaleX','scaleY','scaleZ',
-                        'tx','ty','yz','rx','ry','rz','sx','sy','sz']
+
+            testList = ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ', 'scaleX', 'scaleY', 'scaleZ',
+                        'tx', 'ty', 'yz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz']
             for obj in sel:
                 attrs = chans
                 if not chans:
@@ -533,30 +543,28 @@ class NodeAttr(object):
                 if attrs:
                     for attr in attrs:
                         try:
-                            default = mc.attributeQuery(attr, listDefault=True, node=obj)[0]
-                            mc.setAttr(obj+'.'+attr, default)
+                            default = mc.attributeQuery(
+                                attr, listDefault=True, node=obj)[0]
+                            mc.setAttr(obj + '. ' + attr, default)
                         except StandardError:
                             pass
-                            
+
         def resetPuppetControl(*args):
-            main(excludeChannels=['rotateOrder', 'pivotPosition', 'spaceSwitch'])
+            main(excludeChannels=['rotateOrder',
+                                  'pivotPosition', 'spaceSwitch'])
 
-        resetPuppetControl()  
-
+        resetPuppetControl()
 
     @staticmethod
     @undo
-    def addRotationOrderAttr(nurbs_ctrl=pm.selected()):    
+    def addRotationOrderAttr(nurbs_ctrl=pm.selected()):
         for ctrl in nurbs_ctrl:
-            pm.addAttr(ctrl, ln="rotationOrder", en="xyz:yzx:zxy:xzy:yxz:zyx:", at="enum")
-            pm.setAttr((str(ctrl) + ".rotationOrder"), 
-                e=1, keyable=True)
-            pm.connectAttr((str(ctrl) + ".rotationOrder"), (str(ctrl) + ".rotateOrder"))
-            
-        
-
-
-    
+            pm.addAttr(ctrl, ln="rotationOrder",
+                       en="xyz:yzx:zxy:xzy:yxz:zyx:", at="enum")
+            pm.setAttr((str(ctrl) + ".rotationOrder"),
+                       e=1, keyable=True)
+            pm.connectAttr((str(ctrl) + ".rotationOrder"),
+                           (str(ctrl) + ".rotateOrder"))
 
 
 # -----------------------------------
@@ -584,29 +592,3 @@ class NodeAttr(object):
 # node.addAttr('adb', 50)
 # node.addAttr('sim', True)
 # node.addAttr('test', 'enum',  eName = "Green:Blue:")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

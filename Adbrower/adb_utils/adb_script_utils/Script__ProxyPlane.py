@@ -5,7 +5,7 @@ import adb_utils.rig_utils.Class__BoundingBox  as adbBBox
 
 
 def plane_proxy(joints_chain, name , axis = 'z', type = 'mesh'):
-    ''' 
+    """ 
     Create a plane proxy for a joint chain
     
     @param joints_chain: list. List of the joints from which to create a curve
@@ -20,7 +20,7 @@ def plane_proxy(joints_chain, name , axis = 'z', type = 'mesh'):
     reload (adbProxy)
     
     Proxy_plane = adbProxy.plane_proxy(pm.selected(), 'adb', 'z')
-    '''
+    """
     all_xmax_locs = []
     all_xmin_locs = []
     all_loc_groups = []

@@ -21,12 +21,12 @@ from adbrower import undo
  
 @undo
 def locGenerator(intervals, obj1, obj2):
-    '''
+    """
     This fonction builds the locators which are guide for futur joints
     
     import adb_utils.adb_script_utils.Script__LocGenerator as locGen
     reload (locGen)
-    '''
+    """
 
     GuideLocList = []   
     posStart = pm.PyNode(obj1).getRotatePivot(space='world')

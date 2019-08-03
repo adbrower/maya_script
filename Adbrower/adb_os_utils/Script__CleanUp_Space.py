@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 
 def delete_folder(folder_name, source_path):
-    ''' Deletes all 'mod' forlders in the source_path'''
+    """ Deletes all 'mod' forlders in the source_path"""
 
     all_new_paths = []
     paths_with_mod = []
@@ -35,7 +35,7 @@ def delete_folder(folder_name, source_path):
 
 
 def all_assets_in_path(source_path):
-    '''find all asset in path_with_files'''
+    """find all asset in path_with_files"""
 
     assets_list = [x for x in os.listdir(source_path)]
     return assets_list
@@ -140,7 +140,7 @@ def find_scene_data(source_path, type_order, _print = False, rig_srig = None, ri
 
 
 def find_data_to_delete():
-    '''Find files to delete'''
+    """Find files to delete"""
     path = data[1]
     all_files = data[0].values()
 
@@ -158,7 +158,7 @@ def find_data_to_delete():
 
 
 def delete_func():  
-    ''' Functions deletings older maya scenes'''         
+    """ Functions deletings older maya scenes"""         
     find_data_to_delete_var = find_data_to_delete()
     os.chdir(find_data_to_delete_var[1])
     
@@ -169,7 +169,7 @@ def delete_func():
 
 
 def delete_empty_path(source_path, type = 'print'):
-    ''' Functions deletings path with no maya scenes'''   
+    """ Functions deletings path with no maya scenes"""   
     os.chdir(source_path)
 
     path_with_files = []
@@ -195,7 +195,7 @@ def delete_empty_path(source_path, type = 'print'):
 
 
 def cleanUp_files_Batch(source_path, rig_srig, _print = False, kill = None):
-    ''' Delete oldest files except last 3 in a batch'''
+    """ Delete oldest files except last 3 in a batch"""
     all_data_dic = {}
     all_asset = all_assets_in_path(source_path)
     # all_asset = [1]

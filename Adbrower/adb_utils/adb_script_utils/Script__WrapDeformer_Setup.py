@@ -8,7 +8,7 @@ import adb_utils.Class__AddAttr as adbAttr
 
 
 def wrapSetUp(_HiRez = pm.selected(), _LoRez=pm.selected()):
-    '''
+    """
     Custom wrapDeformer Setup
     Select target - HiRez first, then the source - LoRez
     The script will create a duplicate of the HiRez with a blenshape and add a DeltaMush on the HiRez
@@ -23,7 +23,7 @@ def wrapSetUp(_HiRez = pm.selected(), _LoRez=pm.selected()):
 
     #or
     from adb_utils.Script__WrapDeformer_Setup import wrapSetUp             
-    '''
+    """
 
     ## Define Variable type
     if isinstance(_HiRez, str) and isinstance(_LoRez, str):

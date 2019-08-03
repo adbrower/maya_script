@@ -8,12 +8,14 @@
 
 import sys
 import traceback
-import pymel.core as pm
-import maya.cmds as mc
 from pprint import pprint
 
+import maya.cmds as mc
+import pymel.core as pm
+
+
 class OrientJoint(object):
-    '''
+    """
     ## EXTERIOR CLASS BUILD
     #------------------------
     import adb_utils.rig_utils.Class__OrientJoint as adbOrient
@@ -21,17 +23,17 @@ class OrientJoint(object):
 
     comp = adbOrient.OrientJoint()
     comp.OrientAxis = 'Y'
-    '''
-    
-    def __init__(self,                     
-                 sel = pm.selected(),
-                 orientAxe = 'Y',
+    """
+
+    def __init__(self,
+                 sel=pm.selected(),
+                 orientAxe='Y',
                  ):
 
         selection = [pm.PyNode(x) for x in sel]
         self.selection = selection
-        self.orientAxe = orientAxe, 
-        
+        self.orientAxe = orientAxe,
+
         # self.orientJoint()
 
     @property
@@ -44,12 +46,11 @@ class OrientJoint(object):
 
     @OrientAxis.setter
     def OrientAxis(self, axis):
-        print 'caca'
-        # self.orientAxe = axis
-        # self.orientJoint()
-        # sys.stdout.write('The joints were oriented with the {} axis \n'.format(axis)) 
+        self.orientAxe = axis
+        self.orientJoint()
+        sys.stdout.write('The joints were oriented with the {} axis \n'.format(axis))
 
-    def orientJoint(self):        
+    def orientJoint(self):
         if self.orientAxe[0] == 'Y':
             pm.select(self.selection)
             pm.joint(zso=1, ch=1, e=1, oj='yxz', secondaryAxisOrient='xdown')
@@ -70,29 +71,29 @@ class OrientJoint(object):
             pm.joint(e=1, oj='none')
             pm.select(None)
 
-        elif self.orientAxe[0] == 'X' :  
+        elif self.orientAxe[0] == 'X':
             pm.select(self.selection)
             pm.joint(zso=1, ch=1, e=1, oj='xyz', secondaryAxisOrient='xup')
             pm.select(cl=True)
 
             #Orient the last joint to the world#
             selLastJnt = pm.select(self.selection[-1])
-            pm.joint(e=1, oj='none') 
-            pm.select(None)  
+            pm.joint(e=1, oj='none')
+            pm.select(None)
 
-        elif self.orientAxe[0] == 'x' :  
+        elif self.orientAxe[0] == 'x':
             pm.select(self.selection)
             pm.joint(zso=1, ch=1, e=1, oj='xyz', secondaryAxisOrient='xdown')
             pm.select(cl=True)
 
             #Orient the last joint to the world#
             selLastJnt = pm.select(self.selection[-1])
-            pm.joint(e=1, oj='none') 
-            pm.select(None)  
-                
+            pm.joint(e=1, oj='none')
+            pm.select(None)
+
         else:
             raise ValueError('That Axis does not exist')
-        
+
 
 # comp = OrientJoint()
 # print comp.OrientAxis
@@ -101,5 +102,3 @@ class OrientJoint(object):
 # comp.OrientAxis = 'y'
 
 # print comp.OrientAxis
-
-

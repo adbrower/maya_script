@@ -42,7 +42,7 @@ from adbrower import changeColor
 #----------------------------------- 
 
 class adbAutoRig():
-    '''Auto Rig Toolbox  '''
+    """Auto Rig Toolbox  """
 
     def __init__(self, **kwargs): 
         self.win = window(t= "adbrower - AutoRig v1.0" , tlb = True, s=True, rtf=True, w = 255)    
@@ -168,7 +168,7 @@ class adbAutoRig():
                         with tabLayout('indexRGBTab',innerMarginWidth=5, innerMarginHeight=5) as tabs:                                                  
                             with rowColumnLayout(numberOfColumns=2) as child1:
 
-                                '''Index'''
+                                """Index"""
 
                                 with gridLayout(numberOfColumns=7, cellWidthHeight=(35, 20)):                   
                                     pm.iconTextButton(bgc=(.000, .000, .000), command= pm.Callback(self.shapeColor,1))
@@ -208,7 +208,7 @@ class adbAutoRig():
 
                                     pm.iconTextButton(bgc=(0.507, 0.041, 0.277), command= pm.Callback(self.shapeColor,31))       
 
-                            ''' RGB '''
+                            """ RGB """
                             with frameLayout() as child2:
                                 with rowLayout(numberOfColumns=2):
                                     colorInputWidgetGrp('RGB', label='Color', rgb=(1, 0, 0), cw3=(0, 30, 162))                    
@@ -291,9 +291,9 @@ class adbAutoRig():
 ##=================
 
     def createctrl(self,shape): 
-        '''
+        """
         Creates a new controler or change controler shape
-        '''
+        """
         if shape == "Cube" : 
             sel = pm.selected()                                  
             self.shape_replacement(sl.cube_shape)
@@ -426,7 +426,7 @@ class adbAutoRig():
             pm.select(sel)
 
     def shapeColor(self,col):
-        ''' Change the color override of the selection '''           
+        """ Change the color override of the selection """           
         ctrls = pm.selected()       
         shapes = [x.getShapes() for x in ctrls]                  
         all_shapes = [x for i in shapes for x in i] or []
@@ -449,7 +449,7 @@ class adbAutoRig():
 
 
     def colordefault(self):    
-        ''' Reset default color '''   
+        """ Reset default color """   
         try:
             ctrlSet = pm.selected()
 
@@ -475,7 +475,7 @@ class adbAutoRig():
             pass 
 
     def cCommand(self):
-        '''Change or updates the color of the RGB palette case when there is a change state '''
+        """Change or updates the color of the RGB palette case when there is a change state """
         rbgV = (pm.palettePort('scenePalette', q=True, rgbValue=True))             
         (pm.colorInputWidgetGrp('RGB', e = True, rgbValue=(rbgV[0],rbgV[1],rbgV[2])))
                 
@@ -486,7 +486,7 @@ class adbAutoRig():
         self.allgrey()
 
     def colorRGB(self, foo):
-        '''Change RGB Colors'''        
+        """Change RGB Colors"""        
         values = (pm.colorInputWidgetGrp('RGB', q=True, rgbValue=True))         
         oControler = pm.selected()
         shapes = [x.getShapes() for x in oControler]
@@ -505,7 +505,7 @@ class adbAutoRig():
 
                                 
     def allgrey(self):                 
-        ''' Puts all the unused case of the RGB Palette grey '''
+        """ Puts all the unused case of the RGB Palette grey """
         allNurbs = pm.ls(type="nurbsCurve")
         allColors = list(set([pm.PyNode(x).overrideColorRGB.get(x) for x in allNurbs]))
         nub = len(allColors)                
@@ -557,7 +557,7 @@ class adbAutoRig():
                         
     @changeColor()
     def shape_replacement(self, shape_name):
-        ''' Replace Shape according to the ShapesLibrary.py file '''               
+        """ Replace Shape according to the ShapesLibrary.py file """               
         sm = adbShape.shapeManagement(subject = pm.selected())
         sm.shapes = shape_name 
         return sm.shapes

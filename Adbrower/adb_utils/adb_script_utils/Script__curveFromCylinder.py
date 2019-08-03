@@ -3,15 +3,15 @@ import maya.cmds as mc
 import pymel.core as pm
 
 def curveFromCylinder(mesh = pm.selected()):
-    '''
+    """
     Creates a curve from the middle point from every loops    
     @param mesh: List. By default is pm.selected()
-    '''
+    """
     
     def createCurveFrom(selection = pm.selected(), curve_name = 'curve'):
-        ''' 
+        """ 
         Creates a curve from the position values of the selection 
-        '''
+        """
         def createLocs(subject):                         
             loc_align = pm.spaceLocator()
             pm.matchTransform(loc_align,subject, rot=True, pos=True)

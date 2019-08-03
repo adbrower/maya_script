@@ -138,7 +138,7 @@ class IkFk_switch(QtWidgets.QDialog):
 
 
     def create_layout(self):
-        ''' all layouts '''
+        """ all layouts """
         
 
         def addLineL(Layout):
@@ -357,13 +357,13 @@ class IkFk_switch(QtWidgets.QDialog):
                         ctrl.overrideColor.set(14)
 
     def CreateSwitchSetup(self):
-        '''Connect the IK and FK joint chain with a blendColor to the Blend joint chain '''
+        """Connect the IK and FK joint chain with a blendColor to the Blend joint chain """
         
         fullname  = self.name2_LineEdit.text()
         self.IKFK_ctrl = fullname + ".IK_FK_Switch"
         
              
-        '''## CHOICE FOR TRANSLATE'''
+        """## CHOICE FOR TRANSLATE"""
         if self.tras_checkbx.checkState() ==  QtCore.Qt.Checked and self.rot_checkbx.checkState() == QtCore.Qt.Unchecked:       
 
             self.BlendColorColl_T = [pm.shadingNode('blendColors',asUtility=1, n="Translate_BC_01") for x in self.oColljoints]
@@ -403,7 +403,7 @@ class IkFk_switch(QtWidgets.QDialog):
                 pm.PyNode(self.IKFK_ctrl) >> pm.PyNode(each).inputValue
                 
                 
-        '''## CHOICE FOR ROTATE'''
+        """## CHOICE FOR ROTATE"""
         if self.tras_checkbx.checkState() == QtCore.Qt.Unchecked and self.rot_checkbx.checkState() ==  QtCore.Qt.Checked:   
                                    
             self.BlendColorColl_R = [pm.shadingNode('blendColors',asUtility=1, n="Roration_BC_01") for x in self.oColljoints]

@@ -97,10 +97,10 @@ class MultiSkin(object):
         
 
     def getSkinCluster(self):
-        '''
+        """
         Find a SkinCluster from a transform        
         Returns the skinCluster node        
-        '''
+        """
         result = []
         if not (pm.objExists(self.final_mesh)):
             return result
@@ -206,10 +206,10 @@ class MultiSkin(object):
 
 
     def extractLayer(self, skinCluster=None):
-        '''
+        """
         Extract a layer (mesh) from a multi skin mesh.
         Clean duplicate of the mesh but keeping the same skinCluster from the original
-        '''
+        """
         get_shape = str(pm.listConnections(pm.PyNode(skinCluster).outputGeometry[0], p=1)[0]).split('.')[0]
 
         duplicated_mesh = self.cleanDuplicate(name = '{}__{}'.format(get_shape, SUFFIX_EXCTACT))        
@@ -221,12 +221,12 @@ class MultiSkin(object):
             
 
     def extractWeight(self, skinCluster_index= 0, target_mesh = None, _surfaceAssociation='closestPoint', _influenceAssociation=['oneToOne', 'oneToOne']):
-        '''
+        """
         Extract a skin Cluster weights from a multi skin mesh
         Clean duplicate of the mesh and duplicates a new skinCluster with the same weights
         
         returns: duplicate mesh and duplicate skin cluster
-        '''
+        """
         
         if target_mesh == None:
             _target_mesh = self.cleanDuplicate()
@@ -241,9 +241,9 @@ class MultiSkin(object):
         
 
     def add_upper_deformers(self, target, layers_to_add =[], ):
-        '''
+        """
         Add lower layer deformation as blendshapes
-        '''
+        """
         
         new_order = []
         for layer in layers_to_add:

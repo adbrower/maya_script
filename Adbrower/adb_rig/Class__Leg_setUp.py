@@ -148,7 +148,7 @@ class LegSetUp(object):
 
     @property
     def getBindJoint(self):
-        '''Joints bind to the proxy plane '''
+        """Joints bind to the proxy plane """
         return self.bind_joints_plane_offset
         
     @property
@@ -207,7 +207,7 @@ class LegSetUp(object):
     @lockAttr(att_to_lock = ['tx','ty','tz','rx','ry','rx','rz','sx','sy','sz','v']) 
     @changeColor('index',col = 3)
     def create_switch_ctrl(self):           
-        '''Swtich Control options '''     
+        """Swtich Control options """     
                    
         self.ikfk_ctrl = sl.ik_fk_shape() 
         if self.side == 'r':
@@ -290,7 +290,7 @@ class LegSetUp(object):
         self.result_leg_chain = setResultjointChain()           
         
         def Create3jointsChain():
-            ''' Duplicates the result joints chain for the Ik and Fk chain'''
+            """ Duplicates the result joints chain for the Ik and Fk chain"""
                 
             for joint in self.result_leg_chain:
                 jntradius = joint.radius.get()
@@ -413,7 +413,7 @@ class LegSetUp(object):
     @lockAttr(att_to_lock = ['tx','ty','tz','sx','sy','sz','v','radius'])      
     @changeColor(col = (1,1,0.236))
     def CreateFKcontrols(self):
-        '''Creates the FK controls on the Fk joint chain '''       
+        """Creates the FK controls on the Fk joint chain """       
         self.FKcontrols = self.fk_shape_setup(RadiusCtrl = 1,
                                               Normalsctrl = (0,1,0),
                                               listJoint = self.FKjointsCh )
@@ -686,9 +686,9 @@ class LegSetUp(object):
                 scaleAxe = 'Y',
                 ):
         
-        '''
+        """
         Creates a stretch system for an arm or leg  
-        '''
+        """
 
         #-----------------------------------
         # FUNCTION
@@ -696,7 +696,7 @@ class LegSetUp(object):
 
         pm.select(self.IKjointsCh, r = True)
         def createloc(sub = pm.selected()):    
-            '''Creates locator at the Pivot of the object selected '''    
+            """Creates locator at the Pivot of the object selected """    
 
             locs = []
             for sel in sub:                           
@@ -966,7 +966,7 @@ class LegSetUp(object):
                                                                                                                                                                                                                                                 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
     def cleanUp_grp(self):
-        ''' creating oRoot grp and final cleanup'''
+        """ creating oRoot grp and final cleanup"""
         side = self.getSide(self.guide_result_leg_chain[0])
         rigging_grp = pm.group(n='{Side}__{Basename}__Rig_sys__grp__'.format(**self.nameStructure), em = True)          
         joints_grp = pm.group(n='{Side}__{Basename}__Joints__grp__'.format(**self.nameStructure), em = True)          
@@ -1007,7 +1007,7 @@ class LegSetUp(object):
         return self.oRoot_grp
                                               
     def set_settingGrp(self):
-        '''Fulfill the Leg_setting_ik_grp '''
+        """Fulfill the Leg_setting_ik_grp """
         
         ## IK sys
         pm.PyNode(self.ikHandle_stretch).translate >> pm.PyNode(self.ik_sys_grp).Ik_Handle 
