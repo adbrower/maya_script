@@ -169,7 +169,7 @@ LOC                           = 'LOC'
 
 
 # TAGS
-TAG_GlOBAL_SCALE              = 'tag_golbal_scale'
+TAG_GlOBAL_SCALE              = 'tag_global_scale'
 
 TAG_LEG                       = 'tag_LEG'
 TAG_ARM                       = 'tag_ARM'

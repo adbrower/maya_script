@@ -6,17 +6,12 @@
 #     audreydb23@gmail.com
 # -------------------------------------------------------------------
 
-import sys
-import traceback
-import pymel.core as pm
-import maya.cmds as mc
-from pprint import pprint
-
-#-----------------------------------
-# IMPORT CUSTOM MODULES
-#----------------------------------- 
-
 import adbrower
+import pymel.core as pm
+
+# -----------------------------------
+# IMPORT CUSTOM MODULES
+# -----------------------------------
 reload(adbrower)
 adb = adbrower.Adbrower()
 

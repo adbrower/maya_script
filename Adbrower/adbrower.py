@@ -22,33 +22,22 @@
 #
 # ------------------------------------------------------
 
-import maya.cmds as mc
-import pymel.core as pm
-from functools import wraps
 import sys
+from functools import wraps
+
+import pymel.core as pm
+import maya.cmds as mc
 import maya.mel as mel
 import maya.OpenMaya as om
 
-
-#-----------------------------------
-# 1. IMPORT CUSTOM MODULES
-#----------------------------------- 
-
-import CollDict
-from CollDict import colordic    
-from CollDict import suffixDic       
-from CollDict import attrDic  
 import NameConv_utils as NC
-# reload(NC)
-     
-
 import ShapesLibrary as sl
-
+from CollDict import suffixDic
+# reload(NC)
 
 #-----------------------------------
 # 2.1 DECORATORS
 #----------------------------------- 
-
 
 def undo(func):
     ''' 
@@ -1824,13 +1813,3 @@ class Adbrower(object):
         for each in pm.selected():
             new_name = each.split(':')[1]
             pm.PyNode(each).rename(new_name)
-
-
-
-
-
-
-
-
-
-

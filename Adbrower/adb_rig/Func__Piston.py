@@ -8,6 +8,7 @@ reload(adbrower)
 
 adb = adbrower.Adbrower()
 
+test = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5__LOC', 'joint6__LOC']
 
 def createPiston(
                  lowRootjnt,
@@ -49,7 +50,6 @@ def createPiston(
 
 
 
-# createPiston(low_ctrl = 'l__leg__knee_bot__loc__', top_ctrl = 'l__leg__thigh_bot__loc__',)
 
 
 

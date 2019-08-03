@@ -1,21 +1,5 @@
-
-import traceback
-
-try:
-    import PySide2.QtCore as QtCore
-    import PySide2.QtGui as QtGui
-    import PySide2.QtWidgets as QtWidgets
-except ImportError:
-    print("failed to import PySide2, {}".format(__file__))
-    import PySide.QtCore as QtCore
-    import PySide.QtGui as QtGui
-    import PySide.QtWidgets as QtWidgets
-
-try:
-    # future proofing for Maya 2017.
-    from shiboken2 import wrapInstance
-except ImportError:
-    from shiboken import wrapInstance
+from PySide2 import QtGui, QtWidgets, QtCore
+from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 import pymel.core as pm
 import pymel.core.datatypes as dt
@@ -27,28 +11,20 @@ import getpass
 import os
 import ConfigParser
 
+USERNAME = getpass.getuser() 
 
+class Match_IkFk(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
-
-def maya_main_window():
-    """Return the Maya main window widget as a Python object."""
-    main_window_ptr = omui.MQtUtil.mainWindow()
-    return wrapInstance(long(main_window_ptr), QtWidgets.QWidget)
-
-
-
-class Match_IkFk(QtWidgets.QDialog):
-
-    def __init__(self, parent=maya_main_window()):
-        super(Match_IkFk, self).__init__(parent)
+    def __init__(self, parent=None):
+        super(Match_IkFk, self).__init__(parent=parent)
 
 
         """Create the UI"""
         self.setWindowTitle('adbrower - Match_IkFk v1.0.0')
         self.setWindowFlags(QtCore.Qt.Tool)
 
-        self.userName = getpass.getuser()         
-        self.path_window = 'C:/Users/'+ self.userName + '/AppData/Roaming'
+                
+        self.path_window = 'C:/Users/'+ USERNAME + '/AppData/Roaming'
         self.path_linux = '/home/'+ USERNAME + '/'
         self.folder_name ='.config/adb_Setup'
         self.file_name = 'ik_fk_match_confi.ini'
@@ -563,3 +539,5 @@ def ui():
 		pass
 	tools_cw_ui = Match_IkFk()
 	tools_cw_ui.show() 
+
+# ui()

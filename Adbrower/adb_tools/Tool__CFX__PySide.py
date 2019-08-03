@@ -1,33 +1,10 @@
 import traceback
-
-try:
-    import PySide2.QtCore as QtCore
-    import PySide2.QtGui as QtGui
-    import PySide2.QtWidgets as QtWidgets
-    from PySide2.QtWidgets import *
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2 import QtGui
-except:
-    print "fail to import PySide2, %s" % __file__
-    import PySide.QtCore as QtCore
-    import PySide.QtGui as QtGui
-    import PySide.QtGui as QtWidgets
-    from PySide.QtCore import *
-    from PySide.QtGui import *
-    from PySide import QtGui
-
-try:
-    # future proofing for Maya 2017.
-    from shiboken2 import wrapInstance
-except ImportError:
-    from shiboken import wrapInstance
-
 import pymel.core as pm
 import pymel.core.datatypes as dt
 import maya.cmds as cmds
 import maya.OpenMaya as om
-import maya.OpenMayaUI as omui
+from PySide2 import QtGui, QtWidgets, QtCore
+from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 import getpass
 import os
@@ -58,9 +35,9 @@ from adbrower import flatList
 
 version = '1.00'
 
-class cfxToolbox(QtWidgets.QDialog):
+class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def __init__(self,parent=None):
-        super(cfxToolbox, self).__init__(parent = maya_main_window())        
+        super(cfxToolbox, self).__init__(parent = parent)        
 
         self.currentCam=pm.lookThru(q=1)
         self.allCam = pm.listCameras(o=False, p = True)
@@ -249,13 +226,13 @@ class cfxToolbox(QtWidgets.QDialog):
         self.dial = QtWidgets.QFileDialog()
         
         ## QTreeWidget
-        self.treeLayout = QVBoxLayout() 
-        self.playTree = QTreeWidget()        
+        self.treeLayout = QtWidgets.QVBoxLayout() 
+        self.playTree = QtWidgets.QTreeWidget()        
         self.playTree.setMinimumHeight(200)
         self.playTree.setMaximumHeight(300)
 
         self.playTree.setSelectionMode(self.playTree.ExtendedSelection)
-        header = QTreeWidgetItem(["Playblast"])
+        header = QtWidgets.QTreeWidgetItem(["Playblast"])
         self.playTree.setHeaderItem(header)
         self.playTree.header().resizeSection(0, 300) ## ---- Colum Witdh
         self.treeLayout.addWidget(self.playTree)   
@@ -393,9 +370,9 @@ class cfxToolbox(QtWidgets.QDialog):
 
     def populate(self):
         ''' Populate the TreeQ Widget '''
-        self.playRoots = [QTreeWidgetItem(self.playTree, [str(item)]) for item in self.roots ]
+        self.playRoots = [QtWidgets.QTreeWidgetItem(self.playTree, [str(item)]) for item in self.roots ]
         [root.setExpanded(True) for root in self.playRoots]                                                                            
-        [root.setForeground(0,QBrush(QColor('#00cdff')))   for root in self.playRoots]  
+        [root.setForeground(0,QtGui.QBrush(QtGui.QColor('#00cdff')))   for root in self.playRoots]  
         
         playbDic = {}        
         for video in self.roots:          
@@ -403,8 +380,8 @@ class cfxToolbox(QtWidgets.QDialog):
         ### populate children under the right Root
         for index in range(len(self.roots)):    
             for value in playbDic[self.roots[index]]:
-                child = QTreeWidgetItem(self.playRoots[index], [value])
-                child.setForeground(0,QBrush(QColor('#84939B')))
+                child = QtWidgets.QTreeWidgetItem(self.playRoots[index], [value])
+                child.setForeground(0,QtGui.QBrush(QtGui.QColor('#84939B')))
 
 
     def buildMainLayout(self):
@@ -462,8 +439,8 @@ class cfxToolbox(QtWidgets.QDialog):
 
         update_data = self.getOsDatas()      
         update_root = self.getRootsData()
-        update_playRoots = [QTreeWidgetItem(self.playTree, [str(item)]) for item in update_root ]  
-        [root.setForeground(0,QBrush(QColor('#00cdff')))   for root in update_playRoots]        
+        update_playRoots = [QtWidgets.QTreeWidgetItem(self.playTree, [str(item)]) for item in update_root ]  
+        [root.setForeground(0,QtGui.QBrush(QtGui.QColor('#00cdff')))   for root in update_playRoots]        
 
         playbDic = {}        
         for video in update_root:          
@@ -471,8 +448,8 @@ class cfxToolbox(QtWidgets.QDialog):
         ### populate children under the right Root
         for index in range(len(update_root)):    
             for value in playbDic[update_root[index]]:
-                child = QTreeWidgetItem(update_playRoots[index], [value]) 
-                child.setForeground(0,QBrush(QColor('#84939B')))        
+                child = QtWidgets.QTreeWidgetItem(update_playRoots[index], [value]) 
+                child.setForeground(0,QtGui.QBrush(QtGui.QColor('#84939B')))        
         self.expandAll() 
 
 
@@ -642,8 +619,8 @@ class cfxToolbox(QtWidgets.QDialog):
 
         update_data = self.getOsDatas()      
         update_root = self.getRootsData()
-        update_playRoots = [QTreeWidgetItem(self.playTree, [str(item)]) for item in update_root ]  
-        [root.setForeground(0,QBrush(QColor('#00cdff')))   for root in update_playRoots]        
+        update_playRoots = [QtWidgets.QTreeWidgetItem(self.playTree, [str(item)]) for item in update_root ]  
+        [root.setForeground(0,QtGui.QBrush(QtGui.QColor('#00cdff')))   for root in update_playRoots]        
 
         playbDic = {}
         
@@ -653,8 +630,8 @@ class cfxToolbox(QtWidgets.QDialog):
         ### populate children under the right Root
         for index in range(len(update_root)):    
             for value in playbDic[update_root[index]]:
-                child = QTreeWidgetItem(update_playRoots[index], [value]) 
-                child.setForeground(0,QBrush(QColor('#84939B')))        
+                child = QtWidgets.QTreeWidgetItem(update_playRoots[index], [value]) 
+                child.setForeground(0,QtGui.QBrush(QtGui.QColor('#84939B')))        
         self.expandAll()                        
                                                         
     #------------------------------
@@ -905,9 +882,9 @@ class clothManager(QtWidgets.QDialog):
         self.clothTree.itemClicked.connect(self.checkAB)   
              
 
-        self.nucRoots = [QTreeWidgetItem(self.clothTree, [str(item)]) for item in self.all_necleus ]
+        self.nucRoots = [QtWidgets.QTreeWidgetItem(self.clothTree, [str(item)]) for item in self.all_necleus ]
         [root.setExpanded(True) for root in self.nucRoots]                                                                            
-        [root.setForeground(0,QBrush(QColor('#99f44f')))   for root in self.nucRoots]    
+        [root.setForeground(0,QtGui.QBrush(QtGui.QColor('#99f44f')))   for root in self.nucRoots]    
         
         
         for root in self.nucRoots:
@@ -929,9 +906,9 @@ class clothManager(QtWidgets.QDialog):
             for parent in self.nucRoots:
                 for nuk in self.all_necleus:
                     value = nuk.enable.get()                    
-                child = QtWidgets.QTreeWidgetItem(parent, [treeItem])
+                child = QtWidgets.QtWidgets.QTreeWidgetItem(parent, [treeItem])
                 child.setExpanded(expand)                  
-                child.setForeground(0,QBrush(QColor(labColor)))  
+                child.setForeground(0,QtGui.QBrush(QtGui.QColor(labColor)))  
                 
       
                                                                 
@@ -962,8 +939,8 @@ class clothManager(QtWidgets.QDialog):
                 _root = self.nucRoots[_index]
                 child_count = _root.childCount()        
                 children = [_root.child(index) for index in range(child_count)] # = nRigid, nCloth, constraint
-                child = QTreeWidgetItem(children[1], [str(cloth)])
-                child.setForeground(0,QBrush(QColor('#ffe100'))) 
+                child = QtWidgets.QTreeWidgetItem(children[1], [str(cloth)])
+                child.setForeground(0,QtGui.QBrush(QtGui.QColor('#ffe100'))) 
                 value = pm.PyNode(cloth).isDynamic.get() ## set checkstate
 
                 if value == True:
@@ -987,8 +964,8 @@ class clothManager(QtWidgets.QDialog):
                 _root = self.nucRoots[_index]
                 child_count = _root.childCount()        
                 children = [_root.child(index) for index in range(child_count)] # = nRigid, nCloth, constraint
-                child = QTreeWidgetItem(children[0], [str(rigid)]) 
-                child.setForeground(0,QBrush(QColor('#fd651d')))  
+                child = QtWidgets.QTreeWidgetItem(children[0], [str(rigid)]) 
+                child.setForeground(0,QtGui.QBrush(QtGui.QColor('#fd651d')))  
                 
                 value = pm.PyNode(rigid).isDynamic.get() ## set checkstate
                 if value == True:
@@ -1012,8 +989,8 @@ class clothManager(QtWidgets.QDialog):
                 _root = self.nucRoots[_index]
                 child_count = _root.childCount()        
                 children = [_root.child(index) for index in range(child_count)] # = nRigid, nCloth, constraint
-                child = QTreeWidgetItem(children[2], [str(cons)])     
-                child.setForeground(0,QBrush(QColor('#11a11f')))                                            
+                child = QtWidgets.QTreeWidgetItem(children[2], [str(cons)])     
+                child.setForeground(0,QtGui.QBrush(QtGui.QColor('#11a11f')))                                            
                                 
                 value = pm.PyNode(cons).enable.get() ## set checkstate
                 if value == True:
@@ -1079,11 +1056,6 @@ class clothManager(QtWidgets.QDialog):
 #==================================
 #  UI BUILD
 #==================================
-
-def maya_main_window():
-    """Return the Maya main window widget as a Python object."""
-    main_window_ptr = omui.MQtUtil.mainWindow()
-    return wrapInstance(long(main_window_ptr), QtWidgets.QWidget)
 
 
 def showUI():

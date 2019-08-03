@@ -7,59 +7,40 @@
 #     audreydb23@gmail.com
 # ------------------------------------------------------
 
-from pymel.core import *
-import traceback
-import maya.cmds as mc
-import pymel.core as pm
-import sys
-
-
 #-----------------------------------
 # IMPORT CUSTOM MODULES
 #----------------------------------- 
+import sys
 
-
+import maya.cmds as mc
+import pymel.core as pm
 import ShapesLibrary as sl
-# reload(sl)
 
 import adbrower
-reload(adbrower)
-
-adb = adbrower.Adbrower()
-
-import CollDict
-reload(CollDict)
-from CollDict import colordic
-
-from CollDict import suffixDic
-
-
-import adb_utils.Class__Transforms
-import adb_utils.Class__AddAttr as adbAttr
-import adb_utils.rig_utils.Class__ShapeManagement as adbShape
-from adbrower import flatList
-
+from adbrower import changeColor, flatList, undo
+from CollDict import colordic, suffixDic
 ## Import Tools
-import adb_tools.Tool__Joint_Generator__Pyside
-import adb_tools.Tool__ConnectionTool
-import adb_tools.Tool__Tilt as Tool__Tilt
-import adb_tools.Tool__IKFK_Switch__PySide as Tool__IKFK_Switch__PySide
-import adb_tools.Tool__Match_IkFK_PySide as Tool__Match_IkFK_PySide
 import adb_tools.Tool__adbModule as Tool__adbModule
-import adb_tools.Tool__CopyWeight_Skin as Tool__CopyWeight_Skin     
-import adb_tools.Tool__AutoRig as Tool__AutoRig 
+import adb_tools.Tool__AutoRig as Tool__AutoRig
 import adb_tools.Tool__CFX__PySide as Tool__adbCFX
+import adb_tools.Tool__ConnectionTool
+import adb_tools.Tool__CopyWeight_Skin as Tool__CopyWeight_Skin
+import adb_tools.Tool__IKFK_Switch__PySide as Tool__IKFK_Switch__PySide
+import adb_tools.Tool__Joint_Generator__Pyside
+import adb_tools.Tool__Match_IkFK_PySide as Tool__Match_IkFK_PySide
+import adb_tools.Tool__Tilt as Tool__Tilt
+import adb_utils.Class__AddAttr as adbAttr
+import adb_utils.Class__Transforms
+import adb_utils.rig_utils.Class__ShapeManagement as adbShape
 import arShake_v012
+from skinWrangler_master import skinWrangler
 from spaceSwitchTool import spaceSwitchSetup as switchSetup
 
+adb = adbrower.Adbrower()
 
 #-----------------------------------
 #  DECORATORS
 #----------------------------------- 
-
-from adbrower import undo
-from adbrower import changeColor
-
 
 ICONS_FOLDER = 'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_icons/'
 imageColorLambert = ICONS_FOLDER+'ColorLambert.png'
@@ -70,8 +51,6 @@ imageColorYellow = ICONS_FOLDER+'ColorYellow.png'
 imageColorDarkGrey = ICONS_FOLDER+'ColorDarkGRey.png'
 imageMoins = ICONS_FOLDER+'Moins.png'
 imagePlus = ICONS_FOLDER+'Plus.png'
-
-
 
 #-----------------------------------
 #  CLASS
@@ -184,7 +163,8 @@ class AudreyToolBox():
         pm.menuItem(label = "IK - FK Match")
         pm.menuItem(label = "CFX ToolBox")
         pm.menuItem(label = "Auto Rig Tool")
-        pm.menuItem(divider = 1) 
+        pm.menuItem(divider = 1)
+        pm.menuItem(label = "Skin Wrangler Tool") 
         pm.menuItem(label = "Shake Tool")
         pm.menuItem(label = "Space Switch Tool")
         
@@ -1344,6 +1324,9 @@ class AudreyToolBox():
                             
         elif tool == "Space Switch Tool":
             switchSetup.show()
+            
+        elif tool == "Skin Wrangler Tool":
+            skinWrangler.show()
         
     def jointGenToolAB(self):            
         adb_tools.Tool__Joint_Generator__Pyside.showUI()    
@@ -2131,20 +2114,3 @@ class AudreyToolBox():
 
 
 myTools = AudreyToolBox()
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        

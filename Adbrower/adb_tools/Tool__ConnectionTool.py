@@ -7,7 +7,6 @@
 #     audreydb23@gmail.com
 # ------------------------------------------------------------------------------------------------------
 
-from pymel.core import * 
 import maya.cmds as mc
 import pymel.core as pm
 import sys
@@ -35,130 +34,130 @@ class connectionTool():
     def ui(self):
 
         template = pm.uiTemplate('ExampleTemplate', force=True )
-        template.define( button, width=200, height=25)
-        template.define( frameLayout, mh=2, borderVisible=False, labelVisible=False )
+        template.define( pm.button, width=200, height=25)
+        template.define( pm.frameLayout, mh=2, borderVisible=False, labelVisible=False )
 
 
         if pm.window(self.name, q=1, ex=1):
             pm.deleteUI(self.name)
 
-        with window(self.name, t= self.title + " v." + str(self.version), s=True, tlb = True, mxb=False) as self.win:
+        with pm.window(self.name, t= self.title + " v." + str(self.version), s=True, tlb = True, mxb=False) as self.win:
 
             with template:
-                with frameLayout(mw=4):                    
-                    with columnLayout(adj=True, rs = 10):
-                            text( label="MULTI ACTION TOOL" , h=30)
+                with pm.frameLayout(mw=4):                    
+                    with pm.columnLayout(adj=True, rs = 10):
+                            pm.text( label="MULTI ACTION TOOL" , h=30)
                             
-                    with frameLayout():
-                        with columnLayout(adj=True):
+                    with pm.frameLayout():
+                        with pm.columnLayout(adj=True):
 
-                            with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=2):
-                                button(label="Load Driver", w=255, backgroundColor = (0.17, 0.17, 0.17), c = pm.Callback(self.getDriverList))
-                                button(label="Load Target", w=256, backgroundColor = (0.17, 0.17, 0.17), c = pm.Callback(self.getTargetList))
+                            with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=2):
+                                pm.button(label="Load Driver", w=255, backgroundColor = (0.17, 0.17, 0.17), c = pm.Callback(self.getDriverList))
+                                pm.button(label="Load Target", w=256, backgroundColor = (0.17, 0.17, 0.17), c = pm.Callback(self.getTargetList))
 
-                            with rowLayout( numberOfColumns=4):
-                                self.Drivers = textScrollList( numberOfRows=8, allowMultiSelection=True, dcc = pm.Callback(self.DccD))
-                                self.Targets = textScrollList( numberOfRows=8, allowMultiSelection=True, dcc = pm.Callback(self.DccT)) 
+                            with pm.rowLayout( numberOfColumns=4):
+                                self.Drivers = pm.textScrollList( numberOfRows=8, allowMultiSelection=True, dcc = pm.Callback(self.DccD))
+                                self.Targets = pm.textScrollList( numberOfRows=8, allowMultiSelection=True, dcc = pm.Callback(self.DccT)) 
                    
-                            with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=6):
-                                button(label="Add", w=85, backgroundColor = (0.365, 0.365, 0.365), c = pm.Callback(self.AddDriver,))
-                                button(label="Replace ", w=80, backgroundColor =  (0.365, 0.365, 0.365),  c = pm.Callback(self. ReplaceDriver)) 
-                                button(label="Remove ", w=85, backgroundColor =(0.365, 0.365, 0.365),c = pm.Callback(self.RemoveDriver))
+                            with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=6):
+                                pm.button(label="Add", w=85, backgroundColor = (0.365, 0.365, 0.365), c = pm.Callback(self.AddDriver,))
+                                pm.button(label="Replace ", w=80, backgroundColor =  (0.365, 0.365, 0.365),  c = pm.Callback(self. ReplaceDriver)) 
+                                pm.button(label="Remove ", w=85, backgroundColor =(0.365, 0.365, 0.365),c = pm.Callback(self.RemoveDriver))
                                 
-                                button(label="Add", w=85, backgroundColor = (0.365, 0.365, 0.365), c = pm.Callback(self.AddTarget))
-                                button(label="Replace ", w=80, backgroundColor = (0.365, 0.365, 0.365), c = pm.Callback(self. ReplaceTarget))
-                                button(label="Remove ", w=85, backgroundColor = (0.365, 0.365, 0.365), c = pm.Callback(self.RemoveTarget) )
+                                pm.button(label="Add", w=85, backgroundColor = (0.365, 0.365, 0.365), c = pm.Callback(self.AddTarget))
+                                pm.button(label="Replace ", w=80, backgroundColor = (0.365, 0.365, 0.365), c = pm.Callback(self. ReplaceTarget))
+                                pm.button(label="Remove ", w=85, backgroundColor = (0.365, 0.365, 0.365), c = pm.Callback(self.RemoveTarget) )
 
-                        with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=2):
-                            button(label="Refresh", w=255, backgroundColor = (0.202, 0.202, 0.202), c = pm.Callback(self.RefreshDriver))
-                            button(label="Refresh ", w=256, backgroundColor = (0.202, 0.202, 0.202),c = pm.Callback(self.RefreshTarget))
+                        with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=2):
+                            pm.button(label="Refresh", w=255, backgroundColor = (0.202, 0.202, 0.202), c = pm.Callback(self.RefreshDriver))
+                            pm.button(label="Refresh ", w=256, backgroundColor = (0.202, 0.202, 0.202),c = pm.Callback(self.RefreshTarget))
                              
-                    with frameLayout():
-                        with columnLayout(adj=True, rs = 10):
-                            separator() 
-                            text( label="QUICK  CONNECTION" , h=15)        
-                            separator()   
+                    with pm.frameLayout():
+                        with pm.columnLayout(adj=True, rs = 10):
+                            pm.separator() 
+                            pm.text( label="QUICK  CONNECTION" , h=15)        
+                            pm.separator()   
                             
-                        with columnLayout(adj=True):                               
-                            with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=4):
-                                button(label="Translate to Translate ", w=170, h=30, bgc = (0.602, 0.602, 0.602), c = pm.Callback(self.QuickConnT))                                                                                  
-                                button(label="Rotate to Rotate", w=170, h=30, bgc = (0.602, 0.602, 0.602), c = pm.Callback(self.QuickConnR)) 
-                                button(label="Scale to Scale", w=170, h=30, bgc = (0.602, 0.602, 0.602), c = pm.Callback(self.QuickConnS))                             
+                        with pm.columnLayout(adj=True):                               
+                            with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=4):
+                                pm.button(label="Translate to Translate ", w=170, h=30, bgc = (0.602, 0.602, 0.602), c = pm.Callback(self.QuickConnT))                                                                                  
+                                pm.button(label="Rotate to Rotate", w=170, h=30, bgc = (0.602, 0.602, 0.602), c = pm.Callback(self.QuickConnR)) 
+                                pm.button(label="Scale to Scale", w=170, h=30, bgc = (0.602, 0.602, 0.602), c = pm.Callback(self.QuickConnS))                             
                             
-                            separator(h=10,w=500)                            
-                            text( label="MANUEL CONNECTION" , h=25, )                            
-                            separator(h=10,w=500)
+                            pm.separator(h=10,w=500)                            
+                            pm.text( label="MANUEL CONNECTION" , h=25, )                            
+                            pm.separator(h=10,w=500)
                                         
-                            with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=6):
-                                separator(w=51, vis=False)
-                                button(label="Add Outputs", w=190, backgroundColor = (0.202, 0.202, 0.202), c = pm.Callback(self.AddOutputs))
-                                separator(w=40, vis=False)
-                                button(label="Add Inputs ", w=220, backgroundColor = (0.202, 0.202, 0.202), c = pm.Callback(self.AddInputs))
+                            with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=6):
+                                pm.separator(w=51, vis=False)
+                                pm.button(label="Add Outputs", w=190, backgroundColor = (0.202, 0.202, 0.202), c = pm.Callback(self.AddOutputs))
+                                pm.separator(w=40, vis=False)
+                                pm.button(label="Add Inputs ", w=220, backgroundColor = (0.202, 0.202, 0.202), c = pm.Callback(self.AddInputs))
 
-                            with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=5):
-                                text( label="  Output   ",align = 'left')
-                                self.Output1  = textFieldGrp(w=190, pht= "Type output", columnWidth1=189)
+                            with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=5):
+                                pm.text( label="  Output   ",align = 'left')
+                                self.Output1  = pm.textFieldGrp(w=190, pht= "Type output", columnWidth1=189)
 
-                                text( label="   Input  ",align = 'left')
-                                self.Input1  = textFieldGrp(w=220, pht= "Type input", columnWidth1=219)
+                                pm.text( label="   Input  ",align = 'left')
+                                self.Input1  = pm.textFieldGrp(w=220, pht= "Type input", columnWidth1=219)
 
-                        with columnLayout(adj=True, rs = 10):                    
-                                with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=5):
-                                    text( label="  Output   ",align = 'left')
-                                    self.Output2  = textFieldGrp(w=190, pht= "Type output", columnWidth1=189)
+                        with pm.columnLayout(adj=True, rs = 10):                    
+                                with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=5):
+                                    pm.text( label="  Output   ",align = 'left')
+                                    self.Output2  = pm.textFieldGrp(w=190, pht= "Type output", columnWidth1=189)
 
-                                    text( label="   Input  ",align = 'left')
-                                    self.Input2  = textFieldGrp(w=220, pht= "Type input", columnWidth1=219)
+                                    pm.text( label="   Input  ",align = 'left')
+                                    self.Input2  = pm.textFieldGrp(w=220, pht= "Type input", columnWidth1=219)
 
-                        with columnLayout(adj=True, rs = 5):                    
-                                with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=5):
-                                    text( label="  Output   ",align = 'left')                                                                      
-                                    self.Output3  = textFieldGrp(w=190, pht= "Type output", columnWidth1=189)                                                                                                         
-                                    text( label="   Input  ",align = 'left')
-                                    self.Input3  = textFieldGrp(w=220, pht= "Type input", columnWidth1=219)
+                        with pm.columnLayout(adj=True, rs = 5):                    
+                                with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=5):
+                                    pm.text( label="  Output   ",align = 'left')                                                                      
+                                    self.Output3  = pm.textFieldGrp(w=190, pht= "Type output", columnWidth1=189)                                                                                                         
+                                    pm.text( label="   Input  ",align = 'left')
+                                    self.Input3  = pm.textFieldGrp(w=220, pht= "Type input", columnWidth1=219)
 
-                        separator()  
+                        pm.separator()  
                     
-                    with frameLayout():
-                        with formLayout():                                                   
-                            with tabLayout(innerMarginWidth=5, innerMarginHeight=5) as tabs:                            
-                                with frameLayout()as child1:
-                                    with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=2):
-                                        button(label="Connect One to Many ", w=256, h=30, bgc = (0.17, 0.17, 0.17),c = pm.Callback(self.ConAll))                                                                                  
-                                        button(label="Connect Each Other", w=256, h=30, bgc = (0.17, 0.17, 0.17),c = pm.Callback(self.pairing_AttrConn)) 
+                    with pm.frameLayout():
+                        with pm.formLayout():                                                   
+                            with pm.tabLayout(innerMarginWidth=5, innerMarginHeight=5) as tabs:                            
+                                with pm.frameLayout()as child1:
+                                    with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=2):
+                                        pm.button(label="Connect One to Many ", w=256, h=30, bgc = (0.17, 0.17, 0.17),c = pm.Callback(self.ConAll))                                                                                  
+                                        pm.button(label="Connect Each Other", w=256, h=30, bgc = (0.17, 0.17, 0.17),c = pm.Callback(self.pairing_AttrConn)) 
 
-                                with frameLayout()as child2:
-                                    with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=4):                                        
-                                        button(label="Parent + Scale", w=340, h=30, bgc = (0.349, 0.478, 0.349),c = pm.Callback(self.ParentScaleCons))  
-                                        button(label="Parent Constraint", w=170, h=30, bgc = (0.17, 0.17, 0.17),c = pm.Callback(self.ParentCons))  
+                                with pm.frameLayout()as child2:
+                                    with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=4):                                        
+                                        pm.button(label="Parent + Scale", w=340, h=30, bgc = (0.349, 0.478, 0.349),c = pm.Callback(self.ParentScaleCons))  
+                                        pm.button(label="Parent Constraint", w=170, h=30, bgc = (0.17, 0.17, 0.17),c = pm.Callback(self.ParentCons))  
 
-                                    with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=6):
-                                        button(label="Point Constraint ", w=170, h=30, bgc = (0.17, 0.17, 0.17),c = pm.Callback(self.PointCons))                                                                                  
-                                        button(label="Scale Constraint ", w=170, h=30, bgc = (0.17, 0.17, 0.17),c = pm.Callback(self.ScaleCons))                                                                                  
-                                        button(label="Orient Constraint ", w=170, h=30, bgc = (0.17, 0.17, 0.17),c = pm.Callback(self.OrientCons))                                                                                  
+                                    with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=6):
+                                        pm.button(label="Point Constraint ", w=170, h=30, bgc = (0.17, 0.17, 0.17),c = pm.Callback(self.PointCons))                                                                                  
+                                        pm.button(label="Scale Constraint ", w=170, h=30, bgc = (0.17, 0.17, 0.17),c = pm.Callback(self.ScaleCons))                                                                                  
+                                        pm.button(label="Orient Constraint ", w=170, h=30, bgc = (0.17, 0.17, 0.17),c = pm.Callback(self.OrientCons))                                                                                  
  
-                                with frameLayout()as child3:  
-                                    with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=6):
-                                        button(label="BlendShapes", w=170, h=30, bgc = (0.349, 0.478, 0.349),c = pm.Callback(self.BlendShape_connect))    
-                                        button(label="Parent",  w=170, h=30, bgc = (0.349, 0.478, 0.349), c = pm.Callback(self.parent_2List)) 
-                                        button(label="Match Transform",  w=170, h=30, bgc = (0.349, 0.478, 0.349), c = pm.Callback(self.MatchTransformRT))  
-                                        popupMenu()
-                                        menuItem('Match Postion', c = pm.Callback(self.MatchTransformRT, False, True))                                                                             
-                                        menuItem('Match Rotation', c = pm.Callback(self.MatchTransformRT, True, False))   
+                                with pm.frameLayout()as child3:  
+                                    with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=6):
+                                        pm.button(label="BlendShapes", w=170, h=30, bgc = (0.349, 0.478, 0.349),c = pm.Callback(self.BlendShape_connect))    
+                                        pm.button(label="Parent",  w=170, h=30, bgc = (0.349, 0.478, 0.349), c = pm.Callback(self.parent_2List)) 
+                                        pm.button(label="Match Transform",  w=170, h=30, bgc = (0.349, 0.478, 0.349), c = pm.Callback(self.MatchTransformRT))  
+                                        pm.popupMenu()
+                                        pm.menuItem('Match Postion', c = pm.Callback(self.MatchTransformRT, False, True))                                                                             
+                                        pm.menuItem('Match Rotation', c = pm.Callback(self.MatchTransformRT, True, False))   
                             
                                                                                            
-                                tabLayout( tabs, edit=True, tabLabel=((child1, 'BY CONNECTIONS'),(child2, 'BY CONSTRAINTS'),(child3, 'OTHER OPTIONS')) )
+                                pm.tabLayout( tabs, edit=True, tabLabel=((child1, 'BY CONNECTIONS'),(child2, 'BY CONSTRAINTS'),(child3, 'OTHER OPTIONS')) )
 
-                with frameLayout( cll = True, bgc=(0.202, 0.202, 0.202), labelVisible=True , cl = True, label = "Break Connection", cc =pm.Callback(self.winResize) ) as self.BC_layout:                    
-                    with frameLayout():
-                        with columnLayout(adj=True,rs = 15):                                    
-                            text(label = 'Select the Driver from which you want to break connection', al = 'center')                  
+                with pm.frameLayout( cll = True, bgc=(0.202, 0.202, 0.202), labelVisible=True , cl = True, label = "Break Connection", cc =pm.Callback(self.winResize) ) as self.BC_layout:                    
+                    with pm.frameLayout():
+                        with pm.columnLayout(adj=True,rs = 15):                                    
+                            pm.text(label = 'Select the Driver from which you want to break connection', al = 'center')                  
                               
-                            with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=6):
-                                    button(label="Add Connection", w=100, backgroundColor = (0.202, 0.202, 0.202), c = pm.Callback(self.AddOutputsBC))                               
-                                    self.BConn  = textFieldGrp( pht= "Type output")
-                                    text( label="   ",align = 'left')
-                                    button(label="Break Connection", w=150, backgroundColor = (0.602, 0.602, 0.602), c = pm.Callback(self.BreakConnection))
+                            with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=6):
+                                    pm.button(label="Add Connection", w=100, backgroundColor = (0.202, 0.202, 0.202), c = pm.Callback(self.AddOutputsBC))                               
+                                    self.BConn  = pm.textFieldGrp( pht= "Type output")
+                                    pm.text( label="   ",align = 'left')
+                                    pm.button(label="Break Connection", w=150, backgroundColor = (0.602, 0.602, 0.602), c = pm.Callback(self.BreakConnection))
 
 
 
@@ -462,7 +461,7 @@ class connectionTool():
 
 
     def RemoveDriver(self):        
-        selectItem = mc.textScrollList(self.Drivers, q=True, selectItem=True)
+        selectItem = mc.pm.textScrollList(self.Drivers, q=True, selectItem=True)
         pm.textScrollList(self.Drivers, edit=True, ri = selectItem )
 
         ## list management
@@ -480,7 +479,7 @@ class connectionTool():
 
 
     def RemoveTarget(self):
-        selectItem = mc.textScrollList(self.Targets, q=True, selectItem=True)
+        selectItem = mc.pm.textScrollList(self.Targets, q=True, selectItem=True)
         pm.textScrollList(self.Targets, edit=True, ri = selectItem )
 
         ## list management
@@ -498,7 +497,7 @@ class connectionTool():
     def ReplaceDriver(self):
         try:
             newSel = self.getList()        
-            selectItem = mc.textScrollList(self.Drivers, q=True, selectItem=True)
+            selectItem = mc.pm.textScrollList(self.Drivers, q=True, selectItem=True)
             pm.textScrollList(self.Drivers, edit=True, append = newSel  )
             pm.textScrollList(self.Drivers, edit=True, ri = selectItem )
 
@@ -526,7 +525,7 @@ class connectionTool():
     def ReplaceTarget(self):
         try:
             newSel = self.getList()        
-            selectItem = mc.textScrollList(self.Targets, q=True, selectItem=True)
+            selectItem = mc.pm.textScrollList(self.Targets, q=True, selectItem=True)
             pm.textScrollList(self.Targets, edit=True, append = newSel  )
             pm.textScrollList(self.Targets, edit=True, ri = selectItem )
 
@@ -592,14 +591,14 @@ class connectionTool():
             pm.parent(pm.selected()[0:-1],pm.selected()[-1])
             pm.select(None)
 
-        sys.stdout.write('// Result: Parent button applied //') 
+        sys.stdout.write('// Result: Parent pm.button applied //') 
 
     def DccD(self):
-        selectItem = mc.textScrollList(self.Drivers, q=True, selectItem=True)
+        selectItem = mc.pm.textScrollList(self.Drivers, q=True, selectItem=True)
         pm.select(selectItem, r= True)
 
     def DccT(self):
-        selectItem = mc.textScrollList(self.Targets, q=True, selectItem=True)
+        selectItem = mc.pm.textScrollList(self.Targets, q=True, selectItem=True)
         pm.select(selectItem, r= True)
 
   
@@ -691,7 +690,7 @@ class connectionTool():
         try:
             selAttrs = [ x for x in pm.channelBox("mainChannelBox", q=1, selectedMainAttributes = 1)]
 
-            self.BConns  = textFieldGrp( self.BConn ,e = True, tx = str(selAttrs).replace("u'","").replace("'"," ").replace("["," ").replace("]"," "))
+            self.BConns  = pm.textFieldGrp( self.BConn ,e = True, tx = str(selAttrs).replace("u'","").replace("'"," ").replace("["," ").replace("]"," "))
 
         except TypeError:
             pm.warning("Select Attribute in the Channel Box")

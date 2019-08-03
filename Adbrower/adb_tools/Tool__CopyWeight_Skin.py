@@ -1,47 +1,20 @@
-import traceback
-
-try:
-    import PySide2.QtCore as QtCore
-    import PySide2.QtGui as QtGui
-    import PySide2.QtWidgets as QtWidgets
-    from PySide2.QtWidgets import *
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2 import QtGui
-except:
-    print "fail to import PySide2, %s" % __file__
-    import PySide.QtCore as QtCore
-    import PySide.QtGui as QtGui
-    import PySide.QtGui as QtWidgets
-    from PySide.QtCore import *
-    from PySide.QtGui import *
-    from PySide import QtGui
-try:
-    # future proofing for Maya 2017.
-    from shiboken2 import wrapInstance
-except ImportError:
-    from shiboken import wrapInstance
-
-import pymel.core as pm
-import pymel.core.datatypes as dt
-import maya.cmds as cmds
-import maya.OpenMaya as om
-import maya.OpenMayaUI as omui
-from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
-import adb_pyQt.Class__frameLayout as adbFrameLayout
-
 import getpass
 import os
-import ConfigParser
-import maya.cmds as mc
-import maya.mel as mel
 import sys
-from CollDict import pysideColorDic as pyQtDic
 
+import maya.cmds as mc
+import pymel.core as pm
+import ConfigParser
+from PySide2 import QtGui, QtWidgets, QtCore
+import adb_pyQt.Class__frameLayout as adbFrameLayout
+from CollDict import pysideColorDic as pyQtDic
+from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 import adbrower
+
 adb = adbrower.Adbrower()
 import adb_utils.Class__Skinning as skin
 import adb_utils.deformers.Class__Blendshape as bs
+from skinWrangler_master import skinWrangler
 
 
 VERSION = 3.0
@@ -61,7 +34,7 @@ ICONS_FOLDER = 'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_icons/
 
 class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def __init__(self,parent=None):                
-        super(SkinCopyWEIGHTS, self).__init__(parent = maya_main_window())           
+        super(SkinCopyWEIGHTS, self).__init__(parent = parent)           
         self.setObjectName('test')      
         self.starting_height = 810  
         self.starting_width = 390  
@@ -132,8 +105,8 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         #--------- Predefine widgets                 
 
         def addLine():
-            line = QFrame()
-            line.setFrameShape(QFrame.HLine)          
+            line =QtWidgets. QFrame()
+            line.setFrameShape(QtWidgets.QFrame.HLine)          
             return line         
                     
         def addText(message, alignement = QtCore.Qt.AlignCenter, height=30, bold = False):
@@ -193,9 +166,9 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     #--------- Widgets
 
         ## MenuBar
-        self.menuBar = QMenuBar(self) # requires parent
+        self.menuBar = QtWidgets.QMenuBar(self) # requires parent
         
-        self.menu_file = QMenu(self)
+        self.menu_file = QtWidgets.QMenu(self)
         self.menu_file.setTitle("File")
         self.action_change_path = self.menu_file.addAction("Change Path...")
         self.action_print_path = self.menu_file.addAction("Print Path")
@@ -205,16 +178,22 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.action_save.triggered.connect(self.saveData)
         self.action_print_path.triggered.connect(lambda * args : sys.stdout.write('adb_copyWeightToolsettings file saved at: ' + self.final_path + FOLDER_NAME + '/' + FILE_NAME))
         
-        self.menu_refresh = QMenu(self)
+        self.menu_refresh = QtWidgets.QMenu(self)
         self.menu_refresh.setTitle('Edit')
         self.action_clear_info = self.menu_refresh.addAction('Clear all Info')
         self.action_load = self.menu_refresh.addAction("Reload Data")
         
+        self.menu_exterior = QtWidgets.QMenu(self)
+        self.menu_exterior.setTitle('Exterior')
+        self.action_skin_wrangler = self.menu_exterior.addAction('Load Skin Wrangler')
+
         self.action_clear_info.triggered.connect(self.clear_all_info)
         self.action_load.triggered.connect(lambda * args :showUI())
+        self.action_skin_wrangler.triggered.connect(lambda * args :skinWrangler.show())
         
         self.menuBar.addMenu(self.menu_file) 
         self.menuBar.addMenu(self.menu_refresh) 
+        self.menuBar.addMenu(self.menu_exterior) 
 
         ## Line        
         self.line_widget = {'line_0{}'.format(i): addLine() for  i in range(1,5)}
@@ -1113,11 +1092,6 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 # ===============================
 # BUILD WINDOW
 # ===============================
-
-def maya_main_window():
-    """Return the Maya main window widget as a Python object."""
-    main_window_ptr = omui.MQtUtil.mainWindow()
-    return wrapInstance(long(main_window_ptr), QtWidgets.QWidget)
 
 
 def showUI():

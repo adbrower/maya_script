@@ -41,7 +41,7 @@ class Bbox_Array(object):
     '''
     def __init__(self, array):
         
-        if str(type(array)) ==  "<class 'pymel.core.datatypes.BoundingBox'>":
+        if isinstance(array, pm.datatypes.BoundingBox):
             self.boundingbox = array
         else:
             _spheres = [pm.polySphere(r=0.01)[0] for x in xrange(6)]
@@ -246,7 +246,7 @@ class Bbox(object):
             self.oGeo = [geo] 
 
         if len(self.oGeo) == 1:
-            self.bbox = [(self.oGeo[0]).getBoundingBox()]
+            self.bbox = [pm.PyNode((self.oGeo[0])).getBoundingBox()]
 
         elif len(self.oGeo) > 1:
             _lattrice = pm.lattice(self.oGeo, divisions=(2, 2, 2), ldv=(2, 2, 2), objectCentered=True)
@@ -298,11 +298,22 @@ class Bbox(object):
         _meshes.getAllPos()
         _meshes.createPosLocs()        
         print _meshes
+  
+   
+    @property
+    def height(self):
+        return self.bbox[0].height()
         
+    @property
+    def width(self):
+        return self.bbox[0].width()
   
     @property
     def getBbox(self):
-        return self.bbox
+        if len(self.bbox)>1:
+            return self.bbox
+        else:
+            return self.bbox[0]
 
     def posCenter(self, loc = True, axis = 'all'):
         ''' Get the center position '''

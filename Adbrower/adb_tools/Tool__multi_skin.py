@@ -7,6 +7,8 @@ import maya.mel as mel
 # LAYER MANAGING
 #------------------------------------
 
+TAG_EXTRACT = 'tag_Extract'
+SUFFIX_EXCTACT = 'Extracted'
 
 class MultiSkin(object):
     
@@ -21,6 +23,15 @@ class MultiSkin(object):
         self.new_layer = None        
         self.all_skinCluster = self.getSkinCluster()
         self.all_skinCluster_dic = self.initialize_skin_cluster_dic()
+
+    def add_metaData_attribute(self, _transform, attr_name):
+        pm.addAttr(_transform, at='message', ln=attr_name)
+
+    
+    @staticmethod
+    def extract_TAGS(tag_name):
+        extract = [str(x.split('.')[0]) for x in pm.ls('*.{}'.format(tag_name))]
+        return extract        
 
     def add_shapes(self, shape_name=None):
         if shape_name:
@@ -40,7 +51,6 @@ class MultiSkin(object):
             return new_shape
 
             
-
     def get_layers(self):
         self.layer_index_dic ={}
         for i, layer in enumerate(self.final_mesh.getShapes(ni=1)[1:]):
@@ -74,11 +84,14 @@ class MultiSkin(object):
     #  CLUSTER CREATION
     #------------------------------------
 
-    def cleanDuplicate(self):        
+    def cleanDuplicate(self, name = None):        
         duplicated_mesh = pm.duplicate(self.final_mesh)[0]
         all_shapes = pm.PyNode(duplicated_mesh).getShapes()
         [pm.delete(x) for x in all_shapes[1:]]
-        pm.rename(duplicated_mesh, '{}__TEMP'.format(self.final_layer))
+        if name:
+            pm.rename(duplicated_mesh, name)
+        else:
+            pm.rename(duplicated_mesh, '{}__{}'.format(self.final_layer, SUFFIX_EXCTACT))
         duplicated_mesh.getShape().v.set(1)
         return duplicated_mesh
         
@@ -193,21 +206,26 @@ class MultiSkin(object):
 
 
     def extractLayer(self, skinCluster=None):
+        '''
+        Extract a layer (mesh) from a multi skin mesh.
+        Clean duplicate of the mesh but keeping the same skinCluster from the original
+        '''
+        get_shape = str(pm.listConnections(pm.PyNode(skinCluster).outputGeometry[0], p=1)[0]).split('.')[0]
 
-        duplicated_mesh = self.cleanDuplicate()
-        # duplicated_mesh = pm.duplicate(self.final_mesh)[0]
-        # all_shapes = pm.PyNode(duplicated_mesh).getShapes()
-        # [pm.delete(x) for x in all_shapes[1:]]
-        # pm.rename(duplicated_mesh, '{}__TEMP'.format(self.final_layer))
-        
+        duplicated_mesh = self.cleanDuplicate(name = '{}__{}'.format(get_shape, SUFFIX_EXCTACT))        
         if skinCluster:
             pm.PyNode(skinCluster).outputGeometry[0] >> duplicated_mesh.inMesh
+            
+        self.add_metaData_attribute(duplicated_mesh, TAG_EXTRACT)
+        return str(duplicated_mesh)
             
 
     def extractWeight(self, skinCluster_index= 0, target_mesh = None, _surfaceAssociation='closestPoint', _influenceAssociation=['oneToOne', 'oneToOne']):
         '''
-        Extract a skin Cluster weights on a multi skin mesh
-        Creates a new skinCluster with the same weights
+        Extract a skin Cluster weights from a multi skin mesh
+        Clean duplicate of the mesh and duplicates a new skinCluster with the same weights
+        
+        returns: duplicate mesh and duplicate skin cluster
         '''
         
         if target_mesh == None:
@@ -217,31 +235,57 @@ class MultiSkin(object):
 
         
         skincluster = self.all_skinCluster[skinCluster_index]
-        bind_joints = [x for x in pm.listConnections(str(skincluster)+'.matrix[*]', s=1)]
-
-        ## Skinning
-        pm.select(_target_mesh, r = 1)
-        pm.select(bind_joints, add = True)
-        mc.SmoothBindSkin()
-        destination_skin =  [x for x in mel.eval('findRelatedDeformer("' + str(_target_mesh) + '")') if pm.nodeType(x) == 'skinCluster'][0]  
-
-        # Copy Weight Skin        
-        pm.select(self.final_mesh, r = True)
-        pm.select(_target_mesh, add = True)     
-        
-        pm.copySkinWeights(ss=str(skincluster), ds = str(destination_skin), surfaceAssociation= _surfaceAssociation, influenceAssociation=_influenceAssociation, noMirror=1)   
+        destination_skin = pm.duplicate(skincluster, ic=1)[0]
+        destination_skin.outputGeometry[0] >> _target_mesh.inMesh
         return(_target_mesh, destination_skin)
         
+
+    def add_upper_deformers(self, target, layers_to_add =[], ):
+        '''
+        Add lower layer deformation as blendshapes
+        '''
         
+        new_order = []
+        for layer in layers_to_add:
+            get_vis = pm.PyNode(layer).v.get()
+            pm.PyNode(layer).v.set(1)
+            pm.blendShape(layer, target,  o = 'local', w = [(0, 1.0)], foc = False)
+            pm.PyNode(layer).v.set(get_vis)
+                    
+        deformers_order = mel.eval('findRelatedDeformer("' + str(target) + '")')  
+        skin_deformer = [x for x in deformers_order if pm.PyNode(x).type()=='skinCluster'][0]
+        
+        bls_deformer = [x for x in deformers_order if pm.PyNode(x).type()=='blendShape']                                
+        new_order.append(skin_deformer)
+        new_order.append(target)   
+
+        for bls in bls_deformer:
+            new_order.insert(1,bls)
+            pm.reorderDeformers(new_order)
+            new_order.remove(bls)
+            
+        return bls_deformer
+
+
+    def delete_blendshapes(self, target):
+        deformers_order = mel.eval('findRelatedDeformer("' + str(target) + '")')      
+        bls_deformer = [x for x in deformers_order if pm.PyNode(x).type()=='blendShape'] 
+        pm.delete(bls_deformer) 
+        
+
         
 #------------------------------------
 # Test
 #------------------------------------
 
 # aaa = MultiSkin('pSphere1')
-# print aaa.all_skinCluster
 
-# aaa.extractWeight(2)
+
+
+# aaa.extractWeight(-1)
+# aaa.add_upper_deformers('pSphereShape1__TEMP', ['test2', 'test3'])
+
+# pm.blendShape('test1', 'pSphereShape1__TEMP',  o = 'local', w = [(0, 1.0)], foc = False)
 
 
 # [aaa.add_new_layer(x) for x in ['test4', 'test5']] 

@@ -1,47 +1,43 @@
 
-import os
-from datetime import datetime
-import shutil
 import getpass
+import os
+import shutil
 
-userName = getpass.getuser()         
-path_window = 'C:/Users/'+ userName + '/AppData/Roaming'
-path_linux = '/home/'+ userName 
-folder_name ='.config/adb_Setup/pyc_scripts'
+USERNAME = getpass.getuser()
+PATH_WINDOW = 'C:/Users/'+ USERNAME + '/AppData/Roaming'
+PATH_LINUX = '/home/'+ USERNAME
+FOLDER_NAME = '.config/adb_Setup/pyc_scripts'
 
 def move_pyc(source_path):
     def finalPath():
-        if not os.path.exists(path_linux):
+        if not os.path.exists(PATH_LINUX):
             pass
         else:
-            return path_linux   
-       
-        if not os.path.exists(path_window):
-            pass              
+            return PATH_LINUX
+        if not os.path.exists(PATH_WINDOW):
+            pass
         else:
-            return path_window      
-    final_path = finalPath() 
+            return PATH_WINDOW
+    final_path = finalPath()
 
-    os.chdir(final_path)        
+    os.chdir(final_path)
     try:
-        os.makedirs(folder_name)        
-    except :
-        pass          
-        
-    if os.path.exists(final_path + '/' + folder_name + '/'): 
+        os.makedirs(FOLDER_NAME)
+    except:
+        pass
+
+    if os.path.exists(final_path + '/' + FOLDER_NAME + '/'):
         pass
     else:
-        os.chdir(final_path + '/' +  folder_name)
-   
+        os.chdir(final_path + '/' +  FOLDER_NAME)
+
 
     os.chdir(source_path)
-    for f in os.listdir(os.getcwd()):
-
-        file_name, file_ext = (os.path.splitext(f))
+    for file in os.listdir(os.getcwd()):
+        file_name, file_ext = (os.path.splitext(file))
         # print (file_name), (file_ext)
-
         if file_ext == ('.pyc'):
-            shutil.move((source_path+'/'+file_name+file_ext), final_path + '/' +  folder_name )
+            shutil.move((source_path+'/'+file_name+file_ext), final_path + '/' +  FOLDER_NAME )
         else:
             pass
 
@@ -49,7 +45,7 @@ def move_pyc(source_path):
     # Delete
     # ---------------------
 
-    os.chdir(final_path + '/' +  folder_name)
+    os.chdir(final_path + '/' +  FOLDER_NAME)
     for f in os.listdir(os.getcwd()):
 
         file_name, file_ext = (os.path.splitext(f))
@@ -62,7 +58,7 @@ def move_pyc(source_path):
 
 
 # ## Work Clean Up
-# #----------------------           
+# #----------------------
 
 # move_pyc('/home/adeschamps/maya/scripts/python/Adbrower')
 # move_pyc('/home/adeschamps/maya/scripts/python/Adbrower/adb_rig')
@@ -76,28 +72,16 @@ def move_pyc(source_path):
 
 
 ## Home Clean Up
-##----------------------    
+##----------------------
 
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_rig')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_tools')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_pyQt')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils/adb_script_utils')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils/rig_utils')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_utils/deformers')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_os_utils')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/archives')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python')
-
-## git folder
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_rig')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_tools')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_utils')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_pyQt')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_utils/adb_script_utils')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_utils/rig_utils')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_utils/deformers')
-move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/git_projects/maya_script/Adbrower/adb_os_utils')
-
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_rig')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_tools')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_utils')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_pyQt')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_utils/adb_script_utils')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_utils/rig_utils')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_utils/deformers')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_os_utils')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script//archives')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/')

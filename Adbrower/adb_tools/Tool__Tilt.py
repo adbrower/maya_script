@@ -7,7 +7,6 @@
 #     audreydb23@gmail.com
 # ------------------------------------------------------------------------------------------------------
 
-from pymel.core import *
 import maya.cmds as mc
 import pymel.core as pm
 
@@ -73,72 +72,72 @@ class TiltTool():
         self.saveData()
 
     def ui(self):
-        template = uiTemplate('ExampleTemplate', force=True )
-        template.define( button, height=30,w=80)
-        template.define( frameLayout, mw=2, mh=2, borderVisible=False, labelVisible=False)
+        template = pm.uiTemplate('ExampleTemplate', force=True )
+        template.define( pm.button, height=30,w=80)
+        template.define( pm.frameLayout, mw=2, mh=2, borderVisible=False, labelVisible=False)
 
         if pm.window(self.name , q=1, ex=1):
             pm.deleteUI(self.name)
 
-        with window("TiltTool_win", t= self.title , s=False, tlb = True, mnb=True) as win:
+        with pm.window("TiltTool_win", t= self.title , s=False, tlb = True, mnb=True) as win:
             with template:
-                with frameLayout():                    
-                    with columnLayout(adj=True, rs=10):
-                            text( label="OPTIONS" , h=30, fn = "boldLabelFont")
+                with pm.frameLayout():                    
+                    with pm.columnLayout(adj=True, rs=10):
+                            pm.text( label="OPTIONS" , h=30, fn = "boldLabelFont")
                             
-                    with frameLayout():
-                        with columnLayout(adj=True, rs = 5):
+                    with pm.frameLayout():
+                        with pm.columnLayout(adj=True, rs = 5):
                            
-                            with rowLayout(columnWidth3=(0, 0, 0), adj=True, numberOfColumns=4):
-                                text( label="Tilt Control  ",align = 'left')
-                                self.tiltCtrl  = textFieldGrp(pht= "Select the tilt control", cw1=150, tx = self.tiltCtrl_txt )
-                                text( label="< < < ")
-                                button(label="Add",  h=25, backgroundColor = colordic['green3'], c = pm.Callback(self.getCtrl))
+                            with pm.rowLayout(columnWidth3=(0, 0, 0), adj=True, numberOfColumns=4):
+                                pm.text( label="Tilt Control  ",align = 'left')
+                                self.tiltCtrl  = pm.textFieldGrp(pht= "Select the tilt control", cw1=150, tx = self.tiltCtrl_txt )
+                                pm.text( label="< < < ")
+                                pm.button(label="Add",  h=25, backgroundColor = colordic['green3'], c = pm.Callback(self.getCtrl))
 
-                            with rowLayout(columnWidth3=(0, 0, 0), adj=True, numberOfColumns=4):
-                                text( label="Mesh ",align = 'left')
-                                self.mesh  = textFieldGrp(pht= "Select the mesh", cw1=150, tx = self.mesh_txt )
-                                text( label="< < < ")
-                                button(label="Add",  h=25, backgroundColor = colordic['green3'], c = pm.Callback(self.getMesh))
+                            with pm.rowLayout(columnWidth3=(0, 0, 0), adj=True, numberOfColumns=4):
+                                pm.text( label="Mesh ",align = 'left')
+                                self.mesh  = pm.textFieldGrp(pht= "Select the mesh", cw1=150, tx = self.mesh_txt )
+                                pm.text( label="< < < ")
+                                pm.button(label="Add",  h=25, backgroundColor = colordic['green3'], c = pm.Callback(self.getMesh))
 
 
-                            with rowLayout(columnWidth3=(0, 0, 0), adj=True,  numberOfColumns=4):
-                                text( label="Target Parent Group", align = 'left')
-                                self.target  = textFieldGrp(pht= "Select the target", cw1=150, tx = self.parent_txt)
-                                text( label="< < < ")
-                                button(label="Add", h=25,  backgroundColor = colordic['green3'], c = pm.Callback(self.getTarget))
+                            with pm.rowLayout(columnWidth3=(0, 0, 0), adj=True,  numberOfColumns=4):
+                                pm.text( label="Target Parent Group", align = 'left')
+                                self.target  = pm.textFieldGrp(pht= "Select the target", cw1=150, tx = self.parent_txt)
+                                pm.text( label="< < < ")
+                                pm.button(label="Add", h=25,  backgroundColor = colordic['green3'], c = pm.Callback(self.getTarget))
 
               
-                            with rowLayout(columnWidth3=(0, 0, 0), adj=True,  numberOfColumns=4):
-                                text( label="Mesh Last Offset Ctrl", align = 'left')
-                                self.offset_ctrl  = textFieldGrp(pht= "Select the target", cw1=150, tx = self.offset_txt)
-                                text( label="< < < ")
-                                button(label="Add", h=25,  backgroundColor = colordic['green3'], c = pm.Callback(self.getOffsetCtrl))
+                            with pm.rowLayout(columnWidth3=(0, 0, 0), adj=True,  numberOfColumns=4):
+                                pm.text( label="Mesh Last Offset Ctrl", align = 'left')
+                                self.offset_ctrl  = pm.textFieldGrp(pht= "Select the target", cw1=150, tx = self.offset_txt)
+                                pm.text( label="< < < ")
+                                pm.button(label="Add", h=25,  backgroundColor = colordic['green3'], c = pm.Callback(self.getOffsetCtrl))
 
                             pm.separator()                            
-                            text( label="RIGGING" , h=20, fn = "boldLabelFont")                                                
+                            pm.text( label="RIGGING" , h=20, fn = "boldLabelFont")                                                
                             pm.separator()
                             
-                            with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=7):
-                                text( label="   CHOOSE AXIS    " , h=50,)
+                            with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=7):
+                                pm.text( label="   CHOOSE AXIS    " , h=50,)
                                 
                                 if self.axisZ_setdata == 'True':
-                                    checkBox("myChBxZ", l="Z  axis", h= 25, value = True)
+                                    pm.checkBox("myChBxZ", l="Z  axis", h= 25, value = True)
                                 else:
-                                    checkBox("myChBxZ", l="Z  axis", h= 25, value = False)
+                                    pm.checkBox("myChBxZ", l="Z  axis", h= 25, value = False)
                                     
                                 if self.axisX_setdata == 'True':                                
-                                    checkBox("myChBxX", l="X  axis", h= 25, value = True)
+                                    pm.checkBox("myChBxX", l="X  axis", h= 25, value = True)
                                 else:
-                                    checkBox("myChBxX", l="X  axis", h= 25, value = False)                                   
+                                    pm.checkBox("myChBxX", l="X  axis", h= 25, value = False)                                   
 
-                                button(label="Save Data", w= 88, h=25,  backgroundColor = colordic['blue'], c = pm.Callback(self.saveData))
-                                button(label="Clear Info", w= 88, h=25,  backgroundColor = colordic['darkblue'], c = pm.Callback(self.refresh))
+                                pm.button(label="Save Data", w= 88, h=25,  backgroundColor = colordic['blue'], c = pm.Callback(self.saveData))
+                                pm.button(label="Clear Info", w= 88, h=25,  backgroundColor = colordic['darkblue'], c = pm.Callback(self.refresh))
 
-                            with rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=2):
+                            with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=2):
 
-                                button(label="Build Basic Guide", w=197, backgroundColor = colordic['grey'], c = pm.Callback(self.buildGuide) )
-                                button(label="Build Basic Rig", w=197, backgroundColor = colordic['grey'], c = pm.Callback(self.buildRig))
+                                pm.button(label="Build Basic Guide", w=197, backgroundColor = colordic['grey'], c = pm.Callback(self.buildGuide) )
+                                pm.button(label="Build Basic Rig", w=197, backgroundColor = colordic['grey'], c = pm.Callback(self.buildRig))
 
 
 #-----------------------------------
@@ -156,10 +155,10 @@ class TiltTool():
                 return self.path_linux   
            
             if not os.path.exists(self.path_window):
-                # print('path window does NOT extist') 
+                # print('path pm.window does NOT extist') 
                 pass              
             else:
-                # print('path window does extist')
+                # print('path pm.window does extist')
                 return self.path_window      
 
         self.final_path = finalPath() 
@@ -379,7 +378,7 @@ class TiltTool():
         
         """ -------------------- Z AXIS -------------------- """
 
-        if mc.checkBox("myChBxZ", q =True, v=True,) == 1 and mc.checkBox("myChBxX", q =True, v=True,) == 0:
+        if mc.pm.checkBox("myChBxZ", q =True, v=True,) == 1 and mc.pm.checkBox("myChBxX", q =True, v=True,) == 0:
             self.axe = 'z'
             self.tiltZ = adb_tilt.Tilt(self.geo, self.tiltctrl, self.mesh_ctrl_parent, self.mesh_ctrl_offset, self.axe )
             self.tiltZ.buildGuide()
@@ -388,7 +387,7 @@ class TiltTool():
         """ -------------------- X AXIS -------------------- """
 
 
-        if mc.checkBox("myChBxX", q =True, v=True,) == 1 and  mc.checkBox("myChBxZ", q =True, v=True,) == 0:
+        if mc.pm.checkBox("myChBxX", q =True, v=True,) == 1 and  mc.pm.checkBox("myChBxZ", q =True, v=True,) == 0:
             self.axe = 'x'
             self.tiltX = adb_tilt.Tilt(self.geo, self.tiltctrl, self.mesh_ctrl_parent, self.mesh_ctrl_offset, self.axe )
             self.tiltX.buildGuide()
@@ -396,7 +395,7 @@ class TiltTool():
 
         """ -------------------- Z AND X AXIS -------------------- """
 
-        if mc.checkBox("myChBxZ", q =True, v=True,) == 1 and mc.checkBox("myChBxX", q =True, v=True,) == 1:
+        if mc.pm.checkBox("myChBxZ", q =True, v=True,) == 1 and mc.pm.checkBox("myChBxX", q =True, v=True,) == 1:
             self.axe = 'both'
             self.tiltBoth = adb_tilt.Tilt(self.geo, self.tiltctrl, self.mesh_ctrl_parent, self.mesh_ctrl_offset, self.axe )
             self.tiltBoth.buildGuide()
@@ -414,20 +413,20 @@ class TiltTool():
            
         """ -------------------- Z AXIS -------------------- """
 
-        if mc.checkBox("myChBxZ", q =True, v=True,) == 1 and mc.checkBox("myChBxX", q =True, v=True,) == 0:
+        if mc.pm.checkBox("myChBxZ", q =True, v=True,) == 1 and mc.pm.checkBox("myChBxX", q =True, v=True,) == 0:
 
             self.tiltZ.buildRig()
             
         """ -------------------- X AXIS -------------------- """
 
-        if mc.checkBox("myChBxX", q =True, v=True,) == 1 and  mc.checkBox("myChBxZ", q =True, v=True,) == 0:
+        if mc.pm.checkBox("myChBxX", q =True, v=True,) == 1 and  mc.pm.checkBox("myChBxZ", q =True, v=True,) == 0:
 
             self.tiltX.buildRig()
 
         """ -------------------- Z AND X AXIS -------------------- """
 
 
-        if mc.checkBox("myChBxZ", q =True, v=True,) == 1 and mc.checkBox("myChBxX", q =True, v=True,) == 1:
+        if mc.pm.checkBox("myChBxZ", q =True, v=True,) == 1 and mc.pm.checkBox("myChBxX", q =True, v=True,) == 1:
             
             self.tiltBoth.buildRig()
      

@@ -8,53 +8,22 @@
 # ------------------------------------------------------
 
 import traceback
-
-try:
-    import PySide2.QtCore as QtCore
-    import PySide2.QtGui as QtGui
-    import PySide2.QtWidgets as QtWidgets
-    from PySide2.QtWidgets import *
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2 import QtGui
-except:
-    print "fail to import PySide2, %s" % __file__
-    import PySide.QtCore as QtCore
-    import PySide.QtGui as QtGui
-    import PySide.QtGui as QtWidgets
-    from PySide.QtCore import *
-    from PySide.QtGui import *
-    from PySide import QtGui
-
-try:
-    # future proofing for Maya 2017.
-    from shiboken2 import wrapInstance
-except ImportError:
-    from shiboken import wrapInstance
-
-import pymel.core as pm
-import pymel.core.datatypes as dt
+import sys
+import adbrower
 import maya.cmds as mc
-import maya.OpenMaya as om
-import maya.OpenMayaUI as omui
+import pymel.core as pm
+
+from PySide2 import QtGui, QtWidgets, QtCore
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
-import os
-
-
-#-----------------------------------
+# -----------------------------------
 # CUSTOM IMPORT
-#----------------------------------- 
-
-
-import adbrower
+# -----------------------------------
 adb = adbrower.Adbrower()
 
 import adb_utils.rig_utils.Class__FkShapes as adbFkShape
 import adb_utils.Class__Locator as adbLoc
-from adbrower import lprint  
 
-reload(adbLoc)
 
 #-----------------------------------
 #  DECORATORS
@@ -164,14 +133,14 @@ class JointGeneratorTool(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         ''' all layouts '''
         
         def addLineL(Layout):
-            line = QFrame()
+            line = QtWidgets.QFrame()
             line.setFrameShape(QFrame.HLine)  
             Layout.addWidget(line)         
             return line 
 
         def addLine():
-            line = QFrame()
-            line.setFrameShape(QFrame.HLine)          
+            line = QtWidgets.QFrame()
+            line.setFrameShape(QtWidgets.QFrame.HLine)          
             return line        
        
         def addText(message, alignement = QtCore.Qt.AlignCenter, height=30, bold = False):
@@ -1069,11 +1038,9 @@ def deleteDockControl():
 
 def showUI(build=None, force=False):
     global ui
-
     try:
         deleteDockControl()
-        ui = JointGeneratorTool()  
-        # print ('ui open')          
+        ui = JointGeneratorTool()           
     except Exception:
         ui = None
         printTraceback()

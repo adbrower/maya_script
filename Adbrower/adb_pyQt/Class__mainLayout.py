@@ -1,56 +1,15 @@
-import traceback
+from PySide2 import QtWidgets, QtCore
+from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
-try:
-    import PySide2.QtCore as QtCore
-    import PySide2.QtGui as QtGui
-    import PySide2.QtWidgets as QtWidgets
-    from PySide2.QtWidgets import *
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2 import QtGui
-except:
-    print "fail to import PySide2, %s" % __file__
-    import PySide.QtCore as QtCore
-    import PySide.QtGui as QtGui
-    import PySide.QtGui as QtWidgets
-    from PySide.QtCore import *
-    from PySide.QtGui import *
-    from PySide import QtGui
-
-try:
-    # future proofing for Maya 2017.
-    from shiboken2 import wrapInstance
-except ImportError:
-    from shiboken import wrapInstance
-
-import pymel.core as pm
-import pymel.core.datatypes as dt
-import maya.cmds as cmds
-import maya.OpenMaya as om
-import maya.OpenMayaUI as omui
-
-import getpass
-import os
-import ConfigParser
-import maya.cmds as mc
-import maya.mel as mel
-import sys
-
-
-
-def maya_main_window():
-    """Return the Maya main window widget as a Python object."""
-    main_window_ptr = omui.MQtUtil.mainWindow()
-    return wrapInstance(long(main_window_ptr), QtWidgets.QWidget)
 
 #-----------------------------------
 #  CLASS
 #----------------------------------- 
 
 
-class mainLayout(QtWidgets.QDialog):
+class mainLayout(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def __init__(self,parent=None):
-        super(mainLayout, self).__init__(parent = maya_main_window())
+        super(mainLayout, self).__init__(parent = parent)
 
         
         self.setObjectName('test')        
@@ -65,9 +24,6 @@ class mainLayout(QtWidgets.QDialog):
         self.main_layout.setSpacing(2)
         self.setLayout(self.main_layout)
         
-        
-
-
 
 
 def showUI():
@@ -80,5 +36,5 @@ def showUI():
 	tools_cw_ui = mainLayout()
 	tools_cw_ui.show()      
     
-showUI()
+# showUI()
 

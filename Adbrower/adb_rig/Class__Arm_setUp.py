@@ -6,22 +6,16 @@
 #     audreydb23@gmail.com
 # ------------------------------------------------------
 
-import sys
-import traceback
-import pymel.core as pm
-import maya.cmds as mc
-from pprint import pprint
-
-#-----------------------------------
-# IMPORT CUSTOM MODULES
-#----------------------------------- 
-
 import ShapesLibrary as sl
-reload(sl)
-from ShapesLibrary import*
+import maya.cmds as mc
+import pymel.core as pm
 
+# -----------------------------------
+# IMPORT CUSTOM MODULES
+# -----------------------------------
+
+from ShapesLibrary import*
 import adbrower
-reload(adbrower)
 adb = adbrower.Adbrower()
 
 import adb_utils.Class__AddAttr as adbAttr

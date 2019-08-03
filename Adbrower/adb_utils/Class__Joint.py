@@ -6,13 +6,10 @@
 #     audreydb23@gmail.com
 # -------------------------------------------------------------------
 
-import pymel.core as pm
-import maya.OpenMaya as om
-
-from adbrower import makeroot
 import adbrower
+import pymel.core as pm
+
 adb = adbrower.Adbrower()
-from adbrower import flatList
 import adb_utils.Class__Transforms as adbTransform
 
 #-----------------------------------
@@ -34,7 +31,7 @@ class Joint(adbTransform.Transform):
         
         if isinstance(self.joints , list):
             self.joints  = [pm.PyNode(x) for x in _joint]
-        elif isinstance(self.joints , basestring):
+        elif isinstance(self.joints , str):
             self.joints  = [_joint]
         else:
             self.joints  = _joint

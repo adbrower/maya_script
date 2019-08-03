@@ -6,45 +6,27 @@
 #     audreydb23@gmail.com
 # ------------------------------------------------------
 
-import sys
-import traceback
-import pymel.core as pm
-import maya.cmds as mc
-from pprint import pprint
-
-
-#-----------------------------------
-# IMPORT CUSTOM MODULES
-#----------------------------------- 
-
 import ShapesLibrary as sl
-reload(sl)
-from ShapesLibrary import* 
-
 import adbrower
-reload(adbrower)
+import pymel.core as pm
+from ShapesLibrary import *
+
+# -----------------------------------
+# IMPORT CUSTOM MODULES
+# -----------------------------------
 adb = adbrower.Adbrower()
-
 import adb_utils.Class__AddAttr as adbAttr
-reload (adbAttr)
-
-import adb_utils.rig_utils.Class__ShapeManagement as adbShape
-reload (adbShape)
-
 import adb_utils.rig_utils.Class__OrientJoint as adbOrient
-reload (adbOrient)
+
 
 #-----------------------------------
 #  DECORATORS
 #----------------------------------- 
-from adbrower import undo
 from adbrower import changeColor
-from adbrower import makeroot
-from adbrower import lockAttr
 
 #-----------------------------------
 # CLASS
-#----------------------------------- 
+#-----------------------------------
 
 class FootSetUp(object):
     def __init__(self,

@@ -1,3 +1,6 @@
 *.pyc
 Concepts_Study
 Exterior_scripts
+sh.exe.stackdump
+*.json
+Archives
