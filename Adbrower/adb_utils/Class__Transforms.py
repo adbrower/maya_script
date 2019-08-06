@@ -7,7 +7,6 @@
 # -------------------------------------------------------------------
 
 import pymel.core as pm
-import maya.cmds as mc
 import maya.OpenMaya as om
 import maya.mel as mel
 
@@ -32,7 +31,7 @@ class Transform(adbAttr.NodeAttr):
         self.transform = transform
         if isinstance(self.transform, list):
             self.transform = transform
-        elif isinstance(self.transform, basestring):
+        elif isinstance(self.transform, str):
             self.transform = [transform]
         elif isinstance(self.transform, unicode):
             self.transform = [pm.PyNode(transform)]
@@ -66,6 +65,7 @@ class Transform(adbAttr.NodeAttr):
         Change de pivot Point of a subject base values
         """
         pivot_point = [pm.PyNode(x).setRotatePivot(val) for x in self.transform]
+        return
 
     @property
     def type(self):
@@ -199,7 +199,7 @@ class Transform(adbAttr.NodeAttr):
             sel.getDagPath(0, d)
             return d
 
-        def getLocalOffset(parent_, child_):
+        def getLocalOffset():
             parentWorldMatrix = getDagPath(str(parent_transform)).inclusiveMatrix()
             childWorldMatrix = getDagPath(child).inclusiveMatrix()
             return childWorldMatrix * parentWorldMatrix.inverse()
@@ -208,7 +208,7 @@ class Transform(adbAttr.NodeAttr):
         dec_matrix = pm.createNode('decomposeMatrix', n='{}_dectM'.format(parent_transform))
 
         if mo is True:
-            localOffset = getLocalOffset(parent_transform, child)
+            localOffset = getLocalOffset()
 
             # matrix Mult Node CONNECTIONS
             pm.setAttr("{}.matrixIn[0]".format(mult_matrix), [localOffset(i, j) for i in range(4) for j in range(4)], type="matrix")
@@ -393,3 +393,4 @@ class Transform(adbAttr.NodeAttr):
             if pm.nodeType(elem) == 'blendShape':
                 result.append(elem)
         return result
+
