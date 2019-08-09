@@ -6,3 +6,5 @@ sh.exe.stackdump
 Archives
 .idea
 *.xml
+config.py
+objectdb
