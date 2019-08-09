@@ -28,9 +28,20 @@ adb = adbrower.Adbrower()
 
 class JointGeneratorTool(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     UI_NAME = 'adb_Rig_Tool'
+    __dialog = None
+    
+    @classmethod
+    def show_dialog(cls):
+        if cls.__dialog is None:
+            cls.__dialog = cls()
+        else:
+            cls.__dialog.raise_() 
+        cls.__dialog.show()
+        
 
     def __init__(self, parent=None):
-        super(JointGeneratorTool, self).__init__(parent=None)
+        
+        super(JointGeneratorTool, self).__init__(parent=parent)
 
         self.setObjectName(self.UI_NAME)
         self.version = 4.0
@@ -39,8 +50,6 @@ class JointGeneratorTool(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.setFixedWidth(400)
         self.setFixedHeight(500)
         self.setWindowFlags(QtCore.Qt.Tool)
-
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         # Main layout
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -976,17 +985,21 @@ def deleteDockControl():
             mc.deleteUI(ui_name)
 
 
-def showUI(build=None, force=False):
-    global ui
-    try:
-        deleteDockControl()
-        ui = JointGeneratorTool()
-    except Exception:
-        ui = None
-        printTraceback()
-        return
+def showUI(dialog=True):
+    if dialog:
+        JointGeneratorTool.show_dialog()
+    else:   
+        global ui
+        try:
+            deleteDockControl()
+            ui = JointGeneratorTool()
+        except Exception:
+            ui = None
+            printTraceback()
+            return
 
-    ui.show(dockable=True)
-    return ui
+        ui.show(dockable=True)
+        return ui
 
-# showUI()
+
+

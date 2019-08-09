@@ -23,7 +23,7 @@ PATH_WINDOW = 'C:/Users/' + USERNAME + '/AppData/Roaming'
 PATH_LINUX = '/home/' + USERNAME + '/'
 FOLDER_NAME = '.config/adb_Setup'
 FILE_NAME = 'Copy_WEIGHTS_Tool_config2.ini'
-ICONS_FOLDER = 'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_icons/'
+ICONS_FOLDER = 'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_icons/'
 
 
 # -----------------------------------
@@ -32,6 +32,16 @@ ICONS_FOLDER = 'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_icons/
 
 
 class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
+    __dialog = None
+    
+    @classmethod
+    def show_dialog(cls):
+        if cls.__dialog is None:
+            cls.__dialog = cls()
+        else:
+            cls.__dialog.raise_() 
+        cls.__dialog.show()
+        
     def __init__(self, parent=None):
         super(SkinCopyWEIGHTS, self).__init__(parent=parent)
         self.setObjectName('test')
@@ -88,13 +98,19 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         pm.select(None)
 
     def closeEvent(self, eventQCloseEvent):
+        # return
         self.saveData()
+
 
     def dockCloseEventTriggered(self):
+        return
         self.saveData()
 
+
     def close(self):
+        return
         self.saveData()
+
 
     def widgetsAndLayouts(self):
 
@@ -1046,14 +1062,16 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 # ===============================
 
 
-def showUI():
-    # Make sure the UI is deleted before recreating
-    global tools_cw_ui
-    try:
-        tools_cw_ui.deleteLater()
-    except:
-        pass
-    tools_cw_ui = SkinCopyWEIGHTS()
-    tools_cw_ui.show()
-
-# showUI()
+def showUI(dialog = True):
+    if dialog:
+        SkinCopyWEIGHTS.show_dialog()
+    else:    
+        # Make sure the UI is deleted before recreating
+        global tools_cw_ui
+        try:
+            tools_cw_ui.deleteLater()
+        except:
+            pass
+        tools_cw_ui = SkinCopyWEIGHTS()
+        tools_cw_ui.show()
+    
