@@ -45,19 +45,19 @@ class adbModule():
         self.ui()
 
     def ui(self):
-        template = uiTemplate('ExampleTemplate', force=True)
+        template = pm.uiTemplate('ExampleTemplate', force=True)
         template.define(pm.button, width=200, height=25)
         template.define(pm.frameLayout, borderVisible=False, labelVisible=False)
 
         with template:
-            with formLayout():
+            with pm.formLayout():
                 pm.dockControl("adb_Module", content=self.win, a="left")
                 with pm.columnLayout(adj=True, rs=1):
                     with pm.columnLayout(adj=True, rs=4):
-                        self.docString = checkBox(l='Doc String')
+                        self.docString = pm.checkBox(l='Doc String')
                     with pm.frameLayout(cll=True, bgc=(0.202, 0.202, 0.202), labelVisible=True, cl=False, label="INFORMATION"):
                         with pm.columnLayout(adj=True, rs=4):
-                            pm.button(label="Print List",  backgroundColor=colordic['grey1'], c=Callback(adb.List))
+                            pm.button(label="Print List",  backgroundColor=colordic['grey1'], c=pm.Callback(adb.List))
                             pm.button(label="Print Type",  backgroundColor=colordic['grey1'], c=pm.Callback(self.Type))
                             pm.button(label="Print Type PyMel",  backgroundColor=colordic['grey1'], c=pm.Callback(self.TypePymel))
 
@@ -82,7 +82,7 @@ class adbModule():
                                 else:
                                     pm.warning('Choice None Existant')
 
-                            optionMenu(w=200, h=30,  cc=proxyPlane)
+                            pm.optionMenu(w=200, h=30,  cc=proxyPlane)
                             pm.menuItem(label="               - Create Proxy Plane -")
                             pm.menuItem(label="                       - X AXIS -")
                             pm.menuItem(label="                       - Y AXIS -")
@@ -100,7 +100,7 @@ class adbModule():
                                 else:
                                     pm.warning('Choice None Existant')
 
-                            optionMenu(w=200, h=30,  cc=mirrorChoice)
+                            pm.optionMenu(w=200, h=30,  cc=mirrorChoice)
                             pm.menuItem(label="               - Choose Axis Mirror -")
                             pm.menuItem(label="                       - X AXIS -")
                             pm.menuItem(label="                       - Y AXIS -")
@@ -108,7 +108,7 @@ class adbModule():
 
                         with pm.rowLayout(adj=True, numberOfColumns=2):
                             pm.button(label="Get Node Type",  backgroundColor=colordic['green3'], c=pm.Callback(self.NodeType), w=20, h=25)
-                            self.nodeName = textField(pht="Name the animation node",  tx='animCurve',)
+                            self.nodeName = pm.textField(pht="Name the animation node",  tx='animCurve',)
                         with pm.columnLayout(adj=True, rs=4):
                             pm.button(label="DrivenKeys to Remap Value",  backgroundColor=colordic['grey1'],  c=pm.Callback(self.DkToRv))
 
@@ -119,31 +119,31 @@ class adbModule():
 
                         with pm.rowLayout(adj=True, numberOfColumns=4):
                             pm.text(label="Number")
-                            self.folli = floatField(v=5, precision=1, showTrailingZeros=0)
+                            self.folli = pm.floatField(v=5, precision=1, showTrailingZeros=0)
                             pm.text(label=" Radius ")
-                            self.radius = floatField(v=1, precision=2,  showTrailingZeros=0)
+                            self.radius = pm.floatField(v=1, precision=2,  showTrailingZeros=0)
 
-                        self.folli_ctrl = checkBox(l='With Controls', v=True)
+                        self.folli_ctrl = pm.checkBox(l='With Controls', v=True)
                         pm.button(label="Create Follicules",  backgroundColor=colordic['grey1'], c=pm.Callback(self.Folli))
                         pm.button(label="Add Controls",  backgroundColor=colordic['grey1'], c=pm.Callback(self._addControls))
 
                     with pm.frameLayout(cll=True, bgc=(0.202, 0.202, 0.202), labelVisible=True, cl=False, label="OUTPUT WINDOW"):
                         with pm.columnLayout(adj=True, rs=5):
-                            text(label="Output Window", h=20)
-                            self.outputWin = textScrollList(w=150, h=60)
+                            pm.text(label="Output Window", h=20)
+                            self.outputWin = pm.textScrollList(w=150, h=60)
                             pm.button(label="Refresh",  backgroundColor=colordic['grey2'], c=lambda *args: pm.textScrollList(self.outputWin,  edit=True, removeAll=True), h=25)
 
                     with pm.frameLayout(cll=True, bgc=(0.202, 0.202, 0.202), labelVisible=True, cl=False, label="SKINNING"):
                         with pm.columnLayout(adj=True, rs=4):
-                            pm.button(label="Reset Skin",  backgroundColor=colordic['grey1'], c=Callback(adb.resetSkin))
-                            pm.button(label="Replace Lattice",  backgroundColor=colordic['grey1'], c=Callback(adb.find_and_replace_lattices))
+                            pm.button(label="Reset Skin",  backgroundColor=colordic['grey1'], c=pm.Callback(adb.resetSkin))
+                            pm.button(label="Replace Lattice",  backgroundColor=colordic['grey1'], c=pm.Callback(adb.find_and_replace_lattices))
                             pm.button(label="Blend Two Groups",  backgroundColor=colordic['grey1'], c=pm.Callback(self._blend2grps))
                             pm.button(label="Wrap",  backgroundColor=colordic['grey1'], c=pm.Callback(self._wrap))
                             pm.button(label="Wrap SetUp",  backgroundColor=colordic['grey1'], c=pm.Callback(self._wrapSetup))
 
                     with pm.frameLayout(cll=True, bgc=(0.202, 0.202, 0.202), labelVisible=True, cl=False, label="CONTROLS"):
                         with pm.columnLayout(adj=True, rs=4):
-                            pm.button(label="Get Curve Information",  backgroundColor=colordic['grey1'], c=Callback(adb.GetCurveShape))
+                            pm.button(label="Get Curve Information",  backgroundColor=colordic['grey1'], c=pm.Callback(adb.GetCurveShape))
                             pm.button(label="Combine Shapes",  backgroundColor=colordic['grey1'], c=lambda * agrs: adb.CombineShape(oNurbs=pm.selected()))
                             pm.button(label="Replace Shape",  backgroundColor=colordic['grey1'], c=pm.Callback(self._ReplaceShape))
 
@@ -231,7 +231,7 @@ class adbModule():
         :return:
         """
 
-        nodeType = pm.textField(self.nodeName, q=True, tx=True
+        nodeType = pm.textField(self.nodeName, q=True, tx=True)
         allNodes = pm.ls(type=nodeType)
         pm.select(None)
 
