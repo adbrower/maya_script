@@ -8,6 +8,7 @@ import traceback
 import adb_pyQt.Class__frameLayout as adbFrameLayout
 import adb_utils.adb_script_utils.Functions__Rivet as adbRivet
 import adbrower
+import Adbrower
 import CollDict
 import maya.cmds as mc
 import maya.mel as mel
@@ -25,7 +26,9 @@ adb = adbrower.Adbrower()
 #  CLASS
 # -----------------------------------
 
-version = '1.00'
+VERSION = '1.00'
+DEFAULT_PATH = Adbrower.PATH_WINDOW_INIT + 'Documents/maya'
+
 
 
 class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
@@ -39,7 +42,7 @@ class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.playbast_path = None
 
         self.setObjectName('CFX_TOOLS_UI')
-        self.setWindowTitle('CFX Toolbox  v{}'.format(version))
+        self.setWindowTitle('CFX Toolbox  v{}'.format(VERSION))
         self.setWindowFlags(QtCore.Qt.Tool)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.resize(290, 900)
@@ -212,7 +215,7 @@ class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.blendshapeValue_LineEdit=QtWidgets.QLineEdit('1.00')
         self.blendshapeValue_LineEdit.setMaximumSize(QtCore.QSize(50, 20))
 
-        self.path_LineEdit=QtWidgets.QLineEdit('C:\Users\Audrey\Documents\maya')
+        self.path_LineEdit=QtWidgets.QLineEdit(DEFAULT_PATH)
         self.path_LineEdit.setStyleSheet(
             "QLineEdit { background-color : #2E2E2E; }")
 
@@ -953,7 +956,7 @@ class clothManager(QtWidgets.QDialog):
                 ['nRigid',              self.selectionAB,   '#fd651d',      False, ],
                 ['nCloth',              self.test,          '#ffe100',      True, ],
                 ['constraints',         self.test,
-                    '#11a11f',      False, ],
+                 '#11a11f',      False, ],
                             ]
 
         for treeItem, buttonFunction, labColor, expand in self.treeSetUpChild:
