@@ -14,7 +14,6 @@ import adbrower
 import maya.cmds as mc
 import pymel.core as pm
 
-reload(adbrower)
 adb = adbrower.Adbrower()
 
 # -----------------------------------
@@ -97,15 +96,26 @@ class MotionPathJnt(object):
         for _joint in self.all_jnts:
             pm.parent(_joint, w=True)
             adb.makeroot_func(_joint)
-
-            _motionPathNode = pm.pathAnimation(self._curve, _joint.getParent(),
-                                               upAxis='y', fractionMode=True,
+            
+            double_linears_nodes = []
+            _motionPathNode = pm.pathAnimation(self._curve,_joint.getParent(), upAxis='y', fractionMode=True,
                                                worldUpType="vector",
                                                inverseUp=False, inverseFront=False, follow=True, bank=False, followAxis='x',
                                                worldUpVector=(0, 1, 0))
 
-            self.all_motionPath.append(_motionPathNode)
+            ## Delete double Linear nodes
+            for axis in 'xyz':
+                double_linear = pm.listConnections(_motionPathNode + '.{}Coordinate'.format(axis))[0]
+                double_linears_nodes.append(double_linear)
 
+            pm.delete(double_linears_nodes)
+            
+            for axis in 'xyz':
+                # pm.cycleCheck(e=1)
+                pm.connectAttr('{}.{}Coordinate'.format(_motionPathNode, axis), '{}.t{}'.format(_joint.getParent(), axis), f=1)
+
+            self.all_motionPath.append(_motionPathNode)
+            
         # New interval value for the Function
         Nintervalls = self._interval - 1
 
@@ -158,5 +168,5 @@ class MotionPathJnt(object):
         self.interval = actual_intv - 1
 
 
-# mpj = MotionPathJnt(14)
-# mpj.radius = 0.2
+mpj = MotionPathJnt(5)
+mpj.radius = 0.2

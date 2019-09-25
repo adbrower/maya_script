@@ -39,8 +39,7 @@ class JointGeneratorTool(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         cls.__dialog.show()
         
 
-    def __init__(self, parent=None):
-        
+    def __init__(self, parent=None):        
         super(JointGeneratorTool, self).__init__(parent=parent)
 
         self.setObjectName(self.UI_NAME)
@@ -900,13 +899,24 @@ class JointGeneratorTool(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
             self.all_jnts.append(_joint)
 
+            double_linears_nodes = []
             _motionPathNode = pm.pathAnimation(self.curve,  _joint.getParent(), upAxis='y', fractionMode=True,
                                                worldUpType="vector",
                                                inverseUp=False, inverseFront=False, follow=True, bank=False, followAxis='x',
                                                worldUpVector=(0, 1, 0))
 
+            ## Delete double Linear nodes
+            for axis in 'xyz':
+                double_linear = pm.listConnections(_motionPathNode + '.{}Coordinate'.format(axis))[0]
+                double_linears_nodes.append(double_linear)                
+            pm.delete(double_linears_nodes)     
+                          
+            for axis in 'xyz':
+                # pm.cycleCheck(e=0)
+                pm.connectAttr('{}.{}Coordinate'.format(_motionPathNode, axis), '{}.t{}'.format(_joint.getParent(), axis), f=1)
+                    
+                    
             self.all_motionPath.append(_motionPathNode)
-
         # New interval value for the Function
         Nintervalls = int(self.interval) - 1
 
@@ -985,21 +995,22 @@ def deleteDockControl():
             mc.deleteUI(ui_name)
 
 
-def showUI(dialog=True):
-    if dialog:
-        JointGeneratorTool.show_dialog()
-    else:   
-        global ui
-        try:
-            deleteDockControl()
-            ui = JointGeneratorTool()
-        except Exception:
-            ui = None
-            printTraceback()
-            return
-
-        ui.show(dockable=True)
-        return ui
+def showUI():
+    JointGeneratorTool.show_dialog()
 
 
+def resetUI():
+    global ui
+    try:
+        deleteDockControl()
+        ui = JointGeneratorTool()
+    except Exception:
+        ui = None
+        printTraceback()
+        return
 
+    ui.show(dockable=True)
+    return ui
+
+
+# showUI()
