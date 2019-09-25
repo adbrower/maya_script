@@ -1,5 +1,4 @@
 import ConfigParser
-import getpass
 import os
 
 import maya.cmds as mc
@@ -10,7 +9,12 @@ import pymel.core.datatypes as dt
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 from PySide2 import QtCore, QtGui, QtWidgets
 
-USERNAME = getpass.getuser()
+import Adbrower
+
+PATH_WINDOW = Adbrower.PATH_WINDOW_INIT + 'AppData/Roaming'
+PATH_LINUX = Adbrower.PATH_LINUX_INIT
+FOLDER_NAME = Adbrower.FOLDER_NAME_INIT
+FILE_NAME = 'ik_fk_match_confi.ini'
 
 
 class Match_IkFk(MayaQWidgetDockableMixin, QtWidgets.QDialog):
@@ -21,18 +25,13 @@ class Match_IkFk(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.setWindowTitle('adbrower - Match_IkFk v1.0.0')
         self.setWindowFlags(QtCore.Qt.Tool)
 
-        self.path_window = 'C:/Users/' + USERNAME + '/AppData/Roaming'
-        self.path_linux = '/home/' + USERNAME + '/'
-        self.folder_name = '.config/adb_Setup'
-        self.file_name = 'ik_fk_match_confi.ini'
-
         self.centralwidget = QtWidgets.QWidget()
         self.centralwidget.setObjectName("match_Tool")
 
         self.final_path = self.setPath()
 
         self.dataList = self.loadData()
-        # print('adb_match_IKFK settings file load from: ' + self.final_path + self.folder_name + '/' + self.file_name)
+        # print('adb_match_IKFK settings file load from: ' + self.final_path + FOLDER_NAME + '/' + FILE_NAME)
 
         self.IKFK_ctrl = self.dataList[0]
         self.IKjointsCh = self.dataList[1]
@@ -45,7 +44,7 @@ class Match_IkFk(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
     def closeEvent(self, eventQCloseEvent):
         self.saveData()
-        print('adb_match_IKFK settings file saved at: ' + self.final_path + self.folder_name + '/' + self.file_name)
+        print('adb_match_IKFK settings file saved at: ' + self.final_path + FOLDER_NAME + '/' + FILE_NAME)
 
     def create_Button(self):
         self.colorWhite = '#FFFFFF'
@@ -264,7 +263,7 @@ class Match_IkFk(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         return mylist
 
     def writeText(self):
-        file_ini = open(self.file_name, 'w+')
+        file_ini = open(FILE_NAME, 'w+')
         file_ini.write('[General] \n')
 
         file_ini.write("switch_ctrl_data= \n")
@@ -278,33 +277,33 @@ class Match_IkFk(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
     def setPath(self):
         def finalPath():
-            if not os.path.exists(self.path_linux):
+            if not os.path.exists(PATH_LINUX):
                 # print('path linux does NOT extist')
                 pass
             else:
                 # print('path linux does extist')
-                return self.path_linux
+                return PATH_LINUX
 
-            if not os.path.exists(self.path_window):
+            if not os.path.exists(PATH_WINDOW):
                 # print('path window does NOT extist')
                 pass
             else:
                 # print('path window does extist')
-                return self.path_window
+                return PATH_WINDOW
 
         self.final_path = finalPath()
 
         os.chdir(self.final_path)
         try:
-            os.makedirs(self.folder_name)
+            os.makedirs(FOLDER_NAME)
         except :
             pass
 
-        if os.path.exists(self.final_path + '/' + self.folder_name + '/' + self.file_name):
+        if os.path.exists(self.final_path + '/' + FOLDER_NAME + '/' + FILE_NAME):
             # print ('file exist')
             pass
         else:
-            os.chdir(self.final_path + '/' +  self.folder_name)
+            os.chdir(self.final_path + '/' +  FOLDER_NAME)
             # print(os.getcwd())
 
             self.writeText()
@@ -319,10 +318,10 @@ class Match_IkFk(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         except :
             pass
 
-        os.chdir(self.final_path +'/'+ self.folder_name)
+        os.chdir(self.final_path +'/'+ FOLDER_NAME)
         # print(os.getcwd())
 
-        file_ini = open(self.file_name, 'w+')
+        file_ini = open(FILE_NAME, 'w+')
         file_ini.write('[General] \n')
 
         for buttonName in self.lineEdit1[:1]:
@@ -350,7 +349,7 @@ class Match_IkFk(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         try:
             dataList = []
             config = ConfigParser.ConfigParser()
-            config.read( self.final_path + '/' + self.folder_name + '/' + self.file_name)
+            config.read( self.final_path + '/' + FOLDER_NAME + '/' + FILE_NAME)
 
             self.switch_ctrl_setdata = config.get("General", "switch_ctrl_data")
             self.Ik_jnts_setdata = config.get("General", "Ik_jnts_data")
@@ -367,7 +366,7 @@ class Match_IkFk(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             return(dataList)
 
         except:
-            os.chdir(self.final_path + '/' +  self.folder_name)
+            os.chdir(self.final_path + '/' +  FOLDER_NAME)
             # print(os.getcwd())
 
             self.writeText()

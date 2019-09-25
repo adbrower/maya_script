@@ -1,5 +1,4 @@
 import ConfigParser
-import getpass
 import os
 import sys
 
@@ -7,23 +6,27 @@ import adb_pyQt.Class__frameLayout as adbFrameLayout
 import adb_utils.Class__Skinning as skin
 import adb_utils.deformers.Class__Blendshape as bs
 import adbrower
+import Adbrower
 import maya.cmds as mc
 import pymel.core as pm
 from CollDict import pysideColorDic as pyQtDic
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 from PySide2 import QtCore, QtGui, QtWidgets
-from skinWrangler_master import skinWrangler
+
+try:
+    from skinWrangler_master import skinWrangler
+except importError as error:
+    print(error)
 
 adb = adbrower.Adbrower()
 
 
 VERSION = 3.0
-USERNAME = getpass.getuser()
-PATH_WINDOW = 'C:/Users/' + USERNAME + '/AppData/Roaming'
-PATH_LINUX = '/home/' + USERNAME + '/'
-FOLDER_NAME = '.config/adb_Setup'
+PATH_WINDOW = Adbrower.PATH_WINDOW_INIT + 'AppData/Roaming'
+PATH_LINUX = Adbrower.PATH_LINUX_INIT
+FOLDER_NAME = Adbrower.FOLDER_NAME_INIT
+ICONS_FOLDER = Adbrower.ICONS_FOLDER_INIT
 FILE_NAME = 'Copy_WEIGHTS_Tool_config2.ini'
-ICONS_FOLDER = 'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_icons/'
 
 
 # -----------------------------------
