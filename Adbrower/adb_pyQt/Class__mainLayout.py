@@ -8,6 +8,16 @@ from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 
 class mainLayout(MayaQWidgetDockableMixin, QtWidgets.QDialog):
+    __dialog = None
+    
+    @classmethod
+    def show_dialog(cls):
+        if cls.__dialog is None:
+            cls.__dialog = cls()
+        else:
+            cls.__dialog.raise_() 
+        cls.__dialog.show()
+        
     def __init__(self,parent=None):
         super(mainLayout, self).__init__(parent = parent)
 
@@ -38,3 +48,5 @@ def showUI():
     
 # showUI()
 
+
+# mainLayout.show_dialog()
