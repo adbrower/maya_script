@@ -5,6 +5,7 @@
 # By: Audrey Deschamps-Brower
 #     audreydb23@gmail.com
 # -------------------------------------------------------------------
+import numpy
 
 import adb_utils.Class__Transforms as adbTransform
 import adbrower
@@ -18,16 +19,112 @@ adb = adbrower.Adbrower()
 
 
 class Joint(adbTransform.Transform):
-    """
-    A Module containing multiples joint methods
-    """
+    """A Module containing multiples joint methods"""
+
+    @classmethod
+    def find_all(cls):
+        """ Return a Joint instance for every joint node in the scene. """
+        return cls([jnt for jnt in pm.ls(type='joint')])
+
+    @classmethod
+    def from_selected(cls):
+        """ Return a instance for a list with all selected """
+        return cls([(jnt) for jnt in pm.selected()])
+
+    @classmethod
+    def create(cls, numb=1, name='joint1', rad=1):
+        jnt_created = []
+        for number in range(numb):
+            jnt = pm.joint(n='{}_{:02d}'.format(name, number+1), rad=rad)
+            pm.parent(jnt, w=1)
+            jnt_created.append(jnt)
+        return cls(jnt_created)
+
+    @classmethod
+    def point_base(cls, *point_array, **kwargs):
+        """
+        @param *point_array : (list) Each element of the list need to be a vector value (x,y,z)
+                                     and it will be unpack
+
+        @param padding      : (Bool) If the joints will have padding number
+        @param chain        : (Bool) If the joints will be chained or not
+        @param orient_axis  : (string)  'x' : 'y' :  'z' : 'world'
+
+        # example
+        points =[[0.0, 0.0, 0.0],[-2.54, 4.68, -0.96],[2.66, 4.66, -6.16], [0.66, 8.22, -6.83]]
+        test = adbJnt.Joint.point_base(*points)
+        """
+
+        name = kwargs.pop('name', 'joint1')
+        padding = kwargs.pop('padding', False)
+        radius = kwargs.pop('radius', 1)
+        chain = kwargs.pop('chain', False)
+        orient_axis = kwargs.pop('orient_axis', 'world')
+
+        joint_array = []
+        for index, point in enumerate(point_array):
+            pm.select(None)
+            if padding:
+                new_joint = pm.joint(name='{}_{:02d}'.format(name, index+1), p=point, rad=radius)
+            else:
+                new_joint = pm.joint(name=name, p=point, rad=radius)
+            joint_array.append(new_joint)
+
+        if chain:
+            def chain_parent(oColljoint):
+                for oParent, oChild in zip(oColljoint[0:-1], oColljoint[1:]):
+                    try:
+                        pm.parent(oChild, None)
+                        pm.parent(oChild, oParent)
+                    except RuntimeError:
+                        continue
+
+            chain_parent(joint_array)
+
+        # orient joint
+        _temp = cls(joint_array)
+        _temp.orient_axis = orient_axis
+
+        return cls(joint_array)
+
+    @classmethod
+    def selection_base(cls, *args, **kwargs):
+        """
+        @param *point_array : (list) Each element of the list need to be a vector value (x,y,z)
+                                     and it will be unpack
+
+        @param name        : (String)
+        @param padding      : (Bool) If the joints will have padding number
+
+        # example
+        points =[[0.0, 0.0, 0.0], [-2.54, 4.68, -0.96], [2.66, 4.66, -6.16], [0.66, 8.22, -6.83]]
+        test = adbLoc.Joint.selection_base()
+        """
+
+        name = kwargs.pop('name', 'joint1')
+        padding = kwargs.pop('padding', False)
+
+        jnts_array = []
+        for index, sel in enumerate(pm.selected()):
+            # create variable for the position of the locators
+            pos = sel.getRotatePivot(space='world')
+            # unparent the joints
+            pm.select(cl=True)
+            # create joints and position them on top of locators
+            if padding:
+                _joint = pm.joint(p=pos, n='{}_{}'.format(name, index+1))
+            else:
+                _joint = pm.joint(p=pos, n=name)
+            jnts_array.append(_joint)
+            return cls(jnts_array)
 
     def __init__(self,
                  _joint,
                  ):
 
         self.joints = _joint
-        self._orientAxis = None
+        self._orient_axis = None
+        self._radius = None
 
         if isinstance(self.joints, list):
             self.joints = [pm.PyNode(x) for x in _joint]
@@ -41,96 +138,8 @@ class Joint(adbTransform.Transform):
     def __repr__(self):
         return str('<{} \'{}\'>'.format(self.__class__.__name__, self.joints))
 
-    @classmethod
-    def findAll(cls):
-        """ Return a Joint instance for every joint node in the scene. """
-        return cls([jnt for jnt in pm.ls(type='joint')])
-
-    @classmethod
-    def fromSelected(cls):
-        """ Return a instance for a list with all selected """
-        return cls([(jnt) for jnt in pm.selected()])
-
-    @classmethod
-    def create(cls, numb=1, name='', r=1, ):
-        jnt_created = []
-        for number in range(numb):
-            jnt = pm.joint(n=name, rad=r)
-            pm.parent(jnt, w=1)
-            jnt_created.append(jnt)
-        return cls(jnt_created)
-
-    @classmethod
-    def point_base(cls, *point_array,  **kwargs):
-        """
-        @param *point_array : (list) Each element of the list need to be a vector value (x,y,z)
-                                     and it will be unpack
-
-        @param chain        : (Bool) If the joints will be chained or not
-        @param orient_axis  : (string)  'x' : 'y' :  'z' : 'world'
-
-        # example
-        test =[[0.0, 0.0, 0.0],[-2.54, 4.68, -0.96],[2.66, 4.66, -6.16], [0.66, 8.22, -6.83]]
-        test = adbJnt.Joint.point_base(*points)
-        """
-
-        name = kwargs.pop('name', 'joint1')
-        radius = kwargs.pop('radius', 1)
-        chain = kwargs.pop('chain', False)
-        orient_axis = kwargs.pop('orient_axis', 'world')
-
-        joint_array = []
-        for index, point in enumerate(point_array):
-            pm.select(None)
-            new_joint = pm.joint(p=point, name=name, rad=radius)
-            joint_array.append(new_joint)
-
-        if chain is True:
-            def chain_parent(oColljoint):
-                for oParent, oChild in zip(oColljoint[0:-1], oColljoint[1:]):
-                    try:
-                        pm.parent(oChild, None)
-                        pm.parent(oChild, oParent)
-                    except:
-                        continue
-
-            chain_parent(joint_array)
-
-        # orient joint
-        _temp = cls(joint_array)
-        _temp.orientAxis = orient_axis
-
-        return cls(joint_array)
-
-    @classmethod
-    def selection_base(cls, *args,  **kwargs):
-        """
-        @param *point_array : (list) Each element of the list need to be a vector value (x,y,z)
-                                     and it will be unpack
-
-        @param name        : (String)
-
-        # example
-        points =[[0.0, 0.0, 0.0],[-2.54, 4.68, -0.96],[2.66, 4.66, -6.16], [0.66, 8.22, -6.83]]
-        test = adbLoc.Joint.selection_base()
-        """
-
-        name = kwargs.pop('name', 'joint1')
-
-        jnts_array = []
-        for sel in pm.selected():
-            # create variable for the position of the locators
-            pos = sel.getRotatePivot(space='world')
-            # unparent the joints
-            pm.select(cl=True)
-            # create joints and position them on top of locators
-            oJoints = pm.joint(p=pos, n=name)
-            jnts_array.append(oJoints)
-
-        return cls(jnts_array)
-
     @property
-    def orientAxis(self):
+    def orient_axis(self):
         dup_jnt = pm.duplicate(self.joints[0], po=True)[0]
         pm.parent(dup_jnt, w=1)
         root_grp = adb.makeroot_func(dup_jnt)
@@ -142,33 +151,33 @@ class Joint(adbTransform.Transform):
         matrixRotationValue = decNode.getAttr('inputMatrix')[0]
         pm.delete(root_grp)
 
-        print matrixRotationValue
+        print(matrixRotationValue)
         if '{:.2f}'.format(matrixRotationValue[0]) == '0.00':
-            self._orientAxis = 'Y'
+            self._orient_axis = 'Y'
         elif '{:.2f}'.format(matrixRotationValue[0]) == '1.00':
-            self._orientAxis = 'X'
-        return self._orientAxis
+            self._orient_axis = 'X'
+        return self._orient_axis
 
-    @orientAxis.setter
-    def orientAxis(self, val):
-        self._orientAxis = val
+    @orient_axis.setter
+    def orient_axis(self, val):
+        self._orient_axis = val
         self.orient_joint()
 
     @property
-    def drawStyle(self):
+    def draw_style(self):
         if self.joints is None:
             pass
-        return pm.PyNode(self.joints[0]).drawStyle.get()
+        return pm.PyNode(self.joints[0]).draw_style.get()
 
-    @drawStyle.setter
-    def drawStyle(self, value):
+    @draw_style.setter
+    def draw_style(self, value):
         """
         0 : Bone
         1 : Multi - Child as box
         2 : None
         """
         for jnt in self.joints:
-            pm.PyNode(jnt).drawStyle.set(value)
+            pm.PyNode(jnt).draw_style.set(value)
 
     @property
     def radius(self):
@@ -188,47 +197,47 @@ class Joint(adbTransform.Transform):
             pm.PyNode(joint).radius.set(rad)
 
     def orient_joint(self):
-        if self._orientAxis == 'Y':
+        if self._orient_axis == 'Y':
             pm.select(self.joints)
             pm.joint(zso=1, ch=1, e=1, oj='yxz', secondaryAxisOrient='xdown')
             pm.select(cl=True)
 
             # Orient the last joint to the world#
-            selLastJnt = pm.select(self.joints[-1])
+            pm.select(self.joints[-1])
             pm.joint(e=1, oj='none')
             pm.select(None)
 
-        elif self._orientAxis == 'y':
+        elif self._orient_axis == 'y':
             pm.select(self.joints)
             pm.joint(zso=1, ch=1, e=1, oj='yxz', secondaryAxisOrient='xup')
             pm.select(cl=True)
 
             # Orient the last joint to the world#
-            selLastJnt = pm.select(self.joints[-1])
+            pm.select(self.joints[-1])
             pm.joint(e=1, oj='none')
             pm.select(None)
 
-        elif self._orientAxis == 'X':
+        elif self._orient_axis == 'X':
             pm.select(self.joints)
             pm.joint(zso=1, ch=1, e=1, oj='xyz', secondaryAxisOrient='xup')
             pm.select(cl=True)
 
             # Orient the last joint to the world#
-            selLastJnt = pm.select(self.joints[-1])
+            pm.select(self.joints[-1])
             pm.joint(e=1, oj='none')
             pm.select(None)
 
-        elif self._orientAxis == 'x':
+        elif self._orient_axis == 'x':
             pm.select(self.joints)
             pm.joint(zso=1, ch=1, e=1, oj='xyz', secondaryAxisOrient='xdown')
             pm.select(cl=True)
 
             # Orient the last joint to the world#
-            selLastJnt = pm.select(self.joints[-1])
+            pm.select(self.joints[-1])
             pm.joint(e=1, oj='none')
             pm.select(None)
 
-        elif self._orientAxis == 'world':
+        elif self._orient_axis == 'world':
             pm.select(self.joints)
             pm.joint(zso=1, ch=1, e=1, oj='none')
             pm.select(cl=True)
@@ -252,3 +261,78 @@ class Joint(adbTransform.Transform):
             pm.setAttr('{0}.side'.format(sel), side)
             pm.setAttr('{0}.type'.format(sel), 18)
             pm.setAttr('{0}.otherType'.format(sel), other, type='string')
+            
+    @staticmethod
+    def getClosestVector(v, axies=None):
+        """
+        returns the vector in axies that is the closets to the vector v
+
+        :param tuple v: input vector
+        :param list axies: list of vectors to match against.
+                           defaults to the vectors of [+x, -x, +y, -y, +z, -z]
+        :rtype: tuple
+        """
+        axies = axies or [(1, 0, 0), (0, 1, 0), (0, 0, 1),
+                          (-1, 0, 0), (0, -1, 0), (0, 0, -1)]
+        return sorted(axies, key=lambda a: numpy.dot(v, a))
+        
+        
+    @staticmethod    
+    def getVectors(joint, child=None, normal=(0, 0, 1), worldSpace=False):
+        """
+        get local aim and up vectors
+
+        :param str joint: name of the transform
+        :param tuple normal: inVector to compute the upVector defaults to (0,0,1)
+        :return: (aimVector, upVector) as tuple
+        :rtype: tuple
+        """
+        # Get first child joint or, if no children, use the joint itself
+        # to get translation vector (if has a parent, otherwise error...)
+        if not child:
+            children = cmds.listRelatives(joint, c=True, type="joint")
+            if not children:
+                parent = cmds.listRelatives(joint, p=True, type="joint")[0]
+                if not parent:
+                    raise RuntimeError("Can't get vectors for '{}' since it has no joint hierarchy...")
+                else:
+                    child = joint
+            else:
+                child = children[0]
+
+        v = cmds.xform(child, q=True, translation=True)
+
+        aim = getClosestVector(v)
+        up = tuple(numpy.cross(normal, aim))
+
+        if worldSpace:
+            mat = cmds.xform(joint, q=True, ws=True, matrix=True)
+            mat = numpy.array(mat).reshape(4, 4)
+
+            aim = numpy.dot(aim + (0,), mat)[0:3]
+            up = numpy.dot(up + (0,), mat)[0:3]
+
+        aim = tuple(map(float, aim))
+        up = tuple(map(float, up))
+
+        # TODO: return a namedtuple
+        return (aim, up)            
+                        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
