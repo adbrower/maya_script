@@ -25,7 +25,8 @@ ICONS_FOLDER = 'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_icons/
 
 YELLOW = '#ffe100'
 ORANGE = '#fd651d'
-GREEN = '#11a11f'
+GREEN = '#597A59'
+DARKRED = '#745a54'
 
 def undo(func):
     ''' 
@@ -210,11 +211,10 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             [child.setIcon(0, QtGui.QIcon(':/out_transform.png')) for child in children]   
             [child.setExpanded(True) for child in children]         
             [QtShapes.append(child) for child in children]
-            
-
-        
+                
         # skinClusters
-        # ----------------------      
+        # ----------------------
+        QTClusters = []      
         cluster_dic = self.getSkinClusterbyShape(flatList(shape_dic.values()))
         QTshape_dic = {}
         for shape in QtShapes:
@@ -232,7 +232,28 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             children=[QTshape.child(index) for index in range(child_count)]
             [child.setForeground(0, QtGui.QBrush(QtGui.QColor(GREEN))) for child in children]            
             [child.setIcon(0, QtGui.QIcon(':/cluster.png')) for child in children]            
-            [QtShapes.append(child) for child in children]   
+            [QTClusters.append(child) for child in children]   
+            
+
+
+        # Joints
+        # ---------------------- 
+        bindJoints_dic = self.getBindJointsFromCluster([x for x in cluster_dic.values() if x != 'None'])
+    
+        QTcluster_dic = {}
+        for cluster in QTClusters:
+            QTcluster_dic.update({cluster:bindJoints_dic[cluster.text(0)]})
+            
+        for QTCluster, jointList in QTcluster_dic.items():
+            [QtWidgets.QTreeWidgetItem(QTCluster, [str(jnt)]) for jnt in jointList]
+            
+            # changed their color
+            child_count=QTCluster.childCount()
+            children=[QTCluster.child(index) for index in range(child_count)]
+            [child.setForeground(0, QtGui.QBrush(QtGui.QColor(DARKRED))) for child in children]            
+            [child.setIcon(0, QtGui.QIcon(':/out_joint.png')) for child in children]            
+ 
+            
 
     def singleClickedAction(self):
         mySelection = self.meshTreeWidget.currentItem()
@@ -289,6 +310,18 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             except IndexError:
                 return False
 
+    @staticmethod
+    def getBindJointsFromCluster(clusterList):
+        """
+        Find all joints attached to a skinCluster
+        @param clusterList: List. list of skin Clusters
+        return dic with key: skin Cluster. Value: list of joint 
+        """
+        bindJoints_dic = {}
+        for cluster in clusterList:
+            all_binds_jnts = [x for x in pm.listConnections(str(cluster) + '.matrix[*]', s=1)]
+            bindJoints_dic.update({str(cluster):all_binds_jnts})
+        return bindJoints_dic
     
     @staticmethod
     def getAllMeshes():
@@ -312,8 +345,7 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         return shapes_dic
             
     
-    @staticmethod
-    def getSkinClusterbyShape(shapes):
+    def getSkinClusterbyShape(self, shapes):
         """
         get skinCluster attached to the shape
         @param shapes: List
@@ -326,9 +358,12 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                 if pm.objectType(incoming) == 'skinCluster':
                     cluster_dic.update({str(shape):incoming})
                 else:
-                    skinCluster = getSkinCluster(shape)
+                    skinCluster = self.getSkinCluster(shape)
                     if skinCluster:
-                        cluster_dic.update({str(shape):skinCluster})                    
+                        if len(skinCluster) > 1:
+                            cluster_dic.update({str(shape):'None'})
+                        else:
+                            cluster_dic.update({str(shape):skinCluster})                    
                     else:
                         cluster_dic.update({str(shape):'None'})                    
             except TypeError:
