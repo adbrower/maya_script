@@ -139,7 +139,7 @@ class connectionTool():
                                     with pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=6):
                                         pm.button(label="BlendShapes", w=170, h=30, bgc=(0.349, 0.478, 0.349), c=pm.Callback(self.BlendShape_connect))
                                         pm.button(label="Parent",  w=170, h=30, bgc=(0.349, 0.478, 0.349), c=pm.Callback(self.parent_2List))
-                                        pm.button(label="Match Transform",  w=170, h=30, bgc=(0.349, 0.478, 0.349), c=pm.Callback(self.MatchTransformRT))
+                                        pm.button(label="Match Transform",  w=170, h=30, bgc=(0.349, 0.478, 0.349), c=pm.Callback(self.MatchTransformRT, True, True))
                                         pm.popupMenu()
                                         pm.menuItem('Match Postion', c=pm.Callback(self.MatchTransformRT, False, True))
                                         pm.menuItem('Match Rotation', c=pm.Callback(self.MatchTransformRT, True, False))
