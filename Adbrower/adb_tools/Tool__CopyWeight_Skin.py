@@ -898,6 +898,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             data_influenceAssociation = [x for x in data_influenceAssociation if x != 'None']
 
             for source, target in zip(self.sources, self.targets):
+                original_skinCls = skin.getSkinCluster(target)
                 try:
                     pm.skinCluster(target, e=1, ub=1,)
                 except:
@@ -917,16 +918,24 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                 else:
                     skn = skin.Skinning(source)
                     skn.copyWeight(target, _surfaceAssociation=data_surfaceAssociation, _influenceAssociation=data_influenceAssociation)
+
+                if original_skinCls is not False:
+                    pm.rename(skin.getSkinCluster(target),  str(original_skinCls)) 
+
             sys.stdout.write('// Result: Zip skin is done!  //')
 
         else:  # for looping
             for target in self.targets:
+                original_skinCls = skin.getSkinCluster(target)
                 try:
                     pm.skinCluster(target, e=1, ub=1,)
                 except:
                     pass
                 skn = skin.Skinning(self.sources[0])
                 skn.copyWeight(target)
+                
+                if original_skinCls is not False:
+                    pm.rename(skin.getSkinCluster(target),  str(original_skinCls)) 
             sys.stdout.write('// Result: Loop skin is done!  //')
 
     def verifyJointSideAB(self):
@@ -1032,6 +1041,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         data_influenceAssociation = [x for x in data_influenceAssociation if x != 'None']
 
         for source, target in zip(self.sources, self.targets):
+            original_skinCls = skin.getSkinCluster(target)
             try:
                 pm.skinCluster(target, e=1, ub=1,)
             except:
@@ -1046,6 +1056,8 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                                  search=search_for,
                                  replace=replace_for
                                  )
+            if original_skinCls is not False:
+                pm.rename(skin.getSkinCluster(target),  str(original_skinCls)) 
 
     def selectSknJntsAB(self):
         skn = skin.Skinning(pm.selected()[0])
