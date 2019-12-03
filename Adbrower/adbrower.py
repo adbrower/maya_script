@@ -321,7 +321,7 @@ class Adbrower(object):
         """
         try:
             mylist = [x.name() for x in pm.selected()]
-        except:
+        except RuntimeError:
             mylist = [x.getTransform().name() for x in pm.selected()]
         mylist_string = [str(x) for x in mylist]  # Remove u'
         print(mylist_string)
@@ -336,10 +336,9 @@ class Adbrower(object):
         for each in sel:
             try:
                 _type = (pm.objectType(pm.PyNode(each).getShape()))
-            except:
+            except RuntimeError:
                 _type = (pm.objectType(pm.PyNode(each)))
             all_types.append(_type)
-            # print(_type)
         return all_types
 
     @undo
@@ -391,7 +390,7 @@ class Adbrower(object):
 
         if targets:
             print(" The targets are : ")
-            for each in (targets):
+            for each in targets:
                 pm.select(targets)
                 print('\n{}{}'.format('       ---->  ', each))
             return targets
@@ -413,7 +412,7 @@ class Adbrower(object):
             str(x) + '.target[*].targetParentMatrix', s=True) for x in constraints]))) or []
         if sources:
             print(" The sources are : ")
-            for each in (sources):
+            for each in sources:
                 pm.select(sources)
                 print('\n{}{}'.format('       ---->  ', each))
             return sources
@@ -495,8 +494,7 @@ class Adbrower(object):
                             '{}_BLS'.format(_input)).split('|')[-1]
 
                     if not mc.objExists(blendShapeNode):
-                        pm.blendShape(_input, _output, name=blendShapeNode, o=origin, w=[
-                                      (0, 1.0)], foc=False)
+                        pm.blendShape(_input, _output, name=blendShapeNode, o=origin, w=[(0, 1.0)], foc=False)
                     else:
                         pm.warning('{} already Exist'.format(blendShapeNode))
 
@@ -1154,7 +1152,6 @@ class Adbrower(object):
             return d
 
         def getLocalOffset():
-            print 'caca'
             parentWorldMatrix = getDagPath(parent_transform).inclusiveMatrix()
             childWorldMatrix = getDagPath(child).inclusiveMatrix()
             return childWorldMatrix * parentWorldMatrix.inverse()
@@ -1646,7 +1643,7 @@ class Adbrower(object):
             for each in sel:
                 attr = each.name() + '.' + (pm.channelBox("mainChannelBox",
                                                           q=1, selectedMainAttributes=1)[0])
-                pm.addAttr(str(attr), e=True,  dv=defaultValue)
+                pm.addAttr(str(attr), e=True, dv=defaultValue)
 
         except TypeError:
             pm.warning('Select the attribute')
