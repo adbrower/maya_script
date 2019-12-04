@@ -323,7 +323,7 @@ class Folli(object):
     def set_TAGS(self):
         MOD_GRP, RIG_GRP, INPUT_GRP, OUTPUT_GRP = self.final_grp
         [Transform(grp) for grp in self.final_grp]
-        Transform(str(INPUT_GRP)).addAttr(NC.TAG_GlOBAL_SCALE, '')
+        Transform(pm.PyNode(INPUT_GRP)).addAttr(NC.TAG_GlOBAL_SCALE, '')
 
 
 # bendy = Folli(1, 5, radius = 0.5, sub = 'X__test__MSH')
