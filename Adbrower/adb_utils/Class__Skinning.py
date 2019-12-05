@@ -40,10 +40,14 @@ def getSkinCluster(_transform):
             result.append(elem)
     pm.select(result, r=True)
     result_node = pm.selected()
+    
     if len(result_node) > 1:
         return result_node
     else:
-        return result_node[0]
+        try:
+            return result_node[0]
+        except IndexError:
+            return False
 
 
 def getBindJoints(_transform):
