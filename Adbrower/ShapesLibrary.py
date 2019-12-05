@@ -2,8 +2,7 @@ import maya.cmds as mc
 import pymel.core as pm
 from functools import wraps
 
-import NameConv_utils as NC
-reload(NC)
+import adb_core.NameConv_utils as NC
 
 
 # -----------------------------------

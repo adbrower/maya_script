@@ -11,7 +11,7 @@ from PySide2 import QtGui, QtWidgets, QtCore
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 adb = adbrower.Adbrower()
-import adb_utils.Class__multi_skin as ms
+import adb_core.Class__multi_skin as ms
 # reload(ms)
 
 

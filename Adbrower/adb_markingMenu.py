@@ -27,9 +27,9 @@ import adb_tools.Tool__IKFK_Switch__PySide as Tool__IKFK_Switch__PySide
 import adb_tools.Tool__Joint_Generator__Pyside
 import adb_tools.Tool__Match_IkFK_PySide as Tool__Match_IkFK_PySide
 import adb_tools.Tool__Tilt as Tool__Tilt
-import adb_utils.adb_script_utils.Functions__Rivet as adbRivet
-import adb_utils.adb_script_utils.Script__WrapDeformer as adbWrap
-import adb_utils.Class__Skinning as skin
+import adb_library.adb_utils.Functions__Rivet as adbRivet
+import adb_library.adb_utils.Script__WrapDeformer as adbWrap
+import adb_core.Class__Skinning as skin
 
 import adbrower
 import ShapesLibrary as sl

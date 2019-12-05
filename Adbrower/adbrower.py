@@ -30,7 +30,7 @@ import maya.cmds as mc
 import maya.mel as mel
 import maya.OpenMaya as om
 
-import NameConv_utils as NC
+import adb_core.NameConv_utils as NC
 import ShapesLibrary as sl
 from CollDict import suffixDic
 # reload(NC)
@@ -1789,3 +1789,4 @@ class Adbrower(object):
         for each in pm.selected():
             new_name = each.split(':')[1]
             pm.PyNode(each).rename(new_name)
+

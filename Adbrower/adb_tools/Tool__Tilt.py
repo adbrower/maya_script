@@ -11,7 +11,7 @@ import ConfigParser
 import getpass
 import os
 
-import adb_rig.Class__Tilt_Setup as adb_tilt
+import adb_library.adb_modules.Module__Tilt_Setup as adb_tilt
 import adbrower
 import CollDict
 import maya.cmds as mc

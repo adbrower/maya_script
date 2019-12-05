@@ -25,10 +25,10 @@ from CollDict import colordic
 import adbrower
 adb = adbrower.Adbrower()
 
-from adb_utils.adb_script_utils.Pretty_DocString  import *
-import adb_rig.Class__Guide_autorig as adb_guide_autoRig
-import adb_rig.Class__Build_autorig as adb_build_autoRig
-import adb_utils.rig_utils.Class__ShapeManagement as adbShape
+from adb_library.adb_utils.Pretty_DocString  import *
+import adb_rigModules.adb_biped.Class__Guide_autorig as adb_guide_autoRig
+import adb_rigModules.adb_biped.Class__Build_autorig as adb_build_autoRig
+import adb_library.adb_utils.Class__ShapeManagement as adbShape
 
 #-----------------------------------
 #  DECORATORS

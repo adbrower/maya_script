@@ -16,6 +16,7 @@ import maya.cmds as mc
 import pymel.core as pm
 import ShapesLibrary as sl
 
+from maya_script import Adbrower
 import adbrower
 from adbrower import changeColor, flatList, undo
 from CollDict import colordic, suffixDic
@@ -29,9 +30,9 @@ import adb_tools.Tool__IKFK_Switch__PySide as Tool__IKFK_Switch__PySide
 import adb_tools.Tool__Joint_Generator__Pyside
 import adb_tools.Tool__Match_IkFK_PySide as Tool__Match_IkFK_PySide
 import adb_tools.Tool__Tilt as Tool__Tilt
-import adb_utils.Class__AddAttr as adbAttr
-import adb_utils.Class__Transforms
-import adb_utils.rig_utils.Class__ShapeManagement as adbShape
+import adb_core.Class__AddAttr as adbAttr
+import adb_core.Class__Transforms
+import adb_library.adb_utils.Class__ShapeManagement as adbShape
 
 adb = adbrower.Adbrower()
 
@@ -39,7 +40,7 @@ adb = adbrower.Adbrower()
 #  DECORATORS
 #-----------------------------------
 
-ICONS_FOLDER = 'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_icons/'
+ICONS_FOLDER = Adbrower.ICONS_FOLDER_INIT
 imageColorLambert = ICONS_FOLDER + 'ColorLambert.png'
 imageColorGreen = ICONS_FOLDER + 'ColorGreen.png'
 imageColorRed = ICONS_FOLDER + 'ColorRed.png'

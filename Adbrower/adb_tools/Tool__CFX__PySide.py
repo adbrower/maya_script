@@ -6,9 +6,9 @@ import sys
 import traceback
 
 import adb_pyQt.Class__frameLayout as adbFrameLayout
-import adb_utils.adb_script_utils.Functions__Rivet as adbRivet
+import adb_library.adb_utils.Functions__Rivet as adbRivet
 import adbrower
-import Adbrower
+from maya_script import Adbrower
 import CollDict
 import maya.cmds as mc
 import maya.mel as mel

@@ -9,7 +9,7 @@ import pymel.core.datatypes as dt
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 from PySide2 import QtCore, QtGui, QtWidgets
 
-import Adbrower
+from maya_script import Adbrower
 
 PATH_WINDOW = Adbrower.PATH_WINDOW_INIT + 'AppData/Roaming'
 PATH_LINUX = Adbrower.PATH_LINUX_INIT

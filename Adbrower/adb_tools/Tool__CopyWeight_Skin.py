@@ -2,11 +2,11 @@ import ConfigParser
 import os
 import sys
 
-import adb_pyQt.Class__frameLayout as adbFrameLayout
-import adb_utils.Class__Skinning as skin
-import adb_utils.deformers.Class__Blendshape as bs
+import adb_tools.adb_pyQt.Class__frameLayout as adbFrameLayout
+import adb_core.Class__Skinning as skin
+import adb_core.deformers.Class__Blendshape as bs
 import adbrower
-import Adbrower
+from maya_script import Adbrower
 import maya.cmds as mc
 import pymel.core as pm
 from CollDict import pysideColorDic as pyQtDic
@@ -1089,4 +1089,3 @@ def showUI(dialog = True):
             pass
         tools_cw_ui = SkinCopyWEIGHTS()
         tools_cw_ui.show()
-    

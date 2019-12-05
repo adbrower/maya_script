@@ -8,18 +8,18 @@
 
 import traceback
 
-import adb_utils.adb_script_utils.Functions__Rivet as adbRivet
-import adb_utils.adb_script_utils.Script__ProxyPlane as adbProxy
-import adb_utils.adb_script_utils.Script__WrapDeformer as adbWrap
-import adb_utils.adb_script_utils.Script__WrapDeformer_Setup as adbWrapSetUp
-import adb_utils.Class__Transforms as adbTransform
-import adb_utils.rig_utils.Class__Folli as adbFolli
+import adb_library.adb_utils.Functions__Rivet as adbRivet
+import adb_library.adb_utils.Script__ProxyPlane as adbProxy
+import adb_library.adb_utils.Script__WrapDeformer as adbWrap
+import adb_library.adb_utils.Script__WrapDeformer_Setup as adbWrapSetUp
+import adb_core.Class__Transforms as adbTransform
+import adb_library.adb_modules.Module__Folli as adbFolli
 import adbrower
 import CollDict
 import maya.cmds as mc
 import pymel.core as pm
 import ShapesLibrary as sl
-from adb_utils.adb_script_utils.Pretty_DocString import *
+from adb_library.adb_utils.Pretty_DocString import *
 from adbrower import changeColor, flatList, lprint, undo
 from CollDict import colordic
 

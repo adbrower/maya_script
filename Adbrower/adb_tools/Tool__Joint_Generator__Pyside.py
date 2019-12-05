@@ -10,8 +10,8 @@
 import sys
 import traceback
 
-import adb_utils.Class__Locator as adbLoc
-import adb_utils.rig_utils.Class__FkShapes as adbFkShape
+import adb_core.Class__Locator as adbLoc
+import adb_library.adb_utils.Class__FkShapes as adbFkShape
 import adbrower
 import maya.cmds as mc
 import pymel.core as pm

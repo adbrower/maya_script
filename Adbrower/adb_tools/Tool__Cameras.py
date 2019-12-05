@@ -12,7 +12,6 @@ import pymel.core as pm
 import sys
 
 import adbrower
-reload(adbrower)
 adb = adbrower.Adbrower()
 
 from CollDict import colordic
