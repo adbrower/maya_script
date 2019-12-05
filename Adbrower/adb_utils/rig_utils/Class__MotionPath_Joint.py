@@ -111,7 +111,7 @@ class MotionPathJnt(object):
             pm.delete(double_linears_nodes)
             
             for axis in 'xyz':
-                # pm.cycleCheck(e=1)
+                pm.cycleCheck(e=1)
                 pm.connectAttr('{}.{}Coordinate'.format(_motionPathNode, axis), '{}.t{}'.format(_joint.getParent(), axis), f=1)
 
             self.all_motionPath.append(_motionPathNode)
@@ -168,5 +168,5 @@ class MotionPathJnt(object):
         self.interval = actual_intv - 1
 
 
-mpj = MotionPathJnt(5)
-mpj.radius = 0.2
+# mpj = MotionPathJnt(5)
+# mpj.radius = 0.2
