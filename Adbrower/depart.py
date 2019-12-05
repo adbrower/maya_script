@@ -59,19 +59,19 @@ adb = adbrower.Adbrower()
 
 
 # import sys
-
-# for mod_name in sys.modules:
-#     if 'adb' in mod_name:
-#         print mod_name
-
-
 # to_delete = set()
 # for mod_name in sys.modules:
 #     if 'adb' in mod_name:
+#         print mod_name
 #         to_delete.add(mod_name)
-
+#     if 'Adb' in mod_name:
+#         print mod_name
+#         to_delete.add(mod_name)
+        
 # for mod_name in to_delete:
 #     if sys.modules[mod_name] is None:
 #         sys.modules.pop(mod_name)
 #     else:
 #         del sys.modules[mod_name]
+        
+# sys.stdout.write('\nModule Reload \n')
