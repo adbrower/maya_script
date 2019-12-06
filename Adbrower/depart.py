@@ -1,27 +1,27 @@
-from adbrower import lprint
-from CollDict import colordic
-from adb_utils.adb_script_utils.Pretty_DocString import doc_string
-import adb_rig
-import adb_utils
-import CollDict
-import adbrower
-import ShapesLibrary as sl
 import sys
-import pymel.core as pm
-import maya.cmds as mc
 from pprint import pprint
 
+import pymel.core as pm
+import maya.cmds as mc
+
+from adbrower import lprint
+from adb_library.adb_utils.Pretty_DocString import doc_string
+import adbrower
+
+
 riggingPythonPathList = [
-    "C:/Users/Audrey/Google Drive/[SCRIPT]/python",
     'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower',
-    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_os_utils',
-    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_rig',
+    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_core',
+    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_core/deformers',
+    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_library',
+    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_library/adb_modules',
+    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_library/adb_utils',
+    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_misc',
+    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_misc/adb_icons',
+    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_rigModules',
+    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_rigModules/adb_biped',
     'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_tools',
-    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_utils',
-    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_utils/adb_script_utils',
-    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_utils/deformers',
-    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_utils/rig_utils',
-    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Exterior_scripts',
+    'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_tools/adb_pyQt',
 ]
 
 for riggingPythonPath in riggingPythonPathList:
@@ -44,13 +44,12 @@ adb = adbrower.Adbrower()
 # Marking Menu
 # -----------------------------------
 
-# import adb_markingMenu
-# reload(adb_markingMenu)
-# adb_markingMenu.markingMenu()
+import adb_markingMenu
+adb_markingMenu.markingMenu()
 
-# mc.evalDeferred('import adb_markingMenu; adb_markingMenu.markingMenu()')
+mc.evalDeferred('import adb_markingMenu; adb_markingMenu.markingMenu()')
 
-# sys.stdout.write('Start up scripts set up \n')
+sys.stdout.write('Start up scripts set up \n')
 
 
 # -----------------------------------
