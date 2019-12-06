@@ -1,11 +1,11 @@
-# ------------------------------------------------------
+# ====================-------------------
 # Class Follicule Module
 # -- Method Rigger (Maya)
 #
 # By: Audrey Deschamps-Brower
 #     audreydb23@gmail.com
 #     Based on Chris Lesage's script
-# ------------------------------------------------------
+# ====================-------------------
 
 
 import sys
@@ -20,19 +20,14 @@ import pymel.core as pm
 import ShapesLibrary as sl
 
 from adbrower import changeColor, flatList, lprint, undo
-
 adb = adbrower.Adbrower()
-# reload(NC)
-reload(adbAttr)
-# -----------------------------------
+
+# =========================
 # CLASS
-# -----------------------------------
-
-MODULE_NAME = 'Folli'
-METADATA_grp_name = '{}_METADATA'.format(MODULE_NAME)
+# =========================
 
 
-class Folli(object):
+class Folli(mb.ModuleBase):
     """
     Create Follicules on a surface
 
@@ -53,38 +48,31 @@ class Folli(object):
     bendy.add_folli(1, radius = 0.5)
 
     """
-
-    def __init__(self,
-                 countU,
-                 countV,
-                 radius=0.2,
-                 sub=pm.selected(),
-                 ):
-
-        self.sub = pm.PyNode(sub)
+    def __init__(self, 
+                module_name,
+                countU,
+                countV,
+                vDir = 'U',
+                radius = 0.2,
+                subject=pm.selected()):
+        super(Folli, self).__init__()
+        
+        self.NAME = module_name
+        self.subject = pm.PyNode(subject)
         self.countU = countU
         self.countV = countV
-        self.vDir = 'U'
+        self.vDir = vDir
         self.radius = radius
         self.all_foll_list = []
         self.all_joints_list = []
-        self.all_jointsGrp_list = []
-
-        if self.sub.getShape().type() == 'nurbsSurface':
-            plugs = pm.listConnections(str(self.sub.getShape()) + '.local', d=True, sh=True)
-        else:
-            plugs = pm.listConnections(str(self.sub.getShape()) + '.outMesh', d=True, sh=True)
-        current_numb_foll = len([x for x in plugs if x.type() == 'follicle']) or []
-
-        if current_numb_foll == []:
-            self.many_follicles(self.sub, self.countU, self.countV, self.vDir)
-            self.setFinal_hiearchy()
-            # self.set_TAGS()
-        else:
-            self.add_folli(self.countV, mesh=self.sub)
+        self.all_jointsGrp_list = []    
 
     def __repr__(self):
-        return str('{} : {} \n {}'.format(self.__class__.__name__, self.sub, self.__class__))
+        return str('{} : {} \n {}'.format(self.__class__.__name__, self.subject, self.__class__))
+
+    # =========================
+    # PROPERTY
+    # =========================
 
     @property
     def getFolliGrp(self):
@@ -103,6 +91,40 @@ class Folli(object):
     def getJoints_grps(self):
         return self.all_jointsGrp_list
 
+    # =========================
+    # METHOD
+    # =========================
+
+    def start(self, _metaDataNode = 'transform'):
+        super(Folli, self)._start(metaDataNode = _metaDataNode)       
+
+    def build(self):
+
+        if self.subject.getShape().type() == 'nurbsSurface':
+            plugs = pm.listConnections(str(self.subject.getShape()) + '.local', d=True, sh=True)
+        else:
+            plugs = pm.listConnections(str(self.subject.getShape()) + '.outMesh', d=True, sh=True)
+        current_numb_foll = len([x for x in plugs if x.type() == 'follicle']) or []
+
+        if current_numb_foll == []:
+            self.many_follicles(self.subject, self.countU, self.countV, self.vDir)
+        else:
+            self.add_folli(self.countV) 
+
+
+        self.setFinalHiearchy(
+                    RIG_GRP_LIST=[self.getFolliGrp],
+                    INPUT_GRP_LIST=[],
+                    OUTPUT_GRP_LIST=[self.getJoints])
+
+        for a, b in zip(self.getJoints, self.all_jointsGrp_list):
+            Transform(b).matrixConstraint(a, mo=True)
+
+
+    # =========================
+    # SOLVERS
+    # =========================
+        
     def create_follicle(self, oNurbs, count, uPos=0.0, vPos=0.0):
         # manually place and connect a follicle onto a nurbs surface.
         if oNurbs.type() == 'transform':
@@ -143,7 +165,8 @@ class Folli(object):
         oFoll.getParent().r.lock()
         return oFoll
 
-    def add_keyable_attribute(self, myObj, oDataType, oParamName, oMin=None, oMax=None, oDefault=0.0):
+    @staticmethod
+    def add_keyable_attribute(myObj, oDataType, oParamName, oMin=None, oMax=None, oDefault=0.0):
         """adds an attribute that shows up in the channel box; returns the newly created attribute"""
         oFullName = '.'.join([str(myObj), oParamName])
         if pm.objExists(oFullName):
@@ -159,7 +182,8 @@ class Folli(object):
             pm.setAttr(myAttr, e=True, keyable=True)
             return myAttr
 
-    def connect_multiply(self, oDriven, oDriver, oMultiplyBy):
+    @staticmethod
+    def connect_multiply(oDriven, oDriver, oMultiplyBy):
         nodeName = oDriven.replace('.', '_') + '_mult'
         try:
             testExists = pm.PyNode(nodeName)
@@ -178,9 +202,8 @@ class Folli(object):
         self.countV = countV
         self.vDir = vDir
 
-        obj = self.sub
+        obj = self.subject
         pm.select(obj, r=True)
-        # myObject = pm.selected()[0]
         pName = '{}{}'.format(NC.getSideFromName(obj), NC.getBasename(obj))
         self.oRoot = pm.spaceLocator(n='{}{}_FOLLI_{}__{}'.format(NC.getSideFromName(obj), NC.getBasename(obj), NC.SYSTEM, NC.GRP))
         pm.delete(self.oRoot.getShape())
@@ -250,7 +273,7 @@ class Folli(object):
             offset = adb.makeroot_func(ctrls, 'OFFSET')
             pm.rename(offset, '{}'.format(offset).replace('__CTRL', ''))
             Transform(foll.getTransform()).matrixConstraint(offset, channels='trh', mo=True)
-            pm.parent(offset, '{}_INPUT__GRP'.format('{}{}_{}'.format(NC.getSideFromName(self.sub), NC.getBasename(self.sub), MODULE_NAME)))
+            pm.parent(offset, '{}_INPUT__GRP'.format('{}{}_{}'.format(NC.getSideFromName(self.subject), NC.getBasename(self.subject), MODULE_NAME)))
 
         for grp, ctrls in zip(self.all_jointsGrp_list, self.create_ctrls):
             pm.parent(grp, ctrls)
@@ -267,7 +290,7 @@ class Folli(object):
         @param mesh: (str) Mesh having the follicules
 
         """
-        mesh = self.sub
+        mesh = self.subject
 
         for x in xrange(add_value):
             mesh_shape = pm.PyNode(mesh).getShape()
@@ -306,23 +329,20 @@ class Folli(object):
             oLoc.rz.set(0.0)
 
             Transform(oFoll.getTransform().getChildren(type='transform')[0]).matrixConstraint(oJoint, channels='trh', mo=True)
-            pm.parent(oJoint, '{}_OUTPUT__GRP'.format('{}{}_{}'.format(NC.getSideFromName(self.sub), NC.getBasename(self.sub), MODULE_NAME)))
+            pm.parent(oJoint, '{}_OUTPUT__GRP'.format('{}{}_{}'.format(NC.getSideFromName(self.subject), NC.getBasename(self.subject), MODULE_NAME)))
             pm.select(None)
 
-    def setFinal_hiearchy(self):
-        self.final_grp = NC.setFinalHiearchy('{}{}_{}'.format(NC.getSideFromName(self.sub), NC.getBasename(self.sub), MODULE_NAME),
-                                             RIG_GRP_LIST=[self.getFolliGrp],
-                                             INPUT_GRP_LIST=[],
-                                             OUTPUT_GRP_LIST=[self.getJoints])
-
-        for a, b in zip(self.getJoints, self.all_jointsGrp_list):
-            Transform(b).matrixConstraint(a, mo=True)
-
-    def set_TAGS(self):
-        MOD_GRP, RIG_GRP, INPUT_GRP, OUTPUT_GRP = self.final_grp
-        [Transform(grp) for grp in self.final_grp]
-        Transform(pm.PyNode(INPUT_GRP)).addAttr(NC.TAG_GlOBAL_SCALE, '')
 
 
-# bendy = Folli(1, 5, radius = 0.5, sub = 'nurbsPlane1')
-# bendy.addControls()
+
+import adb_core.ModuleBase as mb
+reload(mb)
+
+arm = Folli('ArmFolli', 1, 5, radius = 0.5, subject = 'nurbsPlane1')
+arm.start()
+arm.build()
+
+
+# Folli('LegFolli').start()
+
+
