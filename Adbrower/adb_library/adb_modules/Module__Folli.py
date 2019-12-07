@@ -10,6 +10,8 @@
 
 import sys
 
+import adb_core.ModuleBase as moduleBase
+reload(moduleBase)
 import adb_core.Class__AddAttr as adbAttr
 from adb_core.Class__Transforms import Transform
 import adbrower
@@ -26,8 +28,14 @@ adb = adbrower.Adbrower()
 # CLASS
 # =========================
 
+class FolliModel(moduleBase.ModuleBaseModel):
+    def __init__(self):
+        super(FolliModel, self).__init__()
+        self.getFollicules = []
+        self.getFolliGrp = []
 
-class Folli(mb.ModuleBase):
+
+class Folli(moduleBase.ModuleBase):
     """
     Create Follicules on a surface
 
@@ -57,16 +65,15 @@ class Folli(mb.ModuleBase):
                 subject=pm.selected()):
         super(Folli, self).__init__()
         
+        self._MODEL = FolliModel()
+
         self.NAME = module_name
         self.subject = pm.PyNode(subject)
         self.countU = countU
         self.countV = countV
         self.vDir = vDir
         self.radius = radius
-        self.all_foll_list = []
-        self.all_joints_list = []
-        self.all_jointsGrp_list = []    
-
+    
     def __repr__(self):
         return str('{} : {} \n {}'.format(self.__class__.__name__, self.subject, self.__class__))
 
@@ -76,27 +83,26 @@ class Folli(mb.ModuleBase):
 
     @property
     def getFolliGrp(self):
-        return self.oRoot
+        return self._MODEL.getFolliGrp
 
     @property
     def getFollicules(self):
         """ Returns the follicules """
-        return self.all_foll_list
+        return self._MODEL.getFollicules
 
-    @property
-    def getJoints(self):
-        """ Returns the joints """
-        return self.all_joints_list
-
-    def getJoints_grps(self):
-        return self.all_jointsGrp_list
+    @getFollicules.setter
+    def getFollicules(self, value):
+        """ Returns the follicules """
+        self._MODEL.getFollicules = value
 
     # =========================
     # METHOD
     # =========================
 
-    def start(self, _metaDataNode = 'transform'):
-        super(Folli, self)._start(metaDataNode = _metaDataNode)       
+    def start(self, _metaDataNode = 'network'):
+        super(Folli, self)._start(metaDataNode = _metaDataNode)  
+        
+        # add attribute on METADATA node
 
     def build(self):
 
@@ -115,10 +121,10 @@ class Folli(mb.ModuleBase):
         self.setFinalHiearchy(
                     RIG_GRP_LIST=[self.getFolliGrp],
                     INPUT_GRP_LIST=[],
-                    OUTPUT_GRP_LIST=[self.getJoints])
+                    OUTPUT_GRP_LIST=[self._MODEL.getJoints])
 
-        for a, b in zip(self.getJoints, self.all_jointsGrp_list):
-            Transform(b).matrixConstraint(a, mo=True)
+        for joint, joint_grp in zip(self._MODEL.getJoints, self._MODEL.getResetJoints):
+            Transform(joint_grp).matrixConstraint(joint, mo=True)
 
 
     # =========================
@@ -205,10 +211,10 @@ class Folli(mb.ModuleBase):
         obj = self.subject
         pm.select(obj, r=True)
         pName = '{}{}'.format(NC.getSideFromName(obj), NC.getBasename(obj))
-        self.oRoot = pm.spaceLocator(n='{}{}_FOLLI_{}__{}'.format(NC.getSideFromName(obj), NC.getBasename(obj), NC.SYSTEM, NC.GRP))
-        pm.delete(self.oRoot.getShape())
+        self._MODEL.getFolliGrp = pm.spaceLocator(n='{}{}_FOLLI_{}__{}'.format(NC.getSideFromName(obj), NC.getBasename(obj), NC.SYSTEM, NC.GRP))
+        pm.delete(self._MODEL.getFolliGrp.getShape())
         currentFollNumber = 0
-
+                
         for i in range(countU):
             for j in range(countV):
                 currentFollNumber += 1
@@ -223,22 +229,22 @@ class Folli(mb.ModuleBase):
                     vPos = (j / (countV - 1.00)) * 100.0  # NOTE: I recently changed this to have a range of 0-10
                 if vDir == 'U':
                     oFoll = self.create_follicle(myObject, currentFollNumber, vPos, uPos)
-                    self.all_foll_list.append(oFoll)
+                    self._MODEL.getFollicules.append(oFoll)
                 else:
                     # reverse the direction of the follicles
                     oFoll = create_follicle(myObject, currentFollNumber, uPos, vPos)
-                    self.all_foll_list.append(oFoll)
+                    self._MODEL.getFollicules.append(oFoll)
 
                 pm.rename(oFoll.getParent(), '{}_0{}__{}'.format(pName, currentFollNumber, NC.FOLL_SUFFIX))
                 pm.rename(oFoll, '{}_{}__foll__Shape'.format(pName, currentFollNumber))
-                oLoc = pm.group(em=True, n='{}_0{}__{}'.format(pName, currentFollNumber, NC.GRP))
-                self.all_jointsGrp_list.append(oLoc)
-                oLoc.setTranslation(oFoll.getParent().getTranslation(space='world'), space='world')
+                oGrp = pm.group(em=True, n='{}_0{}__{}'.format(pName, currentFollNumber, NC.GRP))
+                self._MODEL.getResetJoints.append(oGrp)
+                oGrp.setTranslation(oFoll.getParent().getTranslation(space='world'), space='world')
 
                 oJoint = pm.joint(n=pName + '_foll_0{}__{}'.format(currentFollNumber, NC.JOINT), rad=self.radius)
-                self.all_joints_list.append(oJoint)
+                self._MODEL.getJoints.append(oJoint)
                 oJoint.setTranslation(oFoll.getParent().getTranslation(space='world'), space='world')
-                pm.matchTransform(oJoint, oLoc, rot=1)
+                pm.matchTransform(oJoint, oGrp, rot=1)
 
                 # connect the UV params to the joint so you can move the follicle by selecting the joint directly.
                 uParam = self.add_keyable_attribute(oJoint, 'double', 'u_param', oMin=-100, oMax=100, oDefault=0)
@@ -248,39 +254,41 @@ class Folli(mb.ModuleBase):
                 uParam.connect(oFoll.getParent().u_param)
                 vParam.connect(oFoll.getParent().v_param)
 
-                pm.parent(oLoc, oFoll.getParent())
-                pm.parent(oFoll.getParent(), self.oRoot)
-                oLoc.rx.set(0.0)
-                oLoc.ry.set(0.0)
-                oLoc.rz.set(0.0)
+                pm.parent(oGrp, oFoll.getParent())
+                pm.parent(oFoll.getParent(), self._MODEL.getFolliGrp)
+                oGrp.rx.set(0.0)
+                oGrp.ry.set(0.0)
+                oGrp.rz.set(0.0)
+                self._MODEL.getInputs.append(oGrp)
                 pm.select(None)
 
-        return self.all_foll_list
+        return self._MODEL.getFollicules
 
     @changeColor()
     def addControls(self, shape=sl.ball_shape):
         """ add Controls to the follicules """
-        pm.select(self.getJoints, r=True)
-        self.create_ctrls = flatList(sl.makeCtrls(shape))
-        [pm.rename(ctrl, '{}__{}__{}'.format(ctrl.split('__')[0], ctrl.split('__')[1], NC.CTRL)) for ctrl in self.create_ctrls]
+        pm.select(self._MODEL.getJoints, r=True)
+        create_ctrls = flatList(sl.makeCtrls(shape))
+        [pm.rename(ctrl, jnt.replace('JNT', NC.CTRL)) for ctrl, jnt in zip(create_ctrls, self._MODEL.getJoints)]
 
         # get the scale of the joint to add 0.5 on the scale of the controller
-        [x.scaleX.set((pm.PyNode(self.getJoints[0]).radius.get()) + 0.5) for x in self.create_ctrls]
-        [x.scaleY.set((pm.PyNode(self.getJoints[0]).radius.get()) + 0.5) for x in self.create_ctrls]
-        [x.scaleZ.set((pm.PyNode(self.getJoints[0]).radius.get()) + 0.5) for x in self.create_ctrls]
+        [x.scaleX.set((pm.PyNode(self._MODEL.getJoints[0]).radius.get()) + 0.5) for x in create_ctrls]
+        [x.scaleY.set((pm.PyNode(self._MODEL.getJoints[0]).radius.get()) + 0.5) for x in create_ctrls]
+        [x.scaleZ.set((pm.PyNode(self._MODEL.getJoints[0]).radius.get()) + 0.5) for x in create_ctrls]
 
-        for foll, ctrls in zip(self.all_foll_list,  self.create_ctrls):
+        for foll, ctrls in zip(self._MODEL.getFollicules,  create_ctrls):
             offset = adb.makeroot_func(ctrls, 'OFFSET')
             pm.rename(offset, '{}'.format(offset).replace('__CTRL', ''))
             Transform(foll.getTransform()).matrixConstraint(offset, channels='trh', mo=True)
-            pm.parent(offset, '{}_INPUT__GRP'.format('{}{}_{}'.format(NC.getSideFromName(self.subject), NC.getBasename(self.subject), MODULE_NAME)))
+            pm.parent(offset, self.INPUT_GRP)
 
-        for grp, ctrls in zip(self.all_jointsGrp_list, self.create_ctrls):
+        for grp, ctrls in zip(self._MODEL.getResetJoints, create_ctrls):
             pm.parent(grp, ctrls)
 
-        [pm.makeIdentity(x, n=0, s=1, r=1, t=1, apply=True, pn=1) for x in self.create_ctrls]
+        [pm.makeIdentity(x, n=0, s=1, r=1, t=1, apply=True, pn=1) for x in create_ctrls]
 
-        return self.create_ctrls
+        self._MODEL.getControls = create_ctrls
+        return self._MODEL.getControls
 
     def add_folli(self, add_value, radius=0.2):
         """
@@ -304,8 +312,8 @@ class Folli(mb.ModuleBase):
             pm.rename(oFoll.getParent(), '{}_0{}__{}'.format(pName, current_numb_foll + 1, NC.FOLL_SUFFIX))
             pm.rename(oFoll, '{}_{}__foll__Shape'.format(pName, current_numb_foll))
 
-            oLoc = pm.group(em=True)
-            oLoc.setTranslation(oFoll.getParent().getTranslation(space='world'), space='world')
+            oGrp = pm.group(em=True)
+            oGrp.setTranslation(oFoll.getParent().getTranslation(space='world'), space='world')
 
             oJoint = pm.joint(rad=radius)
             self.all_joints_list.append(oJoint)
@@ -322,25 +330,30 @@ class Folli(mb.ModuleBase):
             pm.rename(oJoint, '{}_foll_0{}_{}'.format(pName, current_numb_foll + 1, NC.JOINT))
             pm.rename(oJoint.getParent(), '{}_0{}__{}'.format(pName, current_numb_foll + 1, NC.GRP))
 
-            pm.parent(oLoc, oFoll.getParent())
+            pm.parent(oGrp, oFoll.getParent())
             pm.parent(oFoll.getParent(), oRoot)
-            oLoc.rx.set(0.0)
-            oLoc.ry.set(0.0)
-            oLoc.rz.set(0.0)
+            oGrp.rx.set(0.0)
+            oGrp.ry.set(0.0)
+            oGrp.rz.set(0.0)
 
             Transform(oFoll.getTransform().getChildren(type='transform')[0]).matrixConstraint(oJoint, channels='trh', mo=True)
-            pm.parent(oJoint, '{}_OUTPUT__GRP'.format('{}{}_{}'.format(NC.getSideFromName(self.subject), NC.getBasename(self.subject), MODULE_NAME)))
+            pm.parent(oJoint, self.OUTPUT_GRP)
             pm.select(None)
 
 
 
 
-import adb_core.ModuleBase as mb
-reload(mb)
+# import adb_core.ModuleBase as moduleBase
+# reload(moduleBase)
 
-arm = Folli('ArmFolli', 1, 5, radius = 0.5, subject = 'nurbsPlane1')
-arm.start()
-arm.build()
+
+# arm = Folli('ArmFolli', 1, 5, radius = 0.5, subject = 'nurbsPlane1')
+# arm.start()
+# arm.build()
+
+# arm.addControls()
+
+
 
 
 # Folli('LegFolli').start()

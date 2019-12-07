@@ -1,15 +1,25 @@
 import pymel.core as pm
 
 import adb_core.NameConv_utils as NC
+import adb_core.Class__AddAttr as adbAttr
 
 # ====================================
 # CLASS
 # ===================================
 
+class ModuleBaseModel(object):
+    def __init__(self, *args, **kwargs):
+        self.getJoints = []
+        self.getResetJoints = []
+        self.getControls = []
+        self.getResetControls = []
+        self.getInputs = []
+        self.getoutputs = []
+
 class ModuleBase(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, *args, **kwargs):
+        self._MODEL = ModuleBaseModel()
 
     def _start(self, metaDataNode = 'transform'):
         """
@@ -38,6 +48,46 @@ class ModuleBase(object):
         """
         pass
 
+    @property
+    def getJoints(self):
+        return self._MODEL.getJoints
+
+    @getJoints.setter
+    def getJoints(self, value):
+        self._MODEL.getJoints = value
+
+    @property
+    def getResetJoints(self):
+        return self._MODEL.getResetJoints
+
+    @getResetJoints.setter
+    def getResetJoints(self, value):
+        self._MODEL.getResetJoints = value
+
+    @property
+    def getControls(self):
+        return self._MODEL.getControls
+
+    @getControls.setter
+    def getControls(self, value):
+        self._MODEL.getControls = value
+
+    @property
+    def getResetControls(self):
+        return self._MODEL.getResetControls
+
+    @getResetControls.setter
+    def getResetControls(self, value):
+        self._MODEL.getResetControls = value
+
+    @property
+    def getInputs(self):
+        return self._MODEL.getInputs
+
+    @property
+    def getoutputs(self):
+        return self._MODEL.getoutputs
+
 
     def hiearchy_setup(self, module_name, is_module=True):
         """
@@ -61,12 +111,12 @@ class ModuleBase(object):
         self.INPUT_GRP = pm.group(n='{}_INPUT__GRP'.format(module_name), em=1)
         self.OUTPUT_GRP = pm.group(n='{}_OUTPUT__GRP'.format(module_name), em=1)
 
-        self.CONTROLS_GRP = pm.group(n='{}_CONTROLS__GRP'.format(module_name), em=1)
+        # self.CONTROLS_GRP = pm.group(n='{}_CONTROLS__GRP'.format(module_name), em=1)
         self.VISRULE_GRP = pm.group(n='{}_VISRULE__GRP'.format(module_name), em=1)
 
         [pm.parent(grp, self.MOD_GRP) for grp in [self.RIG_GRP, self.INPUT_GRP, self.OUTPUT_GRP]]
-        pm.parent(self.CONTROLS_GRP, self.INPUT_GRP)
-        pm.parent(self.VISRULE_GRP, self.RIG_GRP)
+        # pm.parent(self.CONTROLS_GRP, self.INPUT_GRP)
+        pm.parent(self.VISRULE_GRP, self.MOD_GRP)
 
         return self.MOD_GRP, self.RIG_GRP, self.INPUT_GRP, self.OUTPUT_GRP
 
@@ -101,7 +151,7 @@ class ModuleBase(object):
         if type == 'transform':
             metaData_GRP = pm.group(n=METADATA_grp_name, em=True)
         elif type == 'network':
-            metaData_GRP = pm.shadingNode('network', au=1, n='{}_{}'.format(self.driver, METADATA_grp_name))
+            metaData_GRP = pm.shadingNode('network', au=1, n=METADATA_grp_name)
 
         return metaData_GRP
 
