@@ -4,7 +4,7 @@ import pymel.core as pm
 import adb_core.Class__BoundingBox  as adbBBox
 
 
-def plane_proxy(joints_chain, name , axis = 'z', type = 'mesh'):
+def plane_proxy(joints_chain, name , axis = 'z', scale = 1, type = 'mesh'):
     """ 
     Create a plane proxy for a joint chain
     
@@ -29,6 +29,9 @@ def plane_proxy(joints_chain, name , axis = 'z', type = 'mesh'):
     def createLocs(subject):                         
         loc_align = pm.spaceLocator()
         pm.matchTransform(loc_align,subject, rot=True, pos=True)
+        loc_align.sx.set(scale)
+        loc_align.sy.set(scale)
+        loc_align.sz.set(scale)
         return loc_align
 
     def createCurve(pos ,curve_name):
