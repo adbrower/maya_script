@@ -1,27 +1,25 @@
-import getpass
 from functools import wraps
 
-import adbrower
 import maya.cmds as mc
 import maya.mel as mel
 import pymel.core as pm
-from CollDict import pysideColorDic as pyQtDic
-from PySide2 import QtGui, QtWidgets, QtCore
+from PySide2 import QtCore, QtGui, QtWidgets
 
+import adb_core.Class__multi_skin as ms
+import adbrower
+from CollDict import pysideColorDic as pyQtDic
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
+from maya_script import Adbrower
+
 
 adb = adbrower.Adbrower()
-import adb_core.Class__multi_skin as ms
-# reload(ms)
-
 
 VERSION = 1.0
-USERNAME = getpass.getuser() 
-PATH_WINDOW = 'C:/Users/'+ USERNAME + '/AppData/Roaming'
-PATH_LINUX = '/home/'+ USERNAME + '/'
-FOLDER_NAME ='.config/adb_Setup'
-# ICONS_FOLDER = '/home/adeschamps/maya/scripts/python/Adbrower/adb_icons/'
-ICONS_FOLDER = 'C:/Users/Audrey/Google Drive/[SCRIPT]/python/Adbrower/adb_icons/'
+
+PATH_WINDOW = Adbrower.PATH_WINDOW_INIT + 'AppData/Roaming'
+PATH_LINUX = Adbrower.PATH_LINUX_INIT
+FOLDER_NAME = Adbrower.FOLDER_NAME_INIT
+ICONS_FOLDER = Adbrower.ICONS_FOLDER_INIT
 
 YELLOW = '#ffe100'
 ORANGE = '#fd651d'
@@ -393,9 +391,3 @@ def showUI(dialog = False):
         
     
 showUI()
-    
-    
-    
-    
-    
-    

@@ -1,7 +1,8 @@
-import maya.cmds as mc
-import pymel.core as pm
 import sys
+
+import maya.cmds as mc
 import maya.mel as mel
+import pymel.core as pm
 
 #------------------------------------
 # LAYER MANAGING
@@ -301,6 +302,3 @@ class MultiSkin(object):
 # aaa.delete_skin_cluster('skinCluster2')
 
 # print aaa.layer_index_dic['test2']
-
-
-

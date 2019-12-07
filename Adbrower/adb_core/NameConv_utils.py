@@ -213,6 +213,10 @@ CONDITION_SUFFIX              = 'COND'
 PLUS_MIN_AVER_SUFFIX          = 'PMA'
 
 
+# NOMENCLATURE
+UNDER                         = '_'
+DUNDER                        = '__'
+
 def extract_TAGS(tag_name):
     extract = [x.split('.')[0] for x in pm.ls('*.{}'.format(tag_name))]
     return extract
