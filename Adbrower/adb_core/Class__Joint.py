@@ -5,11 +5,15 @@
 # By: Audrey Deschamps-Brower
 #     audreydb23@gmail.com
 # -------------------------------------------------------------------
-import numpy
 
-import adb_utils.Class__Transforms as adbTransform
+
+from collections import namedtuple
+import pymel.core.datatypes as dt
+
+import adb_core.Class__Transforms as adbTransform
 import adbrower
 import pymel.core as pm
+
 
 adb = adbrower.Adbrower()
 
@@ -20,6 +24,21 @@ adb = adbrower.Adbrower()
 
 class Joint(adbTransform.Transform):
     """A Module containing multiples joint methods"""
+
+    def __init__(self,
+                 _joints,
+                 ):
+
+        self.joints = _joints
+
+        if isinstance(self.joints, list):
+            self.joints = [pm.PyNode(x) for x in _joints]
+        elif isinstance(self.joints, basestring):
+            self.joints = [_joints]
+        else:
+            self.joints = _joints
+
+        super(Joint, self).__init__(self.joints)
 
     @classmethod
     def find_all(cls):
@@ -149,7 +168,7 @@ class Joint(adbTransform.Transform):
         decNode = pm.shadingNode('decomposeMatrix', au=1)
         pm.PyNode(dup_jnt).worldMatrix >> decNode.inputMatrix
         matrixRotationValue = decNode.getAttr('inputMatrix')[0]
-        pm.delete(root_grp)
+        # pm.delete(root_grp)
 
         print(matrixRotationValue)
         if '{:.2f}'.format(matrixRotationValue[0]) == '0.00':
@@ -262,11 +281,12 @@ class Joint(adbTransform.Transform):
             pm.setAttr('{0}.type'.format(sel), 18)
             pm.setAttr('{0}.otherType'.format(sel), other, type='string')
             
+    
     @staticmethod
     def getClosestVector(v, axies=None):
         """
         returns the vector in axies that is the closets to the vector v
-
+    
         :param tuple v: input vector
         :param list axies: list of vectors to match against.
                            defaults to the vectors of [+x, -x, +y, -y, +z, -z]
@@ -274,15 +294,14 @@ class Joint(adbTransform.Transform):
         """
         axies = axies or [(1, 0, 0), (0, 1, 0), (0, 0, 1),
                           (-1, 0, 0), (0, -1, 0), (0, 0, -1)]
-        return sorted(axies, key=lambda a: numpy.dot(v, a))
-        
-        
-    @staticmethod    
-    def getVectors(joint, child=None, normal=(0, 0, 1), worldSpace=False):
+        return sorted(axies, key=lambda a: dt.Vector(v).dot(a))[-1]
+    
+    
+    def getVectors(self, obj, child=None, normal=(0, 0, 1)):
         """
         get local aim and up vectors
-
-        :param str joint: name of the transform
+    
+        :param str obj: name of the transform
         :param tuple normal: inVector to compute the upVector defaults to (0,0,1)
         :return: (aimVector, upVector) as tuple
         :rtype: tuple
@@ -290,49 +309,42 @@ class Joint(adbTransform.Transform):
         # Get first child joint or, if no children, use the joint itself
         # to get translation vector (if has a parent, otherwise error...)
         if not child:
-            children = cmds.listRelatives(joint, c=True, type="joint")
+            children = cmds.listRelatives(obj, c=True, type="joint")
             if not children:
-                parent = cmds.listRelatives(joint, p=True, type="joint")[0]
+                parent = cmds.listRelatives(obj, p=True, type="joint")[0]
                 if not parent:
                     raise RuntimeError("Can't get vectors for '{}' since it has no joint hierarchy...")
                 else:
-                    child = joint
+                    child = obj
             else:
                 child = children[0]
-
         v = cmds.xform(child, q=True, translation=True)
+        
+        aim = self.getClosestVector(v)
+        up = tuple(dt.Vector(normal).cross(aim))
+        
+        jntOrientation = namedtuple('jointOrientation', ['aimV', 'upV'])
+        getJntOriention = jntOrientation(aim, up)
+        
+        return getJntOriention           
+                            
+    @staticmethod
+    def getAxis(vector):
+        """
+        returns the name of the vector (x,y or z)
+    
+        :param tuple vector: a vector
+        :rtype: str
+        """
+        return {
+            (1, 0, 0): "x",
+            (-1, 0, 0): "-x",
+            (0, 1, 0): "y",
+            (0, -1, 0): "-y",
+            (0, 0, 1): "z",
+            (0, 0, -1): "-z",
+        }[vector]    
+        
 
-        aim = getClosestVector(v)
-        up = tuple(numpy.cross(normal, aim))
 
-        if worldSpace:
-            mat = cmds.xform(joint, q=True, ws=True, matrix=True)
-            mat = numpy.array(mat).reshape(4, 4)
 
-            aim = numpy.dot(aim + (0,), mat)[0:3]
-            up = numpy.dot(up + (0,), mat)[0:3]
-
-        aim = tuple(map(float, aim))
-        up = tuple(map(float, up))
-
-        # TODO: return a namedtuple
-        return (aim, up)            
-                        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
