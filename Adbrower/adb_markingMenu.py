@@ -84,7 +84,7 @@ class markingMenu():
 
         mc.menuItem(p=menu, l="Match All Transform", rp="E", c=pm.Callback(self.MatchTransformRT, True, True))
         mc.menuItem(p=menu, l="Print List", rp="NW", c=pm.Callback(adb.List))
-        mc.menuItem(p=menu, l="LOCK ALL WEIGHTS", rp="S", c=pm.Callback(self.lock_unlock_All_Weight, lock=1))
+        mc.menuItem(p=menu, l="Paint Skin Tool", rp="S", c=mc.ArtPaintSkinWeightsToolOptions)
         mc.menuItem(p=menu, l="Add Influence", rp="SE", c=pm.Callback(self.addInfluence), i='addWrapInfluence.png')
 
         transformMenu = mc.menuItem(p=menu, l="Match Transform Separate", rp="NE", i='parentConstraint.png', subMenu=1)
@@ -115,6 +115,7 @@ class markingMenu():
         SkinMenu = mc.menuItem(p=menu, l="Skinning", rp="N", i='paintSkinWeights.png', subMenu=1)
         mc.menuItem(p=SkinMenu, l="Skinning", en=0)
         mc.menuItem(p=SkinMenu, l="Bind", c=mc.SmoothBindSkin, rp='W')
+        mc.menuItem(p=SkinMenu, l="Hammer Weights", c=lambda *args: mel.eval("weightHammerVerts;"), rp='E')
         mc.menuItem(p=SkinMenu, l="Unbind Skin", c=mc.DetachSkin, rp='SW')
         mc.menuItem(p=SkinMenu, l="Reset Skin", c=pm.Callback(adb.resetSkin))
         mc.menuItem(p=SkinMenu, l="Remove Unused", c=lambda *args: pm.mel.removeUnusedInfluences(), rp='NE')
@@ -176,6 +177,7 @@ class markingMenu():
         mc.menuItem(p=menu, l="No Pasted",  c=pm.Callback(self.no_Pasted))
         mc.menuItem(p=menu, l="Auto Suffix", c=lambda *args: adb.AutoSuffix(pm.selected()))
         mc.menuItem(p=menu, l="Select Edges by 2", c=lambda *args: pm.mel.polySelectEdgesEveryN("edgeRing", 2))
+        mc.menuItem(p=menu, l="Delete Unused Nodes", c=lambda *args: pm.mel.hyperShadePanelMenuCommand("hyperShadePanel1", "deleteUnusedNodes"))
 
     def _buildCustomMenu(self):
         """Build the options for the Maya Menu bar """

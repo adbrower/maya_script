@@ -77,9 +77,9 @@ class AudreyToolBox():
 
 ## ------------ SECTION COMMANDES RAPIDES
 
-        pm.rowLayout()
-        pm.button(command=mc.DeleteHistory, w=200, backgroundColor=colordic['grey'], label="Delete History")
-        pm.setParent('..')
+        # pm.rowLayout()
+        # pm.button(command=mc.DeleteHistory, w=200, backgroundColor=colordic['grey'], label="Delete History")
+        # pm.setParent('..')
 
         pm.rowLayout()
         pm.button(command=mc.BakeNonDefHistory, w=200, backgroundColor=colordic['grey'], label="Delete Non Deformer History")
@@ -127,12 +127,6 @@ class AudreyToolBox():
         pm.setParent('..')
         pm.setParent('..')
 
-
-## ------------ SECTION TOOLS ###
-
-        pm.frameLayout(cll=True, w=200, bgc=(.12, .12, .12), cl=False, label="TOOLS")
-        pm.columnLayout(adj=False)
-
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=2)
         pm.button(l="Select By ", backgroundColor=colordic['grey'], command=pm.Callback(self._selectBy))
         pm.popupMenu()
@@ -141,6 +135,12 @@ class AudreyToolBox():
         pm.menuItem(l="mesh",   command=lambda *args: adb.selectType('mesh'))
         self.select_by = pm.textField(w=138, tx='joint')
         pm.setParent('..')
+        
+
+## ------------ SECTION TOOLS ###
+
+        pm.frameLayout(cll=True, w=200, bgc=(.12, .12, .12), cl=False, label="TOOLS")
+        pm.columnLayout(adj=False)
 
         pm.rowLayout(numberOfColumns=1)
         pm.button(l="Joint GeneratorTool", h=25, w=199, backgroundColor=colordic['grey'], command=pm.Callback(self.jointGenToolAB))
@@ -215,44 +215,44 @@ class AudreyToolBox():
 
         ### SECTION CONNECTION ###
 
-        pm.frameLayout(cll=True, w=200, bgc=(.12, .12, .12), cl=True, label="CONNECTIONS")
-        pm.columnLayout(adj=False, rs=5)
-        pm.text(l="                  Conversion nodes", h=20, align='center')
+        # pm.frameLayout(cll=True, w=200, bgc=(.12, .12, .12), cl=True, label="CONNECTIONS")
+        # pm.columnLayout(adj=False, rs=5)
+        # pm.text(l="                  Conversion nodes", h=20, align='center')
 
-        pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=6)
-        pm.iconTextButton(i="render_multiplyDivide.png", style="iconOnly", annotation="Multiply Divide", c=pm.Callback(self.addNodeMD), dcc=pm.Callback(self.addNodes, 'multiplyDivide'), w=38)
-        pm.iconTextButton(i="render_reverse.png", style="iconOnly", annotation="Reverse Node", c=pm.Callback(self.addNodeRev), dcc=pm.Callback(self.addNodes, 'reverse'), w=38)
-        pm.iconTextButton(i="render_remapValue.png", style="iconOnly", annotation="Remap Value", c=pm.Callback(self.addNodes, 'remapValue'), dcc=pm.Callback(self.addNodes, 'remapValue'), w=38)
-        pm.iconTextButton(i="render_plusMinusAverage.png", style="iconOnly", annotation="Plus Minus Average", c=pm.Callback(self.addNodes, 'plusMinusAverage'), dcc=pm.Callback(self.addNodes, 'plusMinusAverage'), w=38)
-        pm.iconTextButton(i="render_blendColors.png", style="iconOnly", annotation="Blend Colors", c=pm.Callback(self.addNodes, 'blendColors'), dcc=pm.Callback(self.addNodes, 'blendColors'), w=38)
-        pm.setParent('..')
+        # pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=6)
+        # pm.iconTextButton(i="render_multiplyDivide.png", style="iconOnly", annotation="Multiply Divide", c=pm.Callback(self.addNodeMD), dcc=pm.Callback(self.addNodes, 'multiplyDivide'), w=38)
+        # pm.iconTextButton(i="render_reverse.png", style="iconOnly", annotation="Reverse Node", c=pm.Callback(self.addNodeRev), dcc=pm.Callback(self.addNodes, 'reverse'), w=38)
+        # pm.iconTextButton(i="render_remapValue.png", style="iconOnly", annotation="Remap Value", c=pm.Callback(self.addNodes, 'remapValue'), dcc=pm.Callback(self.addNodes, 'remapValue'), w=38)
+        # pm.iconTextButton(i="render_plusMinusAverage.png", style="iconOnly", annotation="Plus Minus Average", c=pm.Callback(self.addNodes, 'plusMinusAverage'), dcc=pm.Callback(self.addNodes, 'plusMinusAverage'), w=38)
+        # pm.iconTextButton(i="render_blendColors.png", style="iconOnly", annotation="Blend Colors", c=pm.Callback(self.addNodes, 'blendColors'), dcc=pm.Callback(self.addNodes, 'blendColors'), w=38)
+        # pm.setParent('..')
 
-        pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=1)
-        pm.button(l="Print All Existing Connections", h=25, w=200, backgroundColor=colordic['grey'], c=pm.Callback(self.printAllConns))
-        pm.setParent('..')
+        # pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=1)
+        # pm.button(l="Print All Existing Connections", h=25, w=200, backgroundColor=colordic['grey'], c=pm.Callback(self.printAllConns))
+        # pm.setParent('..')
 
-        pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=4)
-        pm.text(label=" Factor ", h=20, align='left')
-        self.vfactor = pm.floatField(width=40, v=1, precision=0)
-        pm.text(label=" Operation ", h=20, align='left')
-        self.voperation = pm.floatField(width=40, v=1, precision=0)
-        pm.setParent('..')
+        # pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=4)
+        # pm.text(label=" Factor ", h=20, align='left')
+        # self.vfactor = pm.floatField(width=40, v=1, precision=0)
+        # pm.text(label=" Operation ", h=20, align='left')
+        # self.voperation = pm.floatField(width=40, v=1, precision=0)
+        # pm.setParent('..')
 
-        pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=6)
-        # pm.checkBox("myChBxAll", l = "ALL", h= 25, w = 40)
-        pm.text(label=" Connections index", h=20, align='left')
-        self.vindex = pm.floatField(width=40, v=0, precision=0)
+        # pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=6)
+        # # pm.checkBox("myChBxAll", l = "ALL", h= 25, w = 40)
+        # pm.text(label=" Connections index", h=20, align='left')
+        # self.vindex = pm.floatField(width=40, v=0, precision=0)
 
-        pm.setParent('..')
-        pm.optionMenu(w=200)
-        pm.menuItem(label=" - Operation Options - ")
-        pm.menuItem(label="0 - None")
-        pm.menuItem(label="1 - Multiply / Sum")
-        pm.menuItem(label="2 - Divide / Subtract")
-        pm.menuItem(label="3 - Power / Average")
+        # pm.setParent('..')
+        # pm.optionMenu(w=200)
+        # pm.menuItem(label=" - Operation Options - ")
+        # pm.menuItem(label="0 - None")
+        # pm.menuItem(label="1 - Multiply / Sum")
+        # pm.menuItem(label="2 - Divide / Subtract")
+        # pm.menuItem(label="3 - Power / Average")
 
-        pm.setParent('..')
-        pm.setParent('..')
+        # pm.setParent('..')
+        # pm.setParent('..')
 
 
 ## ------------ SECTION CONSTRAINTS ###
