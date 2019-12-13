@@ -1037,7 +1037,7 @@ class Adbrower(object):
             ySpread = max(yComp) - min(yComp)
             zSpread = max(zComp) - min(zComp)
             spreads = [xSpread, ySpread, zSpread]
-            planarAxis = 'xyz'
+            planarAxis = ['x','y','z']
 
             shortestSide = spreads.index(min(spreads))
             planarAxis.pop(shortestSide)
