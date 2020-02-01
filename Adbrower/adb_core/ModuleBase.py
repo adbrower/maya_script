@@ -40,7 +40,7 @@ class ModuleBase(object):
         """
         - Build the rig Module
         """
-        pass
+        self.setFinalHiearchy()
 
     def _connect(self):
         """
@@ -125,7 +125,6 @@ class ModuleBase(object):
                          RIG_GRP_LIST = [],
                          INPUT_GRP_LIST = [],
                          OUTPUT_GRP_LIST = [],
-                         module=True,
                         ):
         """
         Parent children under their group
