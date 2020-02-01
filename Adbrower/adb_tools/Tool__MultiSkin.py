@@ -9,8 +9,8 @@ import adb_core.Class__multi_skin as ms
 import adbrower
 from CollDict import pysideColorDic as pyQtDic
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
+import adb_tools.adb_pyQt.Class__rightClickCustom as adbRC
 from maya_script import Adbrower
-
 
 adb = adbrower.Adbrower()
 
@@ -62,7 +62,6 @@ def flatList(ori_list=''):
 #----------------------------------- 
 
 
-
 class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     __dialog = None
     
@@ -76,6 +75,8 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     
     def __init__(self,parent=None):                
         super(MultiSkin_UI, self).__init__(parent=parent)
+        
+        self.meshTreeWidget=QtWidgets.QTreeWidget()
     
         self.setObjectName('multi skin ui')
         self.starting_height = 500
@@ -84,7 +85,6 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.setWindowFlags(QtCore.Qt.Tool)
         self.setMinimumWidth(self.starting_width)
         self.resize(self.starting_width, self.starting_height)
-    
         
         # -----------------------------
         # ---  Create scrollArea
@@ -104,7 +104,6 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.scroll_widget = QtWidgets.QWidget()
         self.scroll_layout.setWidget(self.scroll_widget)    
     
-    
         # -----------------------------
         # ---  Main Layout
 
@@ -115,6 +114,7 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
         self.scroll_widget.setLayout(self.main_layout)
         self.widgetsAndLayouts()
+        self.create_Button()
         self.buildMainLayout()
 
 
@@ -136,7 +136,6 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             text.setFont(myFont)
             return text    
     
-
     # ------------------------------
     #--------- Layouts
 
@@ -149,54 +148,176 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             self.vlayout[layoutName] = QtWidgets.QVBoxLayout()
             self.vlayout[layoutName].setContentsMargins(margins[0], margins[1], margins[2], margins[3],)    
     
+        self.hLayoutAndFunctions = [
+            # name,              margins
+            ['filterOptions',        [1, 1, 1, 1]],
+            ['buttonsOptions',       [1, 1, 1, 1]],
+            ['searchBarWidget',      [1, 1, 1, 1]],
+        ]
+        self.hlayout = {}
+        for layoutName, margins, in self.hLayoutAndFunctions:
+            self.hlayout[layoutName] = QtWidgets.QHBoxLayout()
+            self.hlayout[layoutName].setContentsMargins(margins[0], margins[1], margins[2], margins[3],)    
+    
+        # ------------------------------
+        # --------- QLINE EDIT WIDGET
 
+        self.searchBar = QtWidgets.QLineEdit()
+        self.searchBar.setPlaceholderText('Search...')
+        self.searchBar.textEdited.connect(self.searchBarEdited)
+        self.hlayout['searchBarWidget'].addWidget(self.searchBar) 
+    
+        # ------------------------------
+        # --------- CHECKBOX WIDGET
+        
+        self.matchCaseChx = QtWidgets.QCheckBox()
+        self.matchCaseChx.setChecked(False)
+        self.matchCaseChx.setText('Match Case')
+        self.matchCaseChx.stateChanged.connect(self.searchBarEdited)
+        
+        # ------------------------------
+        # --------- RADIO BUTTON WIDGET
+        
+        self.allFilter = QtWidgets.QRadioButton('All', self)
+        self.allFilter.setChecked(True)
+        self.allFilter.toggled.connect(self.refreshQtree)
+
+        self.skinClusterFilter = QtWidgets.QRadioButton('Skin Clusters', self)
+        self.skinClusterFilter.setChecked(True)
+        self.skinClusterFilter.toggled.connect(self.refreshQtree)
+        
         # ------------------------------
         # --------- TREE LIST WIDGET
 
         self.meshTreeWidget=QtWidgets.QTreeWidget()
 
         self.meshTreeWidget.setHeaderLabel('Cloth Tree View')
+        self.meshTreeWidget.setSelectionMode(self.meshTreeWidget.ExtendedSelection)
+        
         self.vlayout['treeWidget'].addWidget(self.meshTreeWidget)
         header = QtWidgets.QTreeWidgetItem(["Geometries"])
         self.meshTreeWidget.setHeaderItem(header)
  
-        
         self.meshTreeWidget.itemClicked.connect(self.singleClickedAction)
-        self.filterList = self.filterMeshes(filter='skinClusters')
+        self.meshTreeWidget.itemSelectionChanged .connect(self.singleClickedAction)
         
-        self.populateQTree(self.filterList)
+        self.refreshQtree()
         
-    
-    
+    def create_Button(self):
+        """ Create the buttons  """
+        self.buttonAndFunctions = [
+            # name,                  function ,     group number,                   labelColor,            backgroundColor,                      layout,              layout_coordinate     width
+            ['Show Selected',    self.showSelected,             0,        pyQtDic['colorLightGrey'],         '',                self.hlayout['searchBarWidget'],                  '',         30],
+            ['Refresh',          self.refreshQtree,             0,        pyQtDic['colorLightGrey'],         '',                self.hlayout['filterOptions'],                    '',         30],
+            ['Clear',            self.meshTreeWidget.clear,     0,        pyQtDic['colorLightGrey'],         '',                self.hlayout['filterOptions'],                    '',         30],
+            
+            ['Expand All',       self.expandTree,               0,        pyQtDic['colorLightGrey'],         '',                self.hlayout['buttonsOptions'],                   '',         30],
+            ['Close All',        self.closeTree,                0,        pyQtDic['colorLightGrey'],         '',                self.hlayout['buttonsOptions'],                   '',         30],
+        ]
+
+        # Build Buttons
+        self.buttons = {}
+        for buttonName, buttonFunction, _, labColor, bgColor, layout, layout_coord, width, in self.buttonAndFunctions:
+            self.buttons[buttonName] = adbRC.CustomQPushButton(buttonName)
+            self.buttons[buttonName].clicked.connect(buttonFunction)   
+            try:
+                layout.addWidget(self.buttons[buttonName], int(layout_coord.split(',')[0]), int(layout_coord.split(',')[1]))
+            except ValueError:
+                layout.addWidget(self.buttons[buttonName])
+
+        # add Right Clicked Options
+        _optionsExpandAll = self.buttons['Expand All'].addButtonActions(['Shapes', 'Skin Clusters'])
+        _optionsExpandAll['Shapes'].triggered.connect(lambda:self.expandTree('shape'))
+        _optionsExpandAll['Skin Clusters'].triggered.connect(lambda:self.expandTree('skin cluster'))
+        
+        _optionsCloseAll = self.buttons['Close All'].addButtonActions(['Shapes', 'Skin Clusters'])
+        _optionsCloseAll['Shapes'].triggered.connect(lambda:self.closeTree('shape'))
+        _optionsCloseAll['Skin Clusters'].triggered.connect(lambda:self.closeTree('skin cluster'))
+
+
     def buildMainLayout(self):
         # ------------------------------
         # --------- BUILD MAIN LAYOUT    
         
+        self.main_layout.addLayout(self.hlayout['filterOptions'])
+        self.hlayout['filterOptions'].addWidget(self.allFilter)
+        self.hlayout['filterOptions'].addWidget(self.skinClusterFilter)
+        self.hlayout['filterOptions'].addStretch()
+        
+        self.main_layout.addLayout(self.hlayout['searchBarWidget'])
+        self.hlayout['searchBarWidget'].addWidget(self.matchCaseChx)
+        self.main_layout.addLayout(self.hlayout['buttonsOptions'])
         self.main_layout.addLayout(self.vlayout['treeWidget'])
-
 
 
 # ==================================
 #  SLOTS
 # ==================================    
 
+    def refreshQtree(self):
+        self.meshTreeWidget.clear()
+        all_status = self.allFilter.isChecked()
+        if all_status:
+            _filter = 'all'
+        else:
+            _filter = 'skinClusters'
+        self.filterList = self.filterMeshes(filter=_filter)
+        self.populateQTree(self.filterList)
+        
+    def getSearchBarText(self):
+        searchBarText = self.searchBar.text()
+        return searchBarText
+        
+    def searchBarEdited(self):
+        matchCase=bool(self.matchCaseChx.checkState())
+        query = self.searchBar.text()
+        if matchCase:
+            query_words = str(query).split(" ")
+        else:
+            query_words = str(query).lower().split(" ")
+        query_words = filter(None, query_words)
+        scoreList = {}
+        
+        for item in [str(x) for x in self.filterList]:
+            score = 0
+            for query_word in query_words:
+                if matchCase:
+                    if query_word in item:
+                        score += 1
+                else:
+                    if query_word in item.lower():
+                        score += 1
+            scoreList[item] = score
+
+        # If user enter more than one words, get only result with a score at least equal to the number of words in the query
+        sorted_matches = [i for i in scoreList.items() if i[1] >= len(query_words)]
+        
+        # Sort matches by score
+        sorted_matches = sorted(sorted_matches, key=lambda x: x[0])
+        sorted_matches_string = [name for name, index in sorted_matches]
+        
+        self.meshTreeWidget.clear()
+        self.populateQTree(sorted_matches_string)
+        
+
     def populateQTree(self, filterList):
          # Meshes
         # ----------------------
         
-        roots = [QtWidgets.QTreeWidgetItem(self.meshTreeWidget, [str(item)]) for item in filterList]
-        [root.setIcon(0, QtGui.QIcon(':/out_mesh.png')) for root in roots]
-        [root.setExpanded(True) for root in roots]
-        
+        self.roots = [QtWidgets.QTreeWidgetItem(self.meshTreeWidget, [str(item)]) for item in filterList]
+        [root.setIcon(0, QtGui.QIcon(':/out_mesh.png')) for root in self.roots]
+        [root.setExpanded(True) for root in self.roots]
         
         # Shapes
         # ----------------------
-        
-        QtShapes = []
+        self.QtShapes = []
         shape_dic = self.getAllShapes(self.getAllMeshes())
         QTroots_dic = {} # Keys are Qtree object
-        for root in roots:
-            QTroots_dic.update({root:shape_dic[root.text(0)]})
+        for root in self.roots:
+            try:
+                QTroots_dic.update({root:shape_dic[root.text(0)]})
+            except KeyError:
+                pass
         
         # added the shapes under there mesh
         for QTroot, shapesList in QTroots_dic.items():
@@ -208,14 +329,15 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             [child.setForeground(0, QtGui.QBrush(QtGui.QColor(YELLOW))) for child in children]            
             [child.setIcon(0, QtGui.QIcon(':/out_transform.png')) for child in children]   
             [child.setExpanded(True) for child in children]         
-            [QtShapes.append(child) for child in children]
+            [self.QtShapes.append(child) for child in children]
                 
         # skinClusters
         # ----------------------
-        QTClusters = []      
+        self.QTClusters = []    
+          
         cluster_dic = self.getSkinClusterbyShape(flatList(shape_dic.values()))
         QTshape_dic = {}
-        for shape in QtShapes:
+        for shape in self.QtShapes:
             QTshape_dic.update({shape:cluster_dic[shape.text(0)]})
             
         # added the skinCluster under there shape
@@ -230,16 +352,14 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             children=[QTshape.child(index) for index in range(child_count)]
             [child.setForeground(0, QtGui.QBrush(QtGui.QColor(GREEN))) for child in children]            
             [child.setIcon(0, QtGui.QIcon(':/cluster.png')) for child in children]            
-            [QTClusters.append(child) for child in children]   
+            [self.QTClusters.append(child) for child in children]   
             
-
-
         # Joints
         # ---------------------- 
         bindJoints_dic = self.getBindJointsFromCluster([x for x in cluster_dic.values() if x != 'None'])
     
         QTcluster_dic = {}
-        for cluster in QTClusters:
+        for cluster in self.QTClusters:
             QTcluster_dic.update({cluster:bindJoints_dic[cluster.text(0)]})
             
         for QTCluster, jointList in QTcluster_dic.items():
@@ -251,12 +371,32 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             [child.setForeground(0, QtGui.QBrush(QtGui.QColor(DARKRED))) for child in children]            
             [child.setIcon(0, QtGui.QIcon(':/out_joint.png')) for child in children]            
  
-            
+    def closeTree(self, type='mesh'):
+        if type == 'mesh':
+            [root.setExpanded(False) for root in self.roots]
+        elif type == 'shape':
+            [shape.setExpanded(False) for shape in self.QtShapes]
+        elif type == 'skin cluster':
+            [sclus.setExpanded(False) for sclus in self.QTClusters]
 
-    def singleClickedAction(self):
-        mySelection = self.meshTreeWidget.currentItem()
-        pm.select(mySelection.text(0), r=1)
+    def expandTree(self, type='mesh'):
+        if type == 'mesh':
+            [root.setExpanded(True) for root in self.roots]
+        elif type == 'shape':
+            [shape.setExpanded(True) for shape in self.QtShapes]
+        elif type == 'skin cluster':
+            [sclus.setExpanded(True) for sclus in self.QTClusters]
         
+    def showSelected(self):
+        selection = pm.selected()
+        selection.sort()
+        self.meshTreeWidget.clear()
+        self.populateQTree(selection)
+        
+    def singleClickedAction(self):
+        mySelection = self.meshTreeWidget.selectedItems()
+        str_selected = [x.text(0) for x in mySelection]
+        pm.select(str_selected, r=1)
     
     def filterMeshes(self, filter = 'all'):
         """
@@ -266,12 +406,12 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             None
         """
         if filter =='all':
-            return getAllMeshes()
+            return self.getAllMeshes()
 
         elif filter == "skinClusters":
             clusters = pm.ls(type='skinCluster')
             meshesShapes = set(sum([pm.skinCluster(c, q=1, geometry=1) for c in clusters], []))
-            meshes = set([x.getParent() for x in meshesShapes])
+            meshes = set([x.getParent() for x in meshesShapes if pm.objectType(x) == 'mesh'])
             return meshes
         
         elif filter == 'None':
@@ -281,6 +421,10 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 # ==================================
 #  STATIC METHOD
 # ==================================    
+    
+    @staticmethod
+    def test():
+        print ('test')
 
     @staticmethod
     def getSkinCluster(_transform):
@@ -328,6 +472,7 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         """
         shapesList = pm.ls(type="mesh", ni=1)
         transformList = list(set(pm.listRelatives(shapesList ,parent=True)))
+        transformList.sort()
         return transformList
     
     @staticmethod
@@ -352,7 +497,7 @@ class MultiSkin_UI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         cluster_dic = {}
         for shape in shapes:        
             try:
-                incoming = cmds.listConnections('{}.inMesh'.format(shape))[0]
+                incoming = mc.listConnections('{}.inMesh'.format(shape))[0]
                 if pm.objectType(incoming) == 'skinCluster':
                     cluster_dic.update({str(shape):incoming})
                 else:
@@ -390,4 +535,4 @@ def showUI(dialog = False):
         
         
     
-showUI()
+# showUI()
