@@ -39,6 +39,30 @@ from CollDict import suffixDic
 # 2.1 DECORATORS
 # -----------------------------------
 
+def repeat(label):       
+    """
+    Make a function repeatable and adds it to the recent List Command
+    original from: https://gist.github.com/justinfx/f86320b6d9b567e6b8e2
+    """
+    def repeatLastCommand():
+        if _repeat_function is not None:
+            _repeat_function(*_args, **_kwargs)
+            
+    def real_repeate(func):
+        def _repeatfunc(*args, **kwargs):
+            global _repeat_function
+            global _args
+            global _kwargs
+            
+            _repeat_function = func(*args, **kwargs)
+         
+            sys.modules[__name__].repeatLastCommand = lambda : func(*args, **kwargs)
+            rplString = 'python("{}.repeatLastCommand()")'.format(__name__)
+            pm.repeatLast(ac=rplString, acl=func.__name__, h=10)
+            
+        return _repeatfunc
+    return real_repeate
+    
 
 def undo(func):
     """
@@ -94,7 +118,7 @@ def changeColor(type='rgb', col=(0.8, 0.5, 0.2)):
                         pm.PyNode(ctrl).overrideRGBColors.set(0)
                         pm.PyNode(ctrl).overrideColor.set(col)
             else:
-                for ctrl in all_shapes:
+                for ctrl in ctrls:
                     pm.PyNode(ctrl).overrideEnabled.set(1)
                     if type == 'rgb':
                         pm.PyNode(ctrl).overrideRGBColors.set(1)
@@ -1754,12 +1778,9 @@ class Adbrower(object):
         @param index_to_split: float
         @param suffix: string.
         """
-
         for each in pm.selected():
             x = each.split(symbol)[:index_to_split + 1]
-
             new_name = (symbol).join(x) + symbol + suffix
-
             print(new_name)
             each.rename(new_name)
 
