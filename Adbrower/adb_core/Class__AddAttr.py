@@ -412,7 +412,7 @@ class NodeAttr(object):
                             mc.setAttr(eachObj + '.' + alck, lock=1)
 
     @staticmethod
-    def AddSeparator(_transform):
+    def AddSeparator(_transform, label = False):
         """
         Add a seperator in the Channel Box
         """
@@ -438,8 +438,12 @@ class NodeAttr(object):
             else:
                 break
 
-        en = "..................................................................................:"
-        pm.addAttr(node, ln=name, keyable=False, en=en, at="enum", nn=en)
+        en = "................................................................:"
+        
+        if label:
+            pm.addAttr(node, ln=name, keyable=False, en=label, at="enum", nn=en)
+        else:
+            pm.addAttr(node, ln=name, keyable=False, en=en, at="enum", nn=en)
         pm.setAttr((node + "." + name), channelBox=True,
                    keyable=False, lock=True)
 
@@ -570,7 +574,6 @@ class NodeAttr(object):
 # -----------------------------------
 #   IN CLASS BUILD
 # -----------------------------------
-
 
 # node = NodeAttr([pm.selected()[0]])
 # node.addAttr("UV", 'compound', nc=2)
