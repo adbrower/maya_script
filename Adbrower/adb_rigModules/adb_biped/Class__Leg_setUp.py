@@ -7,7 +7,6 @@
 # ------------------------------------------------------
 
 import sys
-import traceback
 import pymel.core as pm
 import maya.cmds as mc
 from pprint import pprint
@@ -27,15 +26,15 @@ import adb_library.adb_utils.Func__Piston as adbPiston
 import adb_library.adb_utils.Script__LocGenerator as locGen
 import adb_library.adb_utils.Class__ShapeManagement as adbShape
 
-# TODO : Replace Class__OrientJoint
-# import adb_utils.rig_utils.Class__OrientJoint as adbOrient
 import adb_library.adb_utils.Script__ProxyPlane as adbProxy
 import adb_library.adb_modules.Module__Folli as adbFolli
-import adb_core.Class__Transforms as adbTransform
+from adb_core.Class__Transforms import Transform
+from adb_core.Class__Joint import Joint
 
 #-----------------------------------
 #  DECORATORS
 #----------------------------------- 
+
 from adbrower import undo
 from adbrower import changeColor
 from adbrower import makeroot
@@ -280,12 +279,14 @@ class LegSetUp(object):
             if self.side == 'r':   
                 mirror_chain_1 = pm.mirrorJoint(self.guide_result_leg_chain[0],mirrorYZ=1)
                 mirror_chain_2 = [pm.PyNode(x) for x in mirror_chain_1]
-                adbOrient.OrientJoint(mirror_chain_2, 'Y') 
+                Joint(mirror_chain_2[0:2]).orientAxis = 'Y'
+                
                 mirror_chain_3 = pm.mirrorJoint(mirror_chain_2[0] ,mirrorBehavior=1, mirrorYZ=1)                
                 pm.delete(mirror_chain_1,mirror_chain_2,self.guide_result_leg_chain)
                 self.guide_result_leg_chain = [pm.PyNode(x) for x in mirror_chain_3]                
             else:
-                adbOrient.OrientJoint(self.guide_result_leg_chain, 'Y')     
+                Joint(self.guide_result_leg_chain).orientAxis = 'Y'
+                   
             return self.guide_result_leg_chain             
         self.result_leg_chain = setResultjointChain()           
         
@@ -353,14 +354,12 @@ class LegSetUp(object):
                 pm.PyNode(oIK).rx >> pm.PyNode(oBlendColor).color2R
                 pm.PyNode(oIK).ry >> pm.PyNode(oBlendColor).color2G
                 pm.PyNode(oIK).rz >> pm.PyNode(oBlendColor).color2B
-                
                             
             ## Connect the BlendColor node in the Blend joint chain        
             for oBlendColor, oBlendJoint in zip (self.BlendColor_Rot_Coll,self.result_leg_chain):
                 pm.PyNode(oBlendColor).outputR  >> pm.PyNode(oBlendJoint).rx
                 pm.PyNode(oBlendColor).outputG  >> pm.PyNode(oBlendJoint).ry
                 pm.PyNode(oBlendColor).outputB  >> pm.PyNode(oBlendJoint).rz
-
 
             for oBlendColor in self.BlendColor_Rot_Coll:
                 pm.PyNode(oBlendColor).blender.set(1)
@@ -404,7 +403,6 @@ class LegSetUp(object):
             pm.PyNode(self.BlendColor_Pos).outputG  >> pm.PyNode(self.result_leg_chain[0]).ty
             pm.PyNode(self.BlendColor_Pos).outputB  >> pm.PyNode(self.result_leg_chain[0]).tz
 
-
         ## BUILD IK FK Switch 
         Create3jointsChain() 
         CreateSwitchSetup()      
@@ -420,12 +418,10 @@ class LegSetUp(object):
 
         # Connect the IK -FK Control to FK controls's visibility
         pm.PyNode(self.IKFK_ctrl_ik_switch_param) >> pm.PyNode(self.FKcontrols[0]).visibility      
-      
         return self.FKcontrols
       
    
     def CreateIKcontrols(self): 
-        
         leg_IkHandle = pm.ikHandle( n='{Side}__{Basename}__IkHandle__'.format(**self.nameStructure), sj=self.IKjointsCh[0], ee=self.IKjointsCh[-1])
         leg_IkHandle[0].v.set(0)
         pm.select(self.IKjointsCh[-1], r = True)
@@ -438,7 +434,6 @@ class LegSetUp(object):
             pm.matchTransform(_leg_IkHandle_ctrl, self.IKjointsCh[-1], pos = True)
             return _leg_IkHandle_ctrl        
         self.leg_IkHandle_ctrl = Ik_ctrl()
-
                
         @lockAttr(att_to_lock = ['rx','ry','rz','sx','sy','sz'])    
         @changeColor('rgb', col = self.pol_vector_col) 
@@ -506,7 +501,6 @@ class LegSetUp(object):
         
         self.attr_cond_node1.outColorR >> WeightParam[1]
         self.attr_cond_node2.outColorR >> WeightParam[0]
-
             
         def IKVisibiltySetUp():              
             ik_ctrls_vis = self.leg_IkHandle_ctrl + self.pole_vector_ctrl
@@ -521,7 +515,6 @@ class LegSetUp(object):
             ## Connect the Reverse nodes to IK controls's visibility
             for oReverse,oFkctrls in zip (ReverseColl ,ik_ctrls_vis):            
                 pm.PyNode(oReverse).outputX  >> pm.PyNode(oFkctrls).visibility
-                
         
         IKVisibiltySetUp()
         
@@ -567,12 +560,10 @@ class LegSetUp(object):
             pm.move(trans[0], trans[1], trans[2], (pm.PyNode(self.locs_top[1]).scalePivot), (pm.PyNode(self.locs_top[1]).rotatePivot))
             
             ## orient Joint
-            piston_joints_top_1 = adbOrient.OrientJoint(piston_joints_top[0:2],'Y')
-            
+            Joint(piston_joints_top[0:2]).orientAxis = 'Y'
             pm.select(piston_joints_top[3], r = True)
             pm.select(piston_joints_top[2], add = True)
-            piston_joints_top_2 = adbOrient.OrientJoint(pm.selected(),'Y')
-
+            Joint(pm.selected()).orientAxis = 'Y'
                    
             adbPiston.createPiston(
                                  lowRootjnt = piston_joints_top[3],
@@ -613,12 +604,11 @@ class LegSetUp(object):
             pm.rename(self.locs_bot[1], '{Side}__{Basename}__ankle_bot__loc__'.format(**self.nameStructure))
 
             ## orient Joint
-            piston_joints_bot_1 = adbOrient.OrientJoint(piston_joints_bot[0:2],'Y')
+            Joint(piston_joints_bot[0:2]).orientAxis = 'Y'
             
             pm.select(piston_joints_bot[3], r = True)
             pm.select(piston_joints_bot[2], add = True)
-            piston_joints_bot_2 = adbOrient.OrientJoint(pm.selected(),'Y')
-
+            Joint(pm.selected()).orientAxis = 'Y'
                      
             adbPiston.createPiston(
                                  lowRootjnt = piston_joints_bot[3],
@@ -835,8 +825,8 @@ class LegSetUp(object):
         pm.parent(self.IKjointsCh[0], self.DistanceLoc.getParent(), pm.PyNode(self.leg_IkHandle_ctrl[0]).getParent(), posLocs[0], self.fk_pos_loc, self.main_strech_grp)
 
         
-    @lockAttr(att_to_lock = ['sx','sy','sz'])    
-    @changeColor( type = 'index', col = (18))   
+    # @lockAttr(att_to_lock = ['sx','sy','sz'])    
+    # @changeColor( type = 'index', col = (18))   
     def addFollicules(self,
                       radius = 0.2,
                       controls_shape = sl.circleX_shape
@@ -845,7 +835,9 @@ class LegSetUp(object):
         ## offset follicules
         leg_proxy_plane_offset = adbProxy.plane_proxy(self.bind_joints_plane_offset, '{Side}__{Basename}__proxy_plane_offset'.format(**self.nameStructure), self.plane_proxy_axis, )
         pm.polyNormal(leg_proxy_plane_offset)
-        leg_folli_offset = adbFolli.Folli(1, 5, radius = radius, sub = leg_proxy_plane_offset)   
+        leg_folli_offset = adbFolli.Folli('test',1, 5, radius = radius, subject = leg_proxy_plane_offset)   
+        leg_folli_offset.start()
+        leg_folli_offset.build()
         self.follicules_offset_ctrl = leg_folli_offset.addControls(controls_shape)
         pm.PyNode(leg_proxy_plane_offset).v.set(0)
         pm.select(leg_proxy_plane_offset, self.bind_joints_plane_offset, r = True)
@@ -860,7 +852,9 @@ class LegSetUp(object):
         leg_proxy_plane_skin = adbProxy.plane_proxy(self.bind_joints_plane_offset, '{Side}__{Basename}__proxy_plane_skin'.format(**self.nameStructure), self.plane_proxy_axis, )  
         pm.polyNormal(leg_proxy_plane_skin)     
         # pm.polySmooth(leg_proxy_plane_skin, ch=0, ost=1, khe=0, ps=0.1, kmb=1, bnr=1, mth=0, suv=1, peh=0, ksb=1, ro=1, sdt=2, ofc=0, kt=1, ovb=1, dv=1, ofb=3, kb=1, c=1, ocr=0, dpe=1, sl=1)        
-        leg_folli_skin = adbFolli.Folli(1, 20, radius = radius, sub = leg_proxy_plane_skin)   
+        leg_folli_skin = adbFolli.Folli('test1', 1, 20, radius = radius, subject = leg_proxy_plane_skin)   
+        leg_folli_skin.start()
+        leg_folli_skin.build()
         pm.PyNode(leg_proxy_plane_skin).v.set(0)
         pm.select(leg_proxy_plane_skin, follicules_offset_joints, r = True)
         mc.SmoothBindSkin()
@@ -884,9 +878,7 @@ class LegSetUp(object):
         adb.AutoSuffix(['{Side}__{Basename}__proxy_plane_skin'.format(**self.nameStructure)])       
                         
         [pm.rename(x,'{[Side]}__{[Basename]}__proxy_plane_skin_0{}'.format(self.nameStructure, self.nameStructure,index+1)) for index, x in enumerate(self.follicules_offset_ctrl)]
-        
         pm.select(self.follicules_skin_joints, r =True)
-        adb.replaceIndex('__',3,'skn')
         
         ## connection de la visibility des controleurs
         [self.ikfk_ctrl.Offset_Ctrls >> control.v for control in self.follicules_offset_ctrl]

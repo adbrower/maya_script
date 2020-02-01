@@ -14,7 +14,6 @@ suffixDic = {
              'nCloth':  '__nCloth',
 }
 
-
 attrDic = {
     'tx': ['translateX'], 'ty': ['translateY'], 'tz': ['translateZ'],
     'rx': ['rotateX'], 'ry': ['rotateY'], 'rz': ['rotateZ'],
@@ -59,8 +58,6 @@ pysideColorDic = {
     'colorDarkGrey2': '#373737',
     'colorDarkGrey3': '#2E2E2E',
     'colorGrey2': '#4A4949',
-
-
 }
 
 

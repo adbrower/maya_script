@@ -18,48 +18,9 @@ RIGTH_SIDE_PREFIX          = 'R'
 # ===================================================
 
 
-
-def hiearchy_setup(module_name, _mod):
-    """
-    MOD_GRP : Module grp
-    RIG__GRP: Constains all the rigs stuff
-    INPUT__GRP : contains all the ctrls and offset groups attach to those ctrls
-    OUTPUT__GRP : contains all the joints who will be skinned
-
-    Returns: RIG_GRP, INPUT_GRP, OUTPUT_GRP
-    """
-    if _mod:
-        MOD_GRP = pm.group(n='{}_MOD__GRP'.format(module_name), em=1)
-    else:
-        MOD_GRP = pm.group(n='{}_SYS__GRP'.format(module_name), em=1)
-    RIG_GRP = pm.group(n='{}_RIG__GRP'.format(module_name), em=1)
-    INPUT_GRP = pm.group(n='{}_INPUT__GRP'.format(module_name), em=1)
-    OUTPUT_GRP = pm.group(n='{}_OUTPUT__GRP'.format(module_name), em=1)
-
-    [pm.parent(grp, MOD_GRP) for grp in [RIG_GRP, INPUT_GRP, OUTPUT_GRP]]
-
-    return MOD_GRP, RIG_GRP, INPUT_GRP, OUTPUT_GRP
-
-
-def setFinalHiearchy(MODULE_NAME,
-                     RIG_GRP_LIST = [],
-                     INPUT_GRP_LIST = [],
-                     OUTPUT_GRP_LIST = [],
-                     mod=True,
-                    ):
-
-    _MOD_GRP, _RIG_GRP, _INPUT_GRP, _OUTPUT_GRP = hiearchy_setup(MODULE_NAME, _mod=mod)
-    [pm.parent(child, _RIG_GRP) for child in RIG_GRP_LIST]
-    [pm.parent(child, _INPUT_GRP) for child in INPUT_GRP_LIST]
-    [pm.parent(child, _OUTPUT_GRP) for child in OUTPUT_GRP_LIST]
-
-    return _MOD_GRP, _RIG_GRP, _INPUT_GRP, _OUTPUT_GRP
-
-
 def getSideFromPosition(_transform):
     """
     @param _transform. Get the side value of this Transform from is world position
-
     """
 
     if isinstance(_transform, list):
@@ -83,7 +44,7 @@ def getSideFromPosition(_transform):
 def getBasename(_transform):
     """
     Get the base Name of a transfrom.
-    Name without Previx of Suffix
+    Name without Prefix or Suffix
 
     returns sting
     """
@@ -109,9 +70,7 @@ def getBasename(_transform):
 def getSideFromName(_transform):
     """
     @param _transform. Get the side value of this Transform
-
     """
-
     if isinstance(_transform, list):
         transform = str(_transform[0])
     else:
@@ -122,9 +81,7 @@ def getSideFromName(_transform):
     for val, names in zip (validations, valideSideNames):
         if val == True:
             return names + '__'
-
     return ''
-
 
 
 
@@ -211,6 +168,8 @@ REMAP_VALUE_SUFFIX            = 'RM'
 REVERSE_SUFFIX                = 'REV'
 CONDITION_SUFFIX              = 'COND'
 PLUS_MIN_AVER_SUFFIX          = 'PMA'
+BLENDCOLOR_SUFFIX             = 'BC'
+IKHANDLE_SUFFIX               = 'IKHDL'
 
 
 # NOMENCLATURE

@@ -5,7 +5,6 @@ import maya.cmds as mc
 from pprint import pprint
 
 import adbrower
-reload(adbrower)
 adb = adbrower.Adbrower()
 
 

@@ -1,17 +1,17 @@
-# ====================-------------------
+# ------------------------------------------------------
 # Class Follicule Module
 # -- Method Rigger (Maya)
 #
 # By: Audrey Deschamps-Brower
 #     audreydb23@gmail.com
 #     Based on Chris Lesage's script
-# ====================-------------------
+# ------------------------------------------------------
 
 
 import sys
 
 import adb_core.ModuleBase as moduleBase
-reload(moduleBase)
+# reload(moduleBase)
 import adb_core.Class__AddAttr as adbAttr
 from adb_core.Class__Transforms import Transform
 import adbrower
@@ -51,9 +51,12 @@ class Folli(moduleBase.ModuleBase):
     reload (adbFolli)
 
     # example:
-    bendy = Folli(1, 5, radius = 0.5, sub = 'X__test__MSH')
-    print bendy.getJoints
-    bendy.add_folli(1, radius = 0.5)
+
+    arm = Folli('ArmFolli', 1, 5, radius = 0.5, subject = 'nurbsPlane1')
+    arm.start()
+    arm.build()
+
+    arm.addControls()
 
     """
     def __init__(self, 
@@ -105,6 +108,7 @@ class Folli(moduleBase.ModuleBase):
         # add attribute on METADATA node
 
     def build(self):
+        super(Folli, self)._build()  
 
         if self.subject.getShape().type() == 'nurbsSurface':
             plugs = pm.listConnections(str(self.subject.getShape()) + '.local', d=True, sh=True)
@@ -116,7 +120,6 @@ class Folli(moduleBase.ModuleBase):
             self.many_follicles(self.subject, self.countU, self.countV, self.vDir)
         else:
             self.add_folli(self.countV) 
-
 
         self.setFinalHiearchy(
                     RIG_GRP_LIST=[self.getFolliGrp],
@@ -256,9 +259,8 @@ class Folli(moduleBase.ModuleBase):
 
                 pm.parent(oGrp, oFoll.getParent())
                 pm.parent(oFoll.getParent(), self._MODEL.getFolliGrp)
-                oGrp.rx.set(0.0)
-                oGrp.ry.set(0.0)
-                oGrp.rz.set(0.0)
+                oGrp.rotate.set(0.0, 0.0, 0.0)
+      
                 self._MODEL.getInputs.append(oGrp)
                 pm.select(None)
 
@@ -341,21 +343,11 @@ class Folli(moduleBase.ModuleBase):
             pm.select(None)
 
 
-
-
-# import adb_core.ModuleBase as moduleBase
-# reload(moduleBase)
-
-
 # arm = Folli('ArmFolli', 1, 5, radius = 0.5, subject = 'nurbsPlane1')
 # arm.start()
 # arm.build()
 
 # arm.addControls()
 
-
-
-
-# Folli('LegFolli').start()
 
 
