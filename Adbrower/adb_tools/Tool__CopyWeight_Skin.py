@@ -20,7 +20,6 @@ except importError as error:
 
 adb = adbrower.Adbrower()
 
-
 VERSION = 3.0
 PATH_WINDOW = Adbrower.PATH_WINDOW_INIT + 'AppData/Roaming'
 PATH_LINUX = Adbrower.PATH_LINUX_INIT
