@@ -6,15 +6,10 @@
 #     audreydb23@gmail.com
 # ------------------------------------------------------------------------------------------------------
 
-import traceback
-import maya.cmds as mc
+
 import pymel.core as pm
+from maya.api import OpenMaya as om
 
-import adbrower
-adb = adbrower.Adbrower()
-
-from adbrower import lprint
-from adbrower import flatList
 from adbrower import undo
  
 @undo
@@ -25,78 +20,75 @@ def locGenerator(intervals, obj1, obj2):
     import adb_utils.adb_script_utils.Script__LocGenerator as locGen
     reload (locGen)
     """
+    locsList = []  
+    mSLStart = om.MSelectionList()
+    mSLStart.add(obj1)
+    mFTransStart = om.MFnTransform(mSLStart.getDagPath(0))
+    startV = om.MVector(mFTransStart.rotatePivot(om.MSpace.kWorld))
 
-    GuideLocList = []   
-    posStart = pm.PyNode(obj1).getRotatePivot(space='world')
-    posEnd = pm.PyNode(obj2).getRotatePivot(space='world')
+    mSLEnd = om.MSelectionList()
+    mSLEnd.add(obj2)
+    mFTransfEnd = om.MFnTransform(mSLEnd.getDagPath(0))
+    endV = om.MVector(mFTransfEnd.rotatePivot(om.MSpace.kWorld))
 
-    # CALCULATE DISTANCE VECTOR
+    distV = endV - startV
 
-    dist = []
-    distX = posEnd[0] - posStart[0]
-    distY = posEnd[1] - posStart[1]
-    distZ = posEnd[2] - posStart[2]
-    dist.append(distX)
-    dist.append(distY)
-    dist.append(distZ)
-
-    # EVALUATE EACH INTERVAL IN THE LIST FOR X, Y and Z
-
-    intervalList = range(0, intervals)
     proxy_posX_list = []
     proxy_posY_list = []
     proxy_posZ_list = []
 
     # CALCULATE X, Y and Z intervals
 
+    nInverval = intervals+2
+    intervalList = range(0, nInverval)
     for each in intervalList:
-        each = each/float(intervals -1)
-        eachX = each * dist[0]
+        each = each/float(nInverval -1)
+        eachX = each * distV.x
         proxy_posX_list.append(eachX)
-        eachY = each * dist[1]
+        eachY = each * distV.y
         proxy_posY_list.append(eachY)
-        eachZ = each * dist[2]
+        eachZ = each * distV.z
         proxy_posZ_list.append(eachZ)
-        if posEnd < 0:
-            intervalList = range(0, intervals, 1)
+        if [endV] < 0:
+            intervalList = range(0, nInverval, 1)
 
-    for count, posX in enumerate(proxy_posX_list):
-        posY = proxy_posY_list[count]
-        posZ = proxy_posZ_list[count]
+    @undo
+    def myGuideLocs():            
+        GuideLoc = pm.spaceLocator()
+        pm.xform(centerPivots=True)
 
-        @undo
-        def myGuideLocs():            
-            GuideLoc = pm.spaceLocator(p=(posX + posStart[0], posY + posStart[1], posZ + posStart[2]))
-            pm.xform(centerPivots=True)
-
-            GuideLocList.append(GuideLoc)
-            GuideLoc.overrideEnabled.set(1)
-            GuideLoc.overrideRGBColors.set(0)
-            GuideLoc.overrideColor.set(17)
+        GuideLoc.overrideEnabled.set(1)
+        GuideLoc.overrideRGBColors.set(0)
+        GuideLoc.overrideColor.set(17)
+        
+        locPx = GuideLoc.localPositionX.get()
+        locPy = GuideLoc.localPositionY.get()
+        locPz = GuideLoc.localPositionZ.get()
+        
+        GuideLoc.translateX.set(locPx)
+        GuideLoc.translateY.set(locPy)
+        GuideLoc.translateZ.set(locPz)
+        
+        GuideLoc.localPositionX.set(0)
+        GuideLoc.localPositionY.set(0)
+        GuideLoc.localPositionZ.set(0)
             
-            locPx = GuideLoc.localPositionX.get()
-            locPy = GuideLoc.localPositionY.get()
-            locPz = GuideLoc.localPositionZ.get()
-            
-            GuideLoc.translateX.set(locPx)
-            GuideLoc.translateY.set(locPy)
-            GuideLoc.translateZ.set(locPz)
-            
-            GuideLoc.localPositionX.set(0)
-            GuideLoc.localPositionY.set(0)
-            GuideLoc.localPositionZ.set(0)
-            
-            pm.xform(GuideLoc, cp=True)
-            
-        myGuideLocs()
+        pm.xform(GuideLoc, cp=True)  
+    
+        return str(GuideLoc)
+        
+    locsList = [str(myGuideLocs()) for x in xrange(intervals)]
 
-    #This line deletes first 2 locators#   
-
-    # pm.delete(obj1)
-    # pm.delete(obj2)
-    pm.select(GuideLocList)
-    return GuideLocList
+    for count, middleTransf in enumerate(locsList):
+        mSLMiddle = om.MSelectionList()
+        mSLMiddle.add(middleTransf)
+        mFTransMiddle = om.MFnTransform(mSLMiddle.getDagPath(0))
+       
+        newPos = [proxy_posX_list[1:-1][count] + startV.x, proxy_posY_list[1:-1][count] + startV.y, proxy_posZ_list[1:-1][count] + startV.z]
+        newPosV = om.MVector(*newPos)
+    
+        mFTransMiddle.setTranslation(newPosV, om.MSpace.kWorld)
 
 
 
-# locGenerator(10, pm.selected()[0], pm.selected()[1])
+# locGenerator(5, 'pCube1', 'pCube2')
