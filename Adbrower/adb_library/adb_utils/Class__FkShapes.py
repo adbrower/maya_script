@@ -9,6 +9,7 @@
 import adbrower
 import pymel.core as pm
 from adbrower import changeColor, flatList, makeroot
+import adb_core.NameConv_utils as NC
 
 adb = adbrower.Adbrower()
 
@@ -99,7 +100,7 @@ class FkShape(object):
             CurveColl = []
             for joint in subject:
                 myname = '{}'.format(joint)
-                new_name = myname.split('__jnt__')[0] + '_fk__ctrl__'
+                new_name = '{}{}__{}'.format(NC.getSideFromName(myname), NC.getBasename(myname), NC.CTRL)
                 self._curve = pm.circle(nr=self.normalsCtrl, r=self._radius)
 
                 curveShape = pm.PyNode(self._curve[0]).getShape()
