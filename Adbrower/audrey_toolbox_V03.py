@@ -18,6 +18,7 @@ import ShapesLibrary as sl
 
 from maya_script import Adbrower
 import adbrower
+
 from adbrower import changeColor, flatList, undo
 from CollDict import colordic, suffixDic
 
@@ -36,10 +37,6 @@ import adb_library.adb_utils.Class__ShapeManagement as adbShape
 
 adb = adbrower.Adbrower()
 
-#-----------------------------------
-#  DECORATORS
-#-----------------------------------
-
 ICONS_FOLDER = Adbrower.ICONS_FOLDER_INIT
 imageColorLambert = ICONS_FOLDER + 'ColorLambert.png'
 imageColorGreen = ICONS_FOLDER + 'ColorGreen.png'
@@ -49,6 +46,7 @@ imageColorYellow = ICONS_FOLDER + 'ColorYellow.png'
 imageColorDarkGrey = ICONS_FOLDER + 'ColorDarkGRey.png'
 imageMoins = ICONS_FOLDER + 'Moins.png'
 imagePlus = ICONS_FOLDER + 'Plus.png'
+
 
 #-----------------------------------
 #  CLASS
@@ -65,15 +63,19 @@ class AudreyToolBox():
 
     def ui(self):
 
+        template = pm.uiTemplate('ExampleTemplate', force=True)
+        pm.iconTextButton(defineTemplate='ExampleTemplate', rpt=1, style='textOnly')
+
         if pm.window(self.name, q=1, ex=1):
             pm.deleteUI(self.name)
 
         if pm.dockControl("toolbox_dockwin", q=1, ex=1):
             pm.deleteUI("toolbox_dockwin")
 
-        mc.window(self.name, t=self.title, w=200, s=True, tlb=True)
-        mc.scrollLayout(horizontalScrollBarThickness=16, verticalScrollBarThickness=16)
-        mc.columnLayout(adj=True)
+        pm.window(self.name, t=self.title, w=200, s=True, tlb=True)
+        pm.setUITemplate( 'ExampleTemplate', pushTemplate=True )
+        pm.scrollLayout(horizontalScrollBarThickness=16, verticalScrollBarThickness=16)
+        pm.columnLayout(adj=True)
 
 ## ------------ SECTION COMMANDES RAPIDES
 
@@ -81,7 +83,7 @@ class AudreyToolBox():
         # pm.button(command=mc.DeleteHistory, w=200, backgroundColor=colordic['grey'], label="Delete History")
         # pm.setParent('..')
 
-        pm.rowLayout()
+        pm.rowLayout(numberOfColumns=2)
         pm.button(command=mc.BakeNonDefHistory, w=200, backgroundColor=colordic['grey'], label="Delete Non Deformer History")
         pm.setParent('..')
 
@@ -140,13 +142,9 @@ class AudreyToolBox():
 ## ------------ SECTION TOOLS ###
 
         pm.frameLayout(cll=True, w=200, bgc=(.12, .12, .12), cl=False, label="TOOLS")
-        pm.columnLayout(adj=False)
+        pm.columnLayout()
 
-        pm.rowLayout(numberOfColumns=1)
         pm.button(l="Joint GeneratorTool", h=25, w=199, backgroundColor=colordic['grey'], command=pm.Callback(self.jointGenToolAB))
-        pm.setParent('..')
-
-        pm.rowLayout(numberOfColumns=1)
         pm.button(l="Connection Tool", h=25, w=199, backgroundColor=colordic['grey'], command=pm.Callback(self.multiToolAB))
         pm.setParent('..')
 
@@ -268,7 +266,7 @@ class AudreyToolBox():
         pm.iconTextButton(l="Parent", i="parentConstraint.png", style="iconAndTextVertical", command=pm.Callback(self.parentconstraintbutton))
         pm.setParent('..')
 
-        pm.button(command=pm.Callback(self.parentscaleconstrain), l="Parent + Scale Constraint",  h=25, w=200, backgroundColor=colordic['green3'])
+        pm.iconTextButton(command=pm.Callback(self.parentscaleconstrain), l="Parent + Scale Constraint",  h=25, w=200, backgroundColor=colordic['green3'])
         pm.separator(h=2)
 
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=4)
@@ -284,9 +282,9 @@ class AudreyToolBox():
         pm.setParent('..')
 
         pm.separator(h=3)
-        pm.button(l="Match Pivot Point", h=25, w=200, backgroundColor=colordic['green3'], command=lambda *args: adb.changePivotPoint(pm.selected()[0], pm.selected()[1]))
+        pm.iconTextButton(l="Match Pivot Point", h=25, w=200, backgroundColor=colordic['green3'], command=lambda *args: adb.changePivotPoint(pm.selected()[0], pm.selected()[1]))
         pm.separator(h=3)
-        pm.button(l="Remove all Constraints From Selection", h=25, w=200, backgroundColor=colordic['grey1'], command=pm.Callback(self.rmvConstraint))
+        pm.iconTextButton(l="Remove all Constraints From Selection", h=25, w=200, backgroundColor=colordic['grey1'], command=pm.Callback(self.rmvConstraint))
         pm.setParent('..')
         pm.setParent('..')
 
@@ -298,11 +296,12 @@ class AudreyToolBox():
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=4)
         pm.iconTextButton(l="Locator", i="locator.png", style="iconAndTextVertical",  command=pm.Callback(self.createloc), ann='popup meunu available')
         pm.popupMenu()
-        pm.menuItem(l=' Create Locator Center Geo', c=pm.Callback(self.createlocCC))
+        pm.menuItem(l='Create Locator Center Geo', c=pm.Callback(self.createlocCC))
 
-        pm.iconTextButton(l="   Chain Parent", i="parent.png", style="iconAndTextVertical",  command=pm.Callback(self.chparent), ann='popup meunu available')
+        pm.separator(vis=0, w=10)
+        pm.iconTextButton(l="Chain Parent", i="parent.png", style="iconAndTextVertical",  command=pm.Callback(self.chparent), ann='popup meunu available')
         pm.popupMenu()
-        pm.menuItem(l=' Parent to the World', c=lambda *args: [pm.parent(x, w=1)for x in pm.selected()], ann='dcc : Parent to the world')
+        pm.menuItem(l='Parent to the World', c=lambda *args: [pm.parent(x, w=1)for x in pm.selected()], ann='dcc : Parent to the world')
 
         pm.iconTextButton(l="   Select Children", i="aselect.png", style="iconAndTextVertical", command=pm.Callback(self.selectchildparent))
         pm.setParent('..')
@@ -311,8 +310,9 @@ class AudreyToolBox():
         pm.iconTextButton(l="R. Hiearchy", i='outliner.png', style='iconAndTextVertical',   command=lambda * args: [pm.reorder(x, back=True) for x in pm.selected()])
         pm.popupMenu()
         pm.menuItem(l='Hiearchy Builder', c=lambda * args: adb.hiearchyBuilder(pm.selected(), 'ctrl'))
-
-        pm.iconTextButton(l="     Material",  style='iconAndTextVertical', i=imageColorLambert, c=lambda*args: mc.hyperShade(assign="lambert1"), ann='popup meunu available')
+        
+        pm.separator(vis=0, w=10)
+        pm.iconTextButton(l="Material",  style='iconAndTextVertical', i=imageColorLambert, c=lambda*args: mc.hyperShade(assign="lambert1"), ann='popup meunu available')
         pm.popupMenu()
         mc.menuItem(image=imageColorLambert, l="Lambert",  c=lambda*args: mc.hyperShade(assign="lambert1"))
         mc.menuItem(image=imageColorYellow, l="Yellow",  c=pm.Callback(self.add_material, 'mat_yellow'))
@@ -321,7 +321,8 @@ class AudreyToolBox():
         mc.menuItem(image=imageColorGreen, l="Green",  c=pm.Callback(self.add_material, 'mat_green'))
         mc.menuItem(image=imageColorDarkGrey, l="Dark Grey",  c=pm.Callback(self.add_material, 'mat_darkGrey'))
 
-        pm.iconTextButton(l="     Make Root",  style='iconAndTextVertical', i='selectByHierarchy.png', command=pm.Callback(self.makeroot), ann='popup meunu available')
+        # pm.separator(vis=0, w=10)
+        pm.iconTextButton(l="Make Root",  style='iconAndTextVertical', i='selectByHierarchy.png', command=pm.Callback(self.makeroot), ann='popup meunu available')
         pm.popupMenu()
         pm.menuItem(l=' Delete grp', c=lambda * args: [pm.ungroup(x) for x in pm.selected()])
         pm.menuItem(l=' Group Null', i="group.png",  command=lambda * args: [pm.group(x, em=True, n="{}__grp__".format(x)) for x in pm.selected()])
