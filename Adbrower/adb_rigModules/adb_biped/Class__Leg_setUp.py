@@ -479,8 +479,7 @@ class LegSetUp(object):
             pm.delete(_loc,pv_guide)
             adb.changeColor_func(self.pv_curve,col=(0.341, 0.341, 0.341))
             adb.lockAttr_func( self.pv_curve, att_to_lock = ['tx','ty','tz','rx','ry','rx','rz','sx','sy','sz']) 
-                    
-                                    
+                                 
             return _pole_vector_ctrl    
         self.pole_vector_ctrl = pole_vector_ctrl()                                
                                                                                                                         

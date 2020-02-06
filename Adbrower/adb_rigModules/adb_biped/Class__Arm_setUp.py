@@ -23,6 +23,7 @@ import adb_library.adb_utils.Func__Piston as adbPiston
 import adb_library.adb_utils.Script__LocGenerator as locGen
 import adb_library.adb_utils.Class__ShapeManagement as adbShape
 # import adb_library.adb_utils.Class__OrientJoint as adbOrient
+import adb_core.Class__Joint as adbJoint
 import adb_library.adb_utils.Script__ProxyPlane as adbProxy
 import adb_library.adb_modules.Module__Folli as adbFolli
 
