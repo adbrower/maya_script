@@ -84,6 +84,22 @@ def getSideFromName(_transform):
     return ''
 
 
+def getNameNoSuffix(_transform):
+    """
+    Get name without the suffix
+    """
+    if isinstance(_transform, list):
+        transform = str(_transform[0])
+    else:
+        transform = str(_transform)
+
+    nameSplit = transform.split('__')[:-1]
+    if nameSplit is []:
+        return transform
+    else:
+        shortName =  '__'.join(nameSplit)
+        return shortName
+
 
 def getNameSpace(_name):
     """
@@ -106,6 +122,7 @@ def getNameSpaceFreeName(_name):
     """
     nameSplit = _name.split(':')
     return(nameSplit[-1])
+
 
 
 # ===================================================
