@@ -12,6 +12,7 @@ import getpass
 import os
 
 import adb_library.adb_modules.Module__Tilt_Setup as adb_tilt
+from maya_script import Adbrower
 import adbrower
 import CollDict
 import maya.cmds as mc
@@ -27,6 +28,12 @@ adb = adbrower.Adbrower()
 #  CLASS
 # -----------------------------------
 
+PATH_WINDOW = Adbrower.PATH_WINDOW_INIT + 'AppData/Roaming'
+PATH_LINUX = Adbrower.PATH_LINUX_INIT
+FOLDER_NAME = Adbrower.FOLDER_NAME_INIT
+ICONS_FOLDER = Adbrower.ICONS_FOLDER_INIT
+FILE_NAME = 'Tilt_Tool_confi.ini'
+
 
 class TiltTool():
     """This Tool makes a tilt fonction on any object  """
@@ -37,11 +44,6 @@ class TiltTool():
         self.name = 'TiltTool_win'
         self.title = 'adbrower - Tilt_Tool' + '  v' + str(self.version)
         self.userName = getpass.getuser()
-
-        self.path_window = 'C:/Users/' + self.userName + '/AppData/Roaming'
-        self.path_linux = '/home/' + self.userName + '/'
-        self.folder_name = '.config/adb_Setup'
-        self.file_name = 'Tilt_Tool_confi.ini'
 
         self.final_path = self.setPath()
         self.loadData()
@@ -57,7 +59,7 @@ class TiltTool():
         # pm.scriptJob(uiDeleted=[self.name, self.scriptJobCallback], runOnce=True)
 
     def MUiMessageCallback(self, clientData):
-        print('adb_TiltToolsettings file saved at: ' + self.final_path + self.folder_name + '/' + self.file_name)
+        print('adb_TiltToolsettings file saved at: ' + self.final_path + FOLDER_NAME + '/' + FILE_NAME)
 
     def scriptJobCallback(self, *args):
         self.saveData()
@@ -135,36 +137,36 @@ class TiltTool():
 
     def setPath(self):
         def finalPath():
-            if not os.path.exists(self.path_linux):
+            if not os.path.exists(PATH_LINUX):
                 # print('path linux does NOT extist')
                 pass
             else:
                 # print('path linux does extist')
-                return self.path_linux
+                return PATH_LINUX
 
-            if not os.path.exists(self.path_window):
+            if not os.path.exists(PATH_WINDOW):
                 # print('path pm.window does NOT extist')
                 pass
             else:
                 # print('path pm.window does extist')
-                return self.path_window
+                return PATH_WINDOW
 
         self.final_path = finalPath()
 
         os.chdir(self.final_path)
         try:
-            os.makedirs(self.folder_name)
+            os.makedirs(FOLDER_NAME)
         except:
             pass
 
-        if os.path.exists(self.final_path + '/' + self.folder_name + '/' + self.file_name):
+        if os.path.exists(self.final_path + '/' + FOLDER_NAME + '/' + FILE_NAME):
             # print ('file exist')
             pass
         else:
-            os.chdir(self.final_path + '/' + self.folder_name)
+            os.chdir(self.final_path + '/' + FOLDER_NAME)
 
         # print(os.getcwd())
-        file_ini = open(self.file_name, 'w+')
+        file_ini = open(FILE_NAME, 'w+')
         file_ini.write('[General] \n')
 
         file_ini.write("tilt_ctrl_data=  \n")
@@ -179,10 +181,10 @@ class TiltTool():
         return(self.final_path)
 
     def saveData(self):
-        os.chdir(self.final_path + '/' + self.folder_name)
+        os.chdir(self.final_path + '/' + FOLDER_NAME)
         # print(os.getcwd())
 
-        file_ini = open(self.file_name, 'w+')
+        file_ini = open(FILE_NAME, 'w+')
         file_ini.write('[General] \n')
         file_ini.write("tilt_ctrl_data=" + str(pm.textFieldGrp(self.tiltCtrl, q=True, text=True)) + '\n')
         file_ini.write("mesh_data=" + str(pm.textFieldGrp(self.mesh, q=True, text=True)) + '\n')
@@ -202,7 +204,7 @@ class TiltTool():
         pm.textFieldGrp(self.offset_ctrl, edit=True, tx='')
 
         file_ini = self.saveData()
-        file_ini = open(self.file_name, 'w+')
+        file_ini = open(FILE_NAME, 'w+')
 
         file_ini.write('[General] \n')
         file_ini.write("tilt_ctrl_data=  \n")
@@ -216,7 +218,7 @@ class TiltTool():
     def loadData(self):
         try:
             config = ConfigParser.ConfigParser()
-            config.read(self.final_path + '/' + self.folder_name + '/' + self.file_name)
+            config.read(self.final_path + '/' + FOLDER_NAME + '/' + FILE_NAME)
 
             self.tilt_ctrl_setdata = config.get("General", "tilt_ctrl_data")
             self.mesh_setdata = config.get("General", "mesh_data")
@@ -224,13 +226,13 @@ class TiltTool():
             self.offset_setdata = config.get("General", "offset_data")
             self.axisZ_setdata = config.get("General", "axisZ_data")
             self.axisX_setdata = config.get("General", "axisX_data")
-            # print('adb_TiltToolsettings load file from: ' + self.final_path + self.folder_name + '/' + self.file_name)
+            # print('adb_TiltToolsettings load file from: ' + self.final_path + FOLDER_NAME + '/' + FILE_NAME)
 
         except:
-            os.chdir(self.final_path + '/' + self.folder_name)
+            os.chdir(self.final_path + '/' + FOLDER_NAME)
             # print(os.getcwd())
 
-            file_ini = open(self.file_name, 'w+')
+            file_ini = open(FILE_NAME, 'w+')
             file_ini.write('[General] \n')
             file_ini.write("tilt_ctrl_data=  \n")
             file_ini.write("mesh_data=  \n")
