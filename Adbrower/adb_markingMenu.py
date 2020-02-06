@@ -27,8 +27,10 @@ import adb_tools.Tool__IKFK_Switch__PySide as Tool__IKFK_Switch__PySide
 import adb_tools.Tool__Joint_Generator__Pyside
 import adb_tools.Tool__Match_IkFK_PySide as Tool__Match_IkFK_PySide
 import adb_tools.Tool__Tilt as Tool__Tilt
+import adb_tools.Tool__MultiSkin as Tool__MultiSkin
 import adb_library.adb_utils.Functions__Rivet as adbRivet
 import adb_library.adb_utils.Script__WrapDeformer as adbWrap
+import adb_core.Class__Transforms as adbTransform
 import adb_core.Class__Skinning as skin
 
 import adbrower
@@ -37,6 +39,7 @@ from adbrower import changeColor, lprint
 
 # reload(adbrower)
 adb = adbrower.Adbrower()
+
 
 # -----------------------------------
 # CLASS
@@ -53,7 +56,7 @@ class markingMenu():
     to initialize this class."""
 
     def __init__(self):
-
+        
         self.adb_Menu = "adb_CustomMenu"
         self.labelMenu = "Adbrower"
 
@@ -139,6 +142,11 @@ class markingMenu():
         mc.menuItem(p=nurbsPlaneMenu, l="Plane Y axis",  c=pm.Callback(self.create_nurbs_selected_objs, 'y'))
         mc.menuItem(p=nurbsPlaneMenu, l="Plane Z axis",  c=pm.Callback(self.create_nurbs_selected_objs, 'z'))
 
+        mirroreMenu = mc.menuItem(p=menu, l="Mirror", subMenu=1)
+        mc.menuItem(p=mirroreMenu, l="X Axis",  c=lambda*args: adbTransform.Transform(pm.selected()).mirror(axis='x'))
+        mc.menuItem(p=mirroreMenu, l="Y Axis",  c=lambda*args: adbTransform.Transform(pm.selected()).mirror(axis='y'))
+        mc.menuItem(p=mirroreMenu, l="Z Axis",  c=lambda*args: adbTransform.Transform(pm.selected()).mirror(axis='z'))
+
         imageColorLambert = mc.internalVar(upd=True) + "scripts/ModIt_script/Icons/ColorLambert.png"
         imageColorGreen = mc.internalVar(upd=True) + "scripts/ModIt_script/Icons/ColorGreen.png"
         imageColorRed = mc.internalVar(upd=True) + "scripts/ModIt_script/Icons/ColorRed.png"
@@ -184,6 +192,7 @@ class markingMenu():
         mc.menuItem(p=self.customMenu, l="adbrower's Tools", d=True)
         mc.menuItem(p=self.customMenu, l="Main Toolbox", c=pm.Callback(self.adbToolbox))
         mc.menuItem(p=self.customMenu, l="adb Module Tool", c=lambda *arg: Tool__adbModule.adbModule())
+        mc.menuItem(p=self.customMenu, l="Multi Skin Tool", c=lambda *arg: Tool__MultiSkin.showUI())
         mc.menuItem(p=self.customMenu, l="Joint Generator Tool", c=lambda *arg: adb_tools.Tool__Joint_Generator__Pyside.showUI())
         mc.menuItem(p=self.customMenu, l="Connection Tool", c=lambda *arg: Tool__ConnectionTool.connectionTool())
         mc.menuItem(p=self.customMenu, l="Tilt Tool", c=lambda *arg: Tool__Tilt.TiltTool())
@@ -201,16 +210,30 @@ class markingMenu():
 # ------------ SKINNING
 
 
-    def addInfluence(self):
-        mesh = pm.ls(sl=1, type='transform')
-        skinCls = adb.findSkinCluster(pm.selected()[-1])
-        jnts = pm.ls(sl=1, type='joint')
-        for joint in jnts:
+    @staticmethod
+    def selectType(type_name):
+        """ Select by type in pm.selected() """
+        def _type_func(each):
             try:
-                pm.skinCluster(skinCls[0], ai=joint, dr=0.1, wt=0, e=1, lw=True)
-            except RuntimeError:
-                pass
+                _type = (pm.objectType(pm.PyNode(each).getShape()))
+            except:
+                _type = (pm.objectType(pm.PyNode(each)))
+            return _type
 
+        types_list = [x for x in pm.selected() if _type_func(x) == type_name]
+        return types_list
+
+    def addInfluence(self):
+        meshes = self.selectType('mesh')
+        for mesh in meshes:
+            skinCls = adb.findSkinCluster(mesh)
+            jnts = pm.ls(sl=1, type='joint')
+            for joint in jnts:
+                try:
+                    pm.skinCluster(skinCls[0], ai=joint, dr=0.1, weight=0, e=1, lw=False)
+                except RuntimeError:
+                    pass
+                
     def lock_unlock_All_Weight(self, lock=True):
         mesh = pm.selected()[0]
         node = skin.Skinning(mesh)
@@ -324,7 +347,7 @@ class markingMenu():
 
 
 # ------------ CREATE
-
+    
     @changeColor('index', col=(17))
     def createloc(self):
         """Creates locator at the Pivot                of the object selected """
@@ -334,7 +357,6 @@ class markingMenu():
             except AttributeError:
                 locs = []
                 for sel in pm.selected():
-
                     try:
                         _name = sel.name().split('__')[1]
                     except:
@@ -423,7 +445,6 @@ class markingMenu():
             'mat_red':  (0.7, 0.0, 0.0),
             'mat_green': (0.0, 0.7, 0.0),
             'mat_darkGrey': (0.05, 0.05, 0.05),
-
         }
 
         selection = pm.selected()
