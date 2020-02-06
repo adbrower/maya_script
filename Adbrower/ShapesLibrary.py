@@ -450,38 +450,28 @@ def fk_shape(scale=0.054):
     mc.FreezeTransformations()
     return new_shape
 
-
+# TODO: FIX THIS
 @undo
 def ik_fk_shape():
-    def CombineShape():
-        oNurbs = pm.selected()
-        oDriver = oNurbs[0]
-        oDriven = oNurbs[1:]
-
-        shapes = [x.getShapes() for x in oDriven]
-        transforms = [x.getTransform() for x in oDriven]
-
-        pm.select(None)
-        pm.select(shapes)
-        pm.select(oDriver, add=True)
-
-        pm.parent(r=True, s=True)
-        pm.delete(transforms)
-        return oDriver
+    def CombineShape(driver, driven):
+        shapes = driver.getShapes()
+        pm.select(shapes[0], r=1)
+        transforms = driven.getTransform()
+        pm.parent(shapes, transforms, r=1, s=True)
+        pm.delete(driver)
+        return  transforms
 
     fk = fk_shape()
     ik = ik_shape()
 
-    pm.select(fk)
-    pm.select(ik, add=1)
-    new_shape = CombineShape()
+    new_shape = CombineShape(ik, fk)
     pm.rename(new_shape, 'ik_fk__ctrl__')
-    pm.move(-0.937262, 0, 0, new_shape + '.scalePivot', new_shape + '.rotatePivot', r=1)
-    new_shape.translateX.set(0.937262)
+    new_shape.translateX.set(1)
     pm.select(new_shape)
     mc.FreezeTransformations()
 
     return new_shape
+
 
 
 @undo
