@@ -217,10 +217,16 @@ class stretchyIK(moduleBase.ModuleBase):
         self.md_strech_node = pm.shadingNode('multiplyDivide', asUtility=1, n='{}_strech__MD'.format(self.NAME, NC.MULTIPLY_DIVIDE_SUFFIX))
         self.md_strech_node.operation.set(1)
 
+        # multiply Divide Scale Factor
+        self.md_scale_node = pm.shadingNode('multiplyDivide', asUtility=1, n='{}_scaleFactor__{}'.format(self.NAME, NC.MULTIPLY_DIVIDE_SUFFIX))
+        self.md_scale_node.operation.set(1)
+        self.md_scale_node.input2X.set(max_distance)
+        self.MOD_GRP.sx >> self.md_scale_node.input1X
+
         # multiply Divide proportion
         self.md_prp_node = pm.shadingNode('multiplyDivide', asUtility=1, n='{}_proportion__{}'.format(self.NAME, NC.MULTIPLY_DIVIDE_SUFFIX))
         self.md_prp_node.operation.set(2)
-        self.md_prp_node.input2X.set(max_distance)
+        # self.md_prp_node.input2X.set(max_distance)
 
         # parenting
         pm.parent(self.posLoc[1], self.ik_ctrl)
@@ -230,6 +236,7 @@ class stretchyIK(moduleBase.ModuleBase):
 
         self.md_prp_node.outputX >> self.cond_node.firstTerm
         self.md_prp_node.outputX >> self.cond_node.colorIfTrueR
+        self.md_scale_node.outputX >> self.md_prp_node.input2X
 
         self.cond_node.outColorR >> self.md_strech_node.input1X
         self.cond_node.outColorR >> self.md_strech_node.input1Y
