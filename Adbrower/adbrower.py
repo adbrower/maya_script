@@ -33,7 +33,7 @@ import maya.OpenMaya as om
 import adb_core.NameConv_utils as NC
 import ShapesLibrary as sl
 from CollDict import suffixDic
-# reload(NC)
+reload(NC)
 
 # -----------------------------------
 # 2.1 DECORATORS
@@ -135,7 +135,7 @@ def changeColor(type='rgb', col=(0.8, 0.5, 0.2)):
 
 # ===============================================================================
 
-def makeroot(suf='root'):
+def makeroot(suf='root', forceNameConvention = True):
     """
     Creates a root group over the function
     @param suf : String returning the suffix you want for your group
@@ -151,7 +151,11 @@ def makeroot(suf='root'):
                     cutsuffix = '__{}__'.format(suffix)
                 except:
                     suffix, cutsuffix = '', ''
-                oRoot = pm.group(n=each.name() + '__' + suf + '__grp__', em=True)
+                if forceNameConvention:
+                    groupName =  '{}_{}__{}'.format(NC.getNameNoSuffix(each.name()), suf,  NC.GRP)
+                else:
+                    groupName = each.name() + '__' + suf + '__{}'.format(NC.GRP)
+                oRoot = pm.group(n=groupName, em=True)
                 for i in xrange(4):
                     oRoot.rename(oRoot.name().replace('___', '__'))
                 oRoot.setTranslation(each.getRotatePivot(space='world'))
@@ -1378,6 +1382,9 @@ class Adbrower(object):
         pm.select(subject, r=True)
 
     def scaleVertex(self, scale, subject=pm.selected()):
+        """
+        @param scale : '+' / '-'
+        """
         sel = subject
         for each in sel:
             self._scaleVertex(scale, [each])
