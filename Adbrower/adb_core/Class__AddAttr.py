@@ -57,7 +57,7 @@ class NodeAttr(object):
                  _node=pm.selected(),
                  ):
 
-        self._nodeType = type(_node)
+        self._nodeType = _node
 
         if isinstance(self._nodeType, str):
             self.node = [pm.PyNode(_node)]
@@ -575,10 +575,10 @@ class NodeAttr(object):
 #   IN CLASS BUILD
 # -----------------------------------
 
-# node = NodeAttr([pm.selected()[0]])
+node = NodeAttr('pCube1')
 # node.addAttr("UV", 'compound', nc=2)
 # node.addAttr("zipper", 0, min = 0, max = 100, parent = "UV")
-# node.addAttr("zipper", 0, min = 0, max = 100)
+node.addAttr("zipper", 0, min = 0, max = 100)
 # node.addAttr("V_pos", 0.5, min = 0, max = 1, parent = "UV")
 
 # node.addAttr('adb', 50)
