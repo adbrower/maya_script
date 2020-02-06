@@ -222,10 +222,10 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.mirror_text = addText('MIRROR', bold=1)
         self.mirror_across_text = addText('Mirror across', alignement=QtCore.Qt.AlignLeft, height=20)
 
-        self.surface_Assoc_text = addText('Surface Association', alignement=QtCore.Qt.AlignLeft, height=20)
-        self.inf_Assoc_1_text = addText('Influence Association 1', alignement=QtCore.Qt.AlignLeft, height=20)
-        self.inf_Assoc_2_text = addText('Influence Association 2', alignement=QtCore.Qt.AlignLeft, height=20)
-        self.inf_Assoc_3_text = addText('Influence Association 3', alignement=QtCore.Qt.AlignLeft, height=20)
+        self.surface_Assoc_text = addText('Surface Association',     alignement = QtCore.Qt.AlignLeft, height = 20)
+        self.inf_Assoc_1_text   = addText('Influence Association 1', alignement = QtCore.Qt.AlignLeft, height = 20)
+        self.inf_Assoc_2_text   = addText('Influence Association 2', alignement = QtCore.Qt.AlignLeft, height = 20)
+        self.inf_Assoc_3_text   = addText('Influence Association 3', alignement = QtCore.Qt.AlignLeft, height = 20)
 
         # ----- set text Color for all text
         for text in [self.copy_skin_text,
@@ -303,9 +303,9 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.same_jnts_Chbx.stateChanged.connect(self.keep_same_joints_checked)
 
         # Qcombo Box
-        self.mirror_options = ["XY", "YZ ", "XZ"]
-        self.SurfaceAss_options = ["closest Point", "rayCast", "closest Component", "uv Space"]
-        self.InfluenceAss_options1 = ["closest Joint", "closest Bone", "one To One", "label", "name"]
+        self.mirror_options         = ["XY", "YZ ", "XZ"]
+        self.SurfaceAss_options     = ["closest Point", "rayCast", "closest Component", "uv Space"]
+        self.InfluenceAss_options1  = ["closest Joint", "closest Bone", "one To One", "label", "name"]
         self.InfluenceAss_options23 = ["None", "closest Joint", "closest Bone", "one To One", "label", "name"]
 
         self.comboLayoutAndFunctons = [
