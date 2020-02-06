@@ -14,7 +14,6 @@ import adb_core.Class__Transforms as adbTransform
 import adbrower
 import pymel.core as pm
 
-
 adb = adbrower.Adbrower()
 
 # -----------------------------------
@@ -157,30 +156,6 @@ class Joint(adbTransform.Transform):
     def __repr__(self):
         return str('<{} \'{}\'>'.format(self.__class__.__name__, self.joints))
 
-    @property
-    def orient_axis(self):
-        dup_jnt = pm.duplicate(self.joints[0], po=True)[0]
-        pm.parent(dup_jnt, w=1)
-        root_grp = adb.makeroot_func(dup_jnt)
-        pm.select(root_grp,  r=1)
-        self.ResetAttr()
-
-        decNode = pm.shadingNode('decomposeMatrix', au=1)
-        pm.PyNode(dup_jnt).worldMatrix >> decNode.inputMatrix
-        matrixRotationValue = decNode.getAttr('inputMatrix')[0]
-        # pm.delete(root_grp)
-
-        print(matrixRotationValue)
-        if '{:.2f}'.format(matrixRotationValue[0]) == '0.00':
-            self._orient_axis = 'Y'
-        elif '{:.2f}'.format(matrixRotationValue[0]) == '1.00':
-            self._orient_axis = 'X'
-        return self._orient_axis
-
-    @orient_axis.setter
-    def orient_axis(self, val):
-        self._orient_axis = val
-        self.orient_joint()
 
     @property
     def draw_style(self):
@@ -215,6 +190,7 @@ class Joint(adbTransform.Transform):
         for joint in self.joints:
             pm.PyNode(joint).radius.set(rad)
 
+        
     def orient_joint(self):
         if self._orient_axis == 'Y':
             pm.select(self.joints)
@@ -264,6 +240,20 @@ class Joint(adbTransform.Transform):
         else:
             raise ValueError('That Axis does not exist')
 
+    @property
+    def orientAxis(self):
+        if len(self.joints) > 1:
+            vec = self.getVectors(str(self.joints[0]))
+        else:
+            vec = self.getVectors(str(self.joints))
+        return self.getAxis(vec.aimV)
+        
+    
+    @orientAxis.setter
+    def orientAxis(self, val):
+        self._orient_axis = val
+        self.orient_joint()
+        
     @staticmethod
     def label_jnts(left_side='L_', right_side='R_'):
         for sel in pm.ls(type='joint'):
@@ -345,6 +335,3 @@ class Joint(adbTransform.Transform):
             (0, 0, -1): "-z",
         }[vector]    
         
-
-
-
