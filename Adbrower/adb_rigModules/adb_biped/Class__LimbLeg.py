@@ -15,6 +15,7 @@ import adbrower
 adb = adbrower.Adbrower()
  
 import adb_core.ModuleBase as moduleBase
+import adb_core.Class__Control as Control
 import adb_core.NameConv_utils as NC
 import adb_core.Class__AddAttr as adbAttr
 from adb_core.Class__Transforms import Transform
@@ -26,12 +27,17 @@ import adb_library.adb_utils.Script__ProxyPlane as adbProxy
 import adb_library.adb_utils.Class__FkShapes as adbFKShape
 
 import adb_library.adb_modules.Module__Folli as adbFolli
+import adb_library.adb_modules.Module__IkStretch as adbIkStretch
 import adb_rigModules.RigBase as RigBase
 
 reload(RigBase)
 reload(adbAttr)
 reload(adbFKShape)
 reload(NC)
+reload(adbrower)
+reload(moduleBase)
+reload(adbIkStretch)
+reload(Control)
 
 #-----------------------------------
 #  DECORATORS
@@ -61,7 +67,7 @@ class LimbLeg(moduleBase.ModuleBase):
                 plane_proxy_axis=None,
                 output_joint_radius=1,
                 ):
-        super(LimbLeg, self).__init__()
+        super(LimbLeg, self).__init__('')
         
         self.nameStructure = None
         
@@ -79,7 +85,7 @@ class LimbLeg(moduleBase.ModuleBase):
     # =========================        
         
     def start(self, _metaDataNode = 'transform'):
-        super(LimbLeg, self)._start(metaDataNode = _metaDataNode)          
+        super(LimbLeg, self)._start('', metaDataNode = _metaDataNode)          
         
         # TODO: Create Guide setup
         
@@ -99,7 +105,9 @@ class LimbLeg(moduleBase.ModuleBase):
              - Create blend 
             
          STRETCHY LIMB
-            # - Ribbon
+             - IK Handle
+
+        RIBBON
             
          SLIDING KNEE
              - Create control
@@ -119,14 +127,14 @@ class LimbLeg(moduleBase.ModuleBase):
         
         else:
             self.col_main = 6 
-            self.pol_vector_col = (0, 0.145, 0.588)
             self.sliding_knee_col = 5
+            self.pol_vector_col = (0, 0.145, 0.588)
 
         self.nameStructure = {
-                            'Side':self.side,
+                            'Side'    : self.side,
                             'Basename': 'Leg',
-                            'Parts': ['Hips', 'Knee', 'Ankle'],
-                            'Suffix':''
+                            'Parts'   : ['Hips', 'Knee', 'Ankle'],
+                            'Suffix'  : ''
                             }
     
         # =================
@@ -134,6 +142,7 @@ class LimbLeg(moduleBase.ModuleBase):
             
         self.createBaseLegJoints()
         self.ik_fk_system()
+        self.stretchyLimb()
             
         
     # =========================
@@ -179,7 +188,7 @@ class LimbLeg(moduleBase.ModuleBase):
             adb.AutoSuffix([baseJnst_grp])
             pm.parent(self.base_leg_joints[0], baseJnst_grp)
             
-        createBaseLegJointsHiearchy()
+        # createBaseLegJointsHiearchy()
                  
         
     def ik_fk_system(self):
@@ -187,6 +196,9 @@ class LimbLeg(moduleBase.ModuleBase):
         Create an IK-FK blend system
         """
         
+        ikFk_MOD = moduleBase.ModuleBase()
+        ikFk_MOD.hiearchy_setup('Ik_FK')
+
         @changeColor()
         def IkJointChain():
             self.ik_leg_joints = pm.duplicate(self.base_leg_joints)                                
@@ -198,6 +210,8 @@ class LimbLeg(moduleBase.ModuleBase):
             pm.PyNode(self.ik_leg_joints[1]).rename('{Side}__{Basename}_Ik_{Parts[1]}'.format(**self.nameStructure))
             pm.PyNode(self.ik_leg_joints[2]).rename('{Side}__{Basename}_Ik_{Parts[2]}'.format(**self.nameStructure))
             adb.AutoSuffix(self.ik_leg_joints)
+
+            pm.parent(self.ik_leg_joints[0], ikFk_MOD.RIG_GRP)
             return self.ik_leg_joints
 
         @changeColor('index', 14)
@@ -211,6 +225,8 @@ class LimbLeg(moduleBase.ModuleBase):
             pm.PyNode(self.fk_leg_joints[1]).rename('{Side}__{Basename}_Fk_{Parts[1]}'.format(**self.nameStructure))
             pm.PyNode(self.fk_leg_joints[2]).rename('{Side}__{Basename}_Fk_{Parts[2]}'.format(**self.nameStructure))
             adb.AutoSuffix(self.fk_leg_joints)
+
+            pm.parent(self.fk_leg_joints[0], ikFk_MOD.RIG_GRP)
             return self.fk_leg_joints
     
         def createIKFKSwitchControl():
@@ -226,7 +242,6 @@ class LimbLeg(moduleBase.ModuleBase):
                 pm.select('{}.cv[:]'.format(_shapes[3]), add=True)
                 
                 pm.move(-3, 0, 0, r=1, os=1, wd=1)
-            
             else:
                 pass
                 
@@ -248,6 +263,9 @@ class LimbLeg(moduleBase.ModuleBase):
                             lenght_blend = 1,
                             )
 
+            pm.parent(self.base_leg_joints[0], ikFk_MOD.OUTPUT_GRP)
+            Joint(self.base_leg_joints).radius = 5
+
         @changeColor('index', col = self.col_main )
         def CreateFkcontrols(radius = 1, 
                     normalsCtrl=(0,1,0)):
@@ -257,29 +275,35 @@ class LimbLeg(moduleBase.ModuleBase):
             return FkShapeSetup.controls
 
         def CreateIKcontrols(Ikshape = sl.cube_shape, exposant = 40, pvShape = sl.ball_shape):
-            
+            """
+            Create the IK handle setup on the IK joint chain
+            """
             self.nameStructure['Suffix'] = NC.IKHANDLE_SUFFIX 
             leg_IkHandle = pm.ikHandle( n='{Side}__{Basename}__{Suffix}'.format(**self.nameStructure), sj=self.ik_leg_joints[0], ee=self.ik_leg_joints[-1])
             leg_IkHandle[0].v.set(0)
             pm.select(self.ik_leg_joints[-1], r = True)
             
-            @makeroot()
+            @makeroot('')
             @changeColor('index', col = self.col_main)        
             def Ik_ctrl():            
                 self.nameStructure['Suffix'] = NC.CTRL 
-                _leg_IkHandle_ctrl = Ikshape()
-                pm.rename(_leg_IkHandle_ctrl, '{Side}__{Basename}__{Suffix}'.format(**self.nameStructure))
-                pm.matchTransform(_leg_IkHandle_ctrl, self.ik_leg_joints[-1], pos = True)
-                return _leg_IkHandle_ctrl      
+                leg_IkHandle_ctrl = Control.Control(name = '{Side}__{Basename}_IK__{Suffix}'.format(**self.nameStructure),
+                                                 shape = Ikshape,
+                                                 scale=3,
+                                                 matchTransforms = self.ik_leg_joints[-1]
+                                                 ).control
+                return leg_IkHandle_ctrl
             self.leg_IkHandle_ctrl = Ik_ctrl()[0]
-
-            @makeroot()
-            @changeColor('index', col = self.col_main ) 
+            
+            @makeroot('')
+            @changeColor('index', col = self.col_main) 
             def Ik_ctrl_offset():
-                _leg_IkHandle_ctrl_offset = Ikshape()
-                _leg_IkHandle_ctrl_offset.scale.set(0.7, 0.7, 0.7)
-                pm.rename(_leg_IkHandle_ctrl_offset, '{Side}__{Basename}_IK_offset__ctrl__'.format(**self.nameStructure) )
-                pm.matchTransform(_leg_IkHandle_ctrl_offset, self.ik_leg_joints[-1], pos = True)            
+                _leg_IkHandle_ctrl_offset = Control.Control(name = '{Side}__{Basename}_IK_offset__{Suffix}'.format(**self.nameStructure),
+                                 shape = Ikshape,
+                                 scale = 2,
+                                 parent = self.leg_IkHandle_ctrl,
+                                 matchTransforms = self.ik_leg_joints[-1]
+                                 ).control           
                 return _leg_IkHandle_ctrl_offset            
             self.leg_IkHandle_ctrl_offset = Ik_ctrl_offset()[0]  
 
@@ -309,27 +333,47 @@ class LimbLeg(moduleBase.ModuleBase):
                     pm.rename(pv_base_jnt, '{}__pvBase__{}'.format(self.side, NC.JOINT))
                     pm.skinCluster(pv_base_jnt , pv_guide, pv_tip_jnt)
                     pm.parent(pv_base_jnt, self.ik_leg_joints[1])
+                    pm.setAttr(pv_guide.inheritsTransform, 0)
+                    pm.setAttr(pv_guide.overrideDisplayType, 1)
 
                     [pm.setAttr('{}.drawStyle'.format(joint),  2) for joint in [pv_tip_jnt, pv_base_jnt]]
+                    pm.parent(pv_guide, ikFk_MOD.RIG_GRP)
                 
                 curve_setup()
                 
+                pm.parent(self.poleVectorCtrl, ikFk_MOD.INPUT_GRP)
                 return self.poleVectorCtrl    
            
             pole_vector_ctrl()
 
-            pm.parent(self.leg_IkHandle_ctrl_offset, self.leg_IkHandle_ctrl)
             pm.parent(leg_IkHandle[0], self.leg_IkHandle_ctrl_offset)
+            pm.parent(self.leg_IkHandle_ctrl.getParent(), ikFk_MOD.INPUT_GRP)
 
         IkJointChain()
         FkJointChain()
-        makeConnections()
         CreateFkcontrols()
         CreateIKcontrols()
+        makeConnections()
+        
+        pm.parent(ikFk_MOD.MOD_GRP, self.RIG.MODULES_GRP)
 
 
     def stretchyLimb(self):
+        legIk = adbIkStretch.stretchyIK('stretchylegIk',
+                    ik_joints = self.ik_leg_joints,
+                    ik_ctrl = self.leg_IkHandle_ctrl_offset,
+                    stretchAxis = 'Y' 
+                    )
+        legIk.start()
+        legIk.build()
+        
+        pm.parent((self.leg_IkHandle_ctrl_offset).getParent(), self.leg_IkHandle_ctrl)
+        pm.parent(legIk.MOD_GRP, self.RIG.MODULES_GRP)
+
+
+    def slidingKnee(self):
         pass
+
 
     # =========================
     # SLOTS
@@ -344,6 +388,8 @@ class LimbLeg(moduleBase.ModuleBase):
                     lenght_blend = 1,
                     ):
             """
+            # TODO: ADD THE BLEND OPTIONS
+            # TODO: ADD THE AXIS OPTIONS OPTIMIZATION
             Function to create an Ik - Fk rotation based script
             
             @param ctrl_name            : (str) Name of the control having the switch attribute
@@ -360,40 +406,98 @@ class LimbLeg(moduleBase.ModuleBase):
                         fk_joints = ['fk_01', 'fk_02', 'fk_03'],
                        )
             """
-            # TODO: ADD THE BLEND OPTIONS
             ## add attribute message
             switch_ctrl = adbAttr.NodeAttr([ctrl_name])
             switch_ctrl.addAttr('lenght_blend', lenght_blend, keyable=False)
 
-            ## Creation of the remaps values and blendColor nodes
-            BlendColorColl_R = [pm.shadingNode('blendColors', asUtility=1, n='{}__{}_rotate__{}'.format(self.side, NC.getBasename(x), NC.BLENDCOLOR_SUFFIX)) for x in result_joints]
+            # Creation of the remaps values and blendColor nodes
             RemapValueColl = [pm.shadingNode('remapValue',asUtility=1, n='{}__{}__{}'.format(self.side, NC.getBasename(x), NC.REMAP_VALUE_SUFFIX)) for x in result_joints]
 
+            BlendColorColl_Rotate = [pm.shadingNode('blendColors', asUtility=1, n='{}__{}_rotate__{}'.format(self.side, NC.getBasename(x), NC.BLENDCOLOR_SUFFIX)) for x in result_joints]
             ## Connect the IK in the Color 2
-            for oIK, oBlendColor in zip (fk_joints,BlendColorColl_R):
-                pm.PyNode(oIK).rx >> pm.PyNode(oBlendColor).color1R
-                pm.PyNode(oIK).ry >> pm.PyNode(oBlendColor).color1G
-                pm.PyNode(oIK).rz >> pm.PyNode(oBlendColor).color1B
+            for oFK, oBlendColor in zip (fk_joints,BlendColorColl_Rotate):
+                pm.PyNode(oFK).rx >> pm.PyNode(oBlendColor).color1R
+                pm.PyNode(oFK).ry >> pm.PyNode(oBlendColor).color1G
+                pm.PyNode(oFK).rz >> pm.PyNode(oBlendColor).color1B
 
             ## Connect the FK in the Color 1
-            for oFK, oBlendColor in zip (ik_joints,BlendColorColl_R):
-                pm.PyNode(oFK).rx >> pm.PyNode(oBlendColor).color2R
-                pm.PyNode(oFK).ry >> pm.PyNode(oBlendColor).color2G
-                pm.PyNode(oFK).rz >> pm.PyNode(oBlendColor).color2B
+            for oIK, oBlendColor in zip (ik_joints,BlendColorColl_Rotate):
+                pm.PyNode(oIK).rx >> pm.PyNode(oBlendColor).color2R
+                pm.PyNode(oIK).ry >> pm.PyNode(oBlendColor).color2G
+                pm.PyNode(oIK).rz >> pm.PyNode(oBlendColor).color2B
                                 
             ## Connect the BlendColor node in the Blend joint chain        
-            for oBlendColor, oBlendJoint in zip (BlendColorColl_R,result_joints):
+            for oBlendColor, oBlendJoint in zip (BlendColorColl_Rotate,result_joints):
                 pm.PyNode(oBlendColor).outputR  >> pm.PyNode(oBlendJoint).rx
                 pm.PyNode(oBlendColor).outputG  >> pm.PyNode(oBlendJoint).ry
                 pm.PyNode(oBlendColor).outputB  >> pm.PyNode(oBlendJoint).rz
 
-            for oBlendColor in BlendColorColl_R:
+            for oBlendColor in BlendColorColl_Rotate:
                 pm.PyNode(oBlendColor).blender.set(1)
 
             ## Connect the Remap Values to Blend Colors
-            for oRemapValue,oBlendColor in zip (RemapValueColl,BlendColorColl_R):            
+            for oRemapValue,oBlendColor in zip (RemapValueColl, BlendColorColl_Rotate):            
                 pm.PyNode(oRemapValue).outValue >> pm.PyNode(oBlendColor).blender
 
+            ## SCALE
+
+            BlendColorColl_Scale = [pm.shadingNode('blendColors', asUtility=1, n='{}__{}_scale__{}'.format(self.side, NC.getBasename(x), NC.BLENDCOLOR_SUFFIX)) for x in result_joints]
+            ## Connect the IK in the Color 2
+            for oFK, oBlendColor in zip (fk_joints, BlendColorColl_Scale):
+                pm.PyNode(oFK).sx >> pm.PyNode(oBlendColor).color1R
+                pm.PyNode(oFK).sy >> pm.PyNode(oBlendColor).color1G
+                pm.PyNode(oFK).sz >> pm.PyNode(oBlendColor).color1B
+
+            ## Connect the FK in the Color 1
+            for oIK, oBlendColor in zip (ik_joints, BlendColorColl_Scale):
+                pm.PyNode(oIK).sx >> pm.PyNode(oBlendColor).color2R
+                pm.PyNode(oIK).sy >> pm.PyNode(oBlendColor).color2G
+                pm.PyNode(oIK).sz >> pm.PyNode(oBlendColor).color2B
+                                
+            ## Connect the BlendColor node in the Blend joint chain        
+            for oBlendColor, oBlendJoint in zip (BlendColorColl_Scale, result_joints):
+                pm.PyNode(oBlendColor).outputR  >> pm.PyNode(oBlendJoint).sx
+                pm.PyNode(oBlendColor).outputG  >> pm.PyNode(oBlendJoint).sy
+                pm.PyNode(oBlendColor).outputB  >> pm.PyNode(oBlendJoint).sz
+
+            for oBlendColor in BlendColorColl_Scale:
+                pm.PyNode(oBlendColor).blender.set(1)
+            ## Connect the Remap Values to Blend Colors
+            for oRemapValue,oBlendColor in zip (RemapValueColl, BlendColorColl_Scale):            
+                pm.PyNode(oRemapValue).outValue >> pm.PyNode(oBlendColor).blender
+
+           ## TRANSLATE
+
+            BlendColorColl_Translate = [pm.shadingNode('blendColors', asUtility=1, 
+            n='{}__{}_scale__{}'.format(self.side, NC.getBasename(x), NC.BLENDCOLOR_SUFFIX)) 
+            for x in result_joints]
+
+            # Connect the IK in the Color 2
+            for oFK, oBlendColor in zip (fk_joints, BlendColorColl_Translate):
+                pm.PyNode(oFK.getParent()).tx >> pm.PyNode(oBlendColor).color1R
+                pm.PyNode(oFK.getParent()).ty >> pm.PyNode(oBlendColor).color1G
+                pm.PyNode(oFK).getParent().tz >> pm.PyNode(oBlendColor).color1B
+
+            ## Connect the FK in the Color 1
+            for oIK, oBlendColor in zip (ik_joints, BlendColorColl_Translate):
+                pm.PyNode(oIK).tx >> pm.PyNode(oBlendColor).color2R
+                pm.PyNode(oIK).ty >> pm.PyNode(oBlendColor).color2G
+                pm.PyNode(oIK).tz >> pm.PyNode(oBlendColor).color2B
+                                
+            ## Connect the BlendColor node in the Blend joint chain        
+            for oBlendColor, oBlendJoint in zip (BlendColorColl_Translate, result_joints):
+                pm.PyNode(oBlendColor).outputR  >> pm.PyNode(oBlendJoint).tx
+                pm.PyNode(oBlendColor).outputG  >> pm.PyNode(oBlendJoint).ty
+                pm.PyNode(oBlendColor).outputB  >> pm.PyNode(oBlendJoint).tz
+
+            for oBlendColor in BlendColorColl_Translate:
+                pm.PyNode(oBlendColor).blender.set(1)
+
+            ## Connect the Remap Values to Blend Colors
+            for oRemapValue,oBlendColor in zip (RemapValueColl, BlendColorColl_Translate):            
+                pm.PyNode(oRemapValue).outValue >> pm.PyNode(oBlendColor).blender
+
+            #=================================================================================================
             ## Connect the IK -FK Control to Remap Value
             blend_switch =  '{}.{}'.format(ctrl_name, blend_attribute)
             
@@ -418,10 +522,7 @@ leg = LimbLeg(module_name='L_Leg')
 # leg.start()
 leg.build(['hip_guide', 'knee_guide', 'ankle_LOC'])
         
-        
 
-        
-        
         
         
         
