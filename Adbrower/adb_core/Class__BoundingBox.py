@@ -17,6 +17,8 @@ adb = adbrower.Adbrower()
 # -----------------------------------
 
 
+
+
 class Bbox_Array(object):
     """
     bbox is a 6-element list of XYZ min and XYZ max: [xmin, ymin, zmin, xmax, ymax, zmax].
@@ -24,6 +26,20 @@ class Bbox_Array(object):
     you'll want the average X, minimum Y, and average Z
 
     Base on list of array of 6
+
+    NOTES CMDS ------------------------------------------------------------
+    -----------------------------------------------------------------------
+    pos = cmds.xform(sub, q=1, ws=1, boundingBoxInvisible=1)
+
+    POSminZ = [pos[3], ((pos[1] + pos[4])/2), pos[2]]
+    POSminZ = [pos[3], ((pos[1] + pos[4])/2), pos[5]]
+
+    POSminX = [pos[0], ((pos[1] + pos[4])/2), pos[5]]
+    POSmaxX = [pos[0], ((pos[1] + pos[4])/2), pos[2]]
+
+    print POSminZ, POSminZ, POSminX, POSmaxX
+
+    -----------------------------------------------------------------------
 
     @param array: (list)
 
