@@ -58,14 +58,17 @@ class NodeAttr(object):
                  ):
 
         self._nodeType = _node
+        
 
         if isinstance(self._nodeType, str):
             self.node = [pm.PyNode(_node)]
 
         elif isinstance(self._nodeType, list):
             self.node = [pm.PyNode(x) for x in _node]
+            
         else:
-            self.node = _node
+            self.node = [pm.PyNode(_node)]
+
 
         self.name = None
         self.attr = None
@@ -166,7 +169,7 @@ class NodeAttr(object):
 
         def addParent_Attr():
             for node in self.node:
-                node.addAttr(name, at=self.attr, keyable=keyable, nc=nc)
+                pm.PyNode(node).addAttr(name, at=self.attr, keyable=keyable, nc=nc)
 
         def addFloat_int():
             """ Add an attribute of type Float or integer"""
@@ -189,20 +192,20 @@ class NodeAttr(object):
             if val:
                 if parent is not None:
                     for node in self.node:
-                        node.addAttr(
+                        pm.PyNode(node).addAttr(
                             name, at=nodeTypeDic[_type]['dt'], dv=attr,  min=min, max=max, keyable=keyable, parent=parent)
                 else:
                     for node in self.node:
-                        node.addAttr(
+                        pm.PyNode(node).addAttr(
                             name, at=nodeTypeDic[_type]['dt'], dv=attr,  min=min, max=max, keyable=keyable,)
             else:
                 if parent is not None:
                     for node in self.node:
-                        node.addAttr(
+                        pm.PyNode(node).addAttr(
                             name, at=nodeTypeDic[_type]['dt'], dv=attr, keyable=keyable, parent=parent)
                 else:
                     for node in self.node:
-                        node.addAttr(
+                        pm.PyNode(node).addAttr(
                             name, at=nodeTypeDic[_type]['dt'], dv=attr, keyable=keyable)
             # self.addMethods()
 
@@ -211,7 +214,7 @@ class NodeAttr(object):
 
             for node in self.node:
                 if parent is not None:
-                    node.addAttr(
+                    pm.PyNode(node).addAttr(
                         name, at=nodeTypeDic[_type]['dt'], dv=attr, keyable=keyable, parent=parent)
                 else:
                     node.addAttr(
@@ -222,12 +225,12 @@ class NodeAttr(object):
             """ Add an attribute of type String"""
             if parent is not None:
                 for node in self.node:
-                    node.addAttr(
+                    pm.PyNode(node).addAttr(
                         name, dt=nodeTypeDic[_type]['dt'], keyable=keyable, parent=parent)
                     pm.PyNode((str(node) + '.' + name)).set(attr)
             else:
                 for node in self.node:
-                    node.addAttr(
+                    pm.PyNode(node).addAttr(
                         name, dt=nodeTypeDic[_type]['dt'], keyable=keyable)
                     pm.PyNode((str(node) + '.' + name)).set(attr)
             # self.addMethods()
@@ -239,11 +242,11 @@ class NodeAttr(object):
             """
             if parent is not None:
                 for node in self.node:
-                    node.addAttr(
+                    pm.PyNode(node).addAttr(
                         name, at=nodeTypeDic[_type]['dt'], enumName=eName, keyable=keyable, parent=parent)
             else:
                 for node in self.node:
-                    node.addAttr(
+                    pm.PyNode(node).addAttr(
                         name, at=nodeTypeDic[_type]['dt'], enumName=eName, keyable=keyable)
             # self.addMethods()
 
@@ -251,11 +254,11 @@ class NodeAttr(object):
             """ Add an attribute of type Message"""
             if parent is not None:
                 for node in self.node:
-                    node.addAttr(
+                    pm.PyNode(node).addAttr(
                         name, at=nodeTypeDic[_type]['dt'], keyable=keyable, parent=parent)
             else:
                 for node in self.node:
-                    node.addAttr(
+                    pm.PyNode(node).addAttr(
                         name, at=nodeTypeDic[_type]['dt'], keyable=keyable)
             # self.addMethods()
 
@@ -575,10 +578,11 @@ class NodeAttr(object):
 #   IN CLASS BUILD
 # -----------------------------------
 
-node = NodeAttr('pCube1')
+
+# node = NodeAttr('pCube1')
 # node.addAttr("UV", 'compound', nc=2)
 # node.addAttr("zipper", 0, min = 0, max = 100, parent = "UV")
-node.addAttr("zipper", 0, min = 0, max = 100)
+# node.addAttr("zipper", 0, min = 0, max = 100)
 # node.addAttr("V_pos", 0.5, min = 0, max = 1, parent = "UV")
 
 # node.addAttr('adb', 50)
