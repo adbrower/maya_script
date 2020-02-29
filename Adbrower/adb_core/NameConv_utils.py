@@ -186,6 +186,7 @@ REVERSE_SUFFIX                = 'REV'
 CONDITION_SUFFIX              = 'COND'
 PLUS_MIN_AVER_SUFFIX          = 'PMA'
 BLENDCOLOR_SUFFIX             = 'BC'
+NETWORK                       = 'NETWORK'
 IKHANDLE_SUFFIX               = 'IKHDL'
 
 
