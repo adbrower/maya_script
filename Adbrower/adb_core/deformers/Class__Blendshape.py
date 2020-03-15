@@ -15,6 +15,25 @@ import maya.mel as mel
 import pymel.core as pm
 from adbrower import flatList, undo
 
+from maya.api import OpenMaya as om2
+import maya.OpenMayaAnim as oma
+
+def getMDagPath(node):
+    """
+    Returns MDagPath of given nodepour invert les value
+    """
+    selList = om2.MSelectionList()
+    selList.add(node)
+    return selList.getDagPath(0)
+
+
+def getMObject(node):
+    """
+    Returns MObject of given node
+    """
+    selList = om2.MSelectionList()
+    selList.add(node)
+    return selList.getDependNode(0)
 
 def findBlendShape(_tranformToCheck):
     """
@@ -41,14 +60,35 @@ class Blendshape(object):
     def __init__(self,
                  bs_node=None,
                  ):
-        if bs_node:
-            self.bs_node = pm.PyNode(bs_node)
-            self.targets = self.init_targets()
-        else:
-            bs_node = None
+        
+        self.bs_node = bs_node
+
+        if isinstance(self.bs_node, list):
+                self.bs_node = pm.PyNode(self.bs_node[0])
+        
 
     def __repr__(self):
         return str('<{} \'{}\'>'.format(self.__class__.__name__, self.bs_node))
+
+    @classmethod
+    def create(cls, mesh, targets = [], name='blendShape', parallel=False, topology=True, foc=False):
+        """
+        Create a new empty blendshape node in the scene.
+
+        @param str name: the name of the new blendshape node.
+        @param str target: the name of the transform to attach the blendshape to.
+        @param bool parallel: sets whether the blendshape runs in parallel to other deformers.
+        @param bool topology: check whether topology matches between base and target meshes.
+        @param bool foc: place new blendshape node at front of deformation chain.
+        @return self
+        """
+        bs = pm.blendShape(mesh, parallel=parallel, tc=topology, foc=foc, n=name)[0]
+        if targets is not []:
+            for index, shape in enumerate(targets):
+                pm.blendShape(bs, e=1, target=(mesh, index + 1, shape, 1))
+                pm.setAttr('{}.weight[{}]'.format(bs, index + 1), 1)
+
+        return cls(bs)
 
     @classmethod
     def findAll(cls):
@@ -80,23 +120,27 @@ class Blendshape(object):
         return pm.nodeType(bs_name) == 'blendShape'
 
     @property
-    def getTransform(self):
+    def mesh(self):
         transform = pm.blendShape(self.bs_node, q=1, g=1)[0]
         return pm.PyNode(transform).getTransform()
 
     @property
-    def getTargets(self):
-        all_targets = self.init_targets()
-        return all_targets.values()
+    def targets(self):
+        targets = self.init_targets()
+        if targets is not None:
+            return targets.values()
+        else:
+            return []
 
     @property
-    def getTargetsNumber(self):
+    def targetNumber(self):
         return len(self.getTargets)
 
     @property
     def right_targets(self):
         right_targets = dict()
-        for index, alias in self.targets.items():
+        _targetDict = self.init_targets()
+        for index, alias in _targetDict.items():
             if alias[:2] == 'R_':
                 right_targets[index] = alias
         return right_targets
@@ -104,33 +148,20 @@ class Blendshape(object):
     @property
     def left_targets(self):
         left_targets = dict()
-        for index, alias in self.targets.items():
+        _targetDict = self.init_targets()
+        for index, alias in _targetDict.items():
             if alias[:2] == 'L_':
                 left_targets[index] = alias
         return left_targets
 
-    def create(self, name=None, target=None,  parallel=False, topology=True, foc=False):
-        """
-        Create a new empty blendshape node in the scene.
-
-        @param str name: the name of the new blendshape node.
-        @param str target: the name of the transform to attach the blendshape to.
-        @param bool parallel: sets whether the blendshape runs in parallel to other deformers.
-        @param bool topology: check whether topology matches between base and target meshes.
-        @param bool foc: place new blendshape node at front of deformation chain.
-        @return self
-        """
-        self.target = target
-        if not name:
-            name = self.name
-        shape = pm.PyNode(self.target).getShape()
-        self.bs = pm.blendShape(shape, parallel=parallel, tc=topology, foc=foc, n=name)[0]
-        return self.bs
 
     def init_targets(self):
         if pm.objExists(self.bs_node):
-            return {i: pm.aliasAttr('{}.w[{}]'.format(self.bs_node, i), q=1) for i in
-                    pm.getAttr('{}.w'.format(self.bs_node), multiIndices=1)}
+            if pm.PyNode(self.bs_node).getTarget():
+                return {i: pm.aliasAttr('{}.w[{}]'.format(self.bs_node, i), q=1) for i in
+                        pm.getAttr('{}.w'.format(self.bs_node), multiIndices=1)} 
+            else:
+                return None
 
     def get_target_index_by_alias(self, alias_name):
         for index, alias in self.targets.items():
@@ -145,14 +176,13 @@ class Blendshape(object):
         @target : String. Mesh getting the blendshape
         @shape_to_add : List. Shape to add to the target
         """
-
-        numb_target = len(self.getTargets)
+        numb_target = len(self.targets)
         if numb_target == 0:
             numb_target = 1
 
         bls_node = self.bs_node
         for index, shape in enumerate(shape_to_add):
-            pm.blendShape(bls_node, e=1, target=(self.getTransform, index + numb_target, shape, 1))
+            pm.blendShape(bls_node, e=1, target=(self.mesh, index + numb_target, shape, 1))
             pm.setAttr('{}.weight[{}]'.format(self.bs_node, index + numb_target), value)
         sys.stdout.write('// Result: targets added // \n ')
 
@@ -204,6 +234,96 @@ class Blendshape(object):
                      xrange(len(combo_data[combo_target_alias]))]
                     pm.connectAttr('{}.outputWeight'.format(combination_node),
                                    '{}.{}'.format(self.bs_node, self.targets[target_index]), f=1)
+
+
+    def getWeightMap(self, shapeIndex = 0):
+        """ Get Values of each vertex of a specific map
+        
+        Keyword Arguments:
+            shapeIndex {int} -- Index of the shape we want to query  (default: {0})
+        
+        Returns:
+            List -- all weights values per vertex
+        """
+        mObj = getMObject(str(self.bs_node))
+        MeshDag = getMDagPath(str(self.mesh))
+        blsDNode = om2.MFnDependencyNode(mObj)
+        weightsPlug  = blsDNode.findPlug('inputTarget', True)
+        paintTargetIndexPlug = blsDNode.findPlug('paintTargetIndex', True)
+        
+        paintTargetIndexPlug.setInt(shapeIndex)
+        
+        basePlugs = []
+        baseWeigthtsList = []
+
+        targetPlugs = []
+        targetWeightList = []
+
+        weightPlugs = om2.MPlugArray()
+        for i in xrange(weightsPlug.numElements()-1):
+            weightlistIdxPlug = weightsPlug.elementByPhysicalIndex(i) 
+            baseWeights = weightlistIdxPlug.child(1)  
+            
+            for j in xrange(baseWeights.numElements()):
+                baseWeightsPlugs = baseWeights.elementByLogicalIndex(j) 
+                baseWeightsValue =  baseWeightsPlugs.asFloat()
+                baseWeigthtsList.append(baseWeightsValue)
+                basePlugs.append(baseWeightsPlugs)
+                
+            targetWeights = weightlistIdxPlug.child(3)    
+            
+            for j in xrange(targetWeights.numElements()):
+                targetWeightsPlugs = targetWeights.elementByLogicalIndex(j) 
+                targetWeightsValue =  targetWeightsPlugs.asFloat()
+                targetWeightList.append(targetWeightsValue)
+                targetPlugs.append(targetWeightsPlugs)
+                
+        return baseWeigthtsList, targetWeightList 
+
+    
+    def getWeightPlug(self):
+        """ Get the MPlugs of each vertex to be able to sets weights 
+        
+        Returns:
+            List -- MPlugs
+        """
+        mObj = getMObject(str(self.bs_node))
+        MeshDag = getMDagPath(str(self.mesh))
+        blsDNode = om2.MFnDependencyNode(mObj)
+        weightsPlug  = blsDNode.findPlug('inputTarget', True)
+        
+        basePlugs = []
+        targetPlugs = []
+
+        weightPlugs = om2.MPlugArray()
+        for i in xrange(weightsPlug.numElements()-1):
+            weightlistIdxPlug = weightsPlug.elementByPhysicalIndex(i) 
+            baseWeights = weightlistIdxPlug.child(1)  
+            
+            for j in xrange(baseWeights.numElements()):
+                baseWeightsPlugs = baseWeights.elementByLogicalIndex(j) 
+                basePlugs.append(baseWeightsPlugs)
+                
+            targetWeights = weightlistIdxPlug.child(3)    
+            
+            for j in xrange(targetWeights.numElements()):
+                targetWeightsPlugs = targetWeights.elementByLogicalIndex(j) 
+                targetPlugs.append(targetWeightsPlugs)
+                
+        return basePlugs, targetPlugs
+
+
+    def setWeightMap(self, allPlugs, allWeights):
+        """ Set new values to a map
+        
+        Arguments:
+            allPlugs {List} -- Mplugs
+            allWeights {List} -- Weights Values
+        """
+        for plug, value in zip(allPlugs, allWeights):
+            plug.setFloat(value)
+
+						   
 
 
 class PI(object):
