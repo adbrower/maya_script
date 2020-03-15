@@ -185,7 +185,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.action_save = self.menu_file.addAction("Save Data")
 
         self.action_save.triggered.connect(self.saveData)
-        self.action_print_path.triggered.connect(lambda * args: sys.stdout.write('adb_copyWeightToolsettings file saved at: ' + self.final_path + FOLDER_NAME + '/' + FILE_NAME))
+        self.action_print_path.triggered.connect(lambda * args: sys.stdout.write(('adb_copyWeightToolsettings file saved at: ' + self.final_path + '/' + FOLDER_NAME + '/' + FILE_NAME).replace('/', '\\' )))
 
         self.menu_refresh = QtWidgets.QMenu(self)
         self.menu_refresh.setTitle('Edit')
