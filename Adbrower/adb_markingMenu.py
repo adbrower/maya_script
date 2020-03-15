@@ -194,7 +194,7 @@ class markingMenu():
         mc.menuItem(p=self.customMenu, l="Main Toolbox", c=pm.Callback(self.adbToolbox))
         mc.menuItem(p=self.customMenu, l="adb Module Tool", c=lambda *arg: Tool__adbModule.adbModule())
         mc.menuItem(p=self.customMenu, l="Multi Skin Tool", c=lambda *arg: Tool__MultiSkin.showUI())
-        mc.menuItem(p=self.customMenu, l="Topology Tool", c=lambda *arg: adbTopoTool.TopoTool())
+        mc.menuItem(p=self.customMenu, l="Topology Tool", c=lambda *arg: adbTopoTool.showUI())
         mc.menuItem(p=self.customMenu, l="Joint Generator Tool", c=lambda *arg: adb_tools.Tool__Joint_Generator__Pyside.showUI())
         mc.menuItem(p=self.customMenu, l="Connection Tool", c=lambda *arg: Tool__ConnectionTool.connectionTool())
         mc.menuItem(p=self.customMenu, l="Tilt Tool", c=lambda *arg: Tool__Tilt.TiltTool())

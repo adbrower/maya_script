@@ -1,6 +1,4 @@
 
-import maya.cmds as mc
-import pymel.core as pm
 
 suffixDic = {
     'nurbsCurve':  '__CTRL',

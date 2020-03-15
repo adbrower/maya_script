@@ -88,3 +88,4 @@ move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_
 move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_rigModules/adb_biped')
 move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_tools')
 move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_tools/adb_pyQt')
+move_pyc('C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script')

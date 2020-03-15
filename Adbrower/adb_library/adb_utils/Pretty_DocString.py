@@ -1,10 +1,7 @@
 
 
 """
-import adb_utils.Pretty_DocString
-reload(adb_utils.Pretty_DocString)
-
-from adb_utils.Pretty_DocString import doc_string
+from adb_library.adb_utils.Pretty_DocString import doc_string
 """
 
 # def docString(func):
