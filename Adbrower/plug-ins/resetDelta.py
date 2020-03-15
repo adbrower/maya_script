@@ -1,9 +1,11 @@
 # =====================================================================
-# Author : Chayan Vinayak
-# Copyright Chayan Vinayak
+# Author : Audrey Deschamps-Brower
+#  audreydb23@gmail.com
 # =====================================================================
 
 import sys
+import time
+
 import maya.OpenMaya as om
 from maya.api import OpenMaya as om2
 import maya.OpenMayaMPx as OpenMayaMPx
@@ -11,6 +13,7 @@ import maya.OpenMayaFX as OpenMayaFX
 
 import pymel.core as pm
 import maya.cmds as mc
+import maya.mel
 
 commandName = "resetDelta"
 
@@ -24,9 +27,101 @@ kPositiveFlag = "-pos"
 kPositiveLongFlag = "-positive"
 kWorldSpaceFlag = "-ws"
 kWorldSpaceLongFlag = "-worldSpace"
-helpMessage = "This command is reset vertex from a mesh to another"
+
+class gShowProgress(object):
+    """
+    Based on: http://josbalcaen.com/maya-python-progress-decorator
+    
+    Function decorator to show the user (progress) feedback.
+    @usage
+ 
+    import time
+    @gShowProgress(end=10)
+    def createCubes():
+        for i in range(10):
+            time.sleep(1)
+            if createCubes.isInterrupted(): break
+            iCube = mc.polyCube(w=1,h=1,d=1)
+            mc.move(i,i*.2,0,iCube)
+            createCubes.step()
+    """
+    def __init__(self, status='Busy...', start=0, end=100, interruptable=True):
+ 
+        self.mStartValue = start
+        self.mEndValue = end
+        self.mStatus = status
+        self.mInterruptable = interruptable
+        self.mMainProgressBar = maya.mel.eval('$tmp = $gMainProgressBar')
+ 
+    def step(self, inValue=1):
+        """Increase step
+        @param inValue (int) Step value"""
+        mc.progressBar(self.mMainProgressBar, edit=True, step=inValue)
+ 
+    def isInterrupted(self):
+        """Check if the user has interrupted the progress
+        @return (boolean)"""
+        return mc.progressBar(self.mMainProgressBar, query=True, isCancelled=True)
+ 
+    def start(self):
+        """Start progress"""
+        mc.waitCursor(state=True)
+        mc.progressBar( self.mMainProgressBar,
+                edit=True,
+                beginProgress=True,
+                isInterruptable=self.mInterruptable,
+                status=self.mStatus,
+                minValue=self.mStartValue,
+                maxValue=self.mEndValue
+            )
+        mc.refresh()
+ 
+    def end(self):
+        """Mark the progress as ended"""
+        mc.progressBar(self.mMainProgressBar, edit=True, endProgress=True)
+        mc.waitCursor(state=False)
+ 
+    def __call__(self, inFunction):
+        """
+        Override call method
+        @param inFunction (function) Original function
+        @return (function) Wrapped function
+        @description
+            If there are decorator arguments, __call__() is only called once,
+            as part of the decoration process! You can only give it a single argument,
+            which is the function object.
+        """
+        def wrapped_f(*args, **kwargs):
+            # Start progress
+            self.start()
+            # Call original function
+            inFunction(*args,**kwargs)
+            # End progress
+            self.end()
+ 
+        # Add special methods to the wrapped function
+        wrapped_f.step = self.step
+        wrapped_f.isInterrupted = self.isInterrupted
+ 
+        # Copy over attributes
+        wrapped_f.__doc__ = inFunction.__doc__
+        wrapped_f.__name__ = inFunction.__name__
+        wrapped_f.__module__ = inFunction.__module__
+ 
+        # Return wrapped function
+        return wrapped_f
 
 class resetDeltaCmd(OpenMayaMPx.MPxCommand):
+    """This command is reset vertex from a mesh to another
+    Command Arguments:
+        base_geometry {str} -- transform on wich we apply the changes
+    
+    Keyword Arguments:
+        -p / percentage {float} -- amount of percentage of transformation (default: {1.0})
+        - ax / axis {str} -- axis on which transformation will be applied (default: {'xyz'})
+        - pos / positive {bool} -- The calculation of the vectors (default: {False})
+        - ws / worldSpace {bool} -- world space or Local space (default: {False})
+    """
     def __init__(self):
         OpenMayaMPx.MPxCommand.__init__(self)
         self.baseGeo = None
@@ -34,58 +129,79 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
 
     def argumentParser(self, argList):
         argData = om.MArgParser(self.syntax(), argList)
-        self.baseGeo = argData.commandArgumentString(0) 
-        try:
-            self.targetGeo = argData.commandArgumentString(1) 
-        except RuntimeError:
-            selList =om2.MGlobal.getActiveSelectionList()
-            self.targetGeo = selList.getSelectionStrings(0)[0]
-
-        if argData.isFlagSet(kPercentageFlag):
-            self.percentage = argData.flagArgumentDouble(kPercentageFlag, 0) 
-        else:
-            self.percentage = 1.0
-
-        if argData.isFlagSet(kPercentageLongFlag):
-            self.percentage = argData.flagArgumentDouble(kPercentageLongFlag, 0)
-        else:
-            self.percentage = 1.0
-
-        if argData.isFlagSet(kAxisFlag):
-            self.axis = "{}".format(argData.flagArgumentString(kAxisFlag, 0))
-        else:
-            self.axis = 'xyz'
-
-        if argData.isFlagSet(kAxisLongFlag):
-          self.axis = "{}".format(argData.flagArgumentString(kAxisLongFlag, 0))   
-        else:
-            self.axis = 'xyz'
-
-        if argData.isFlagSet(kPositiveFlag):
-            self.positive = argData.flagArgumentBool(kPositiveFlag, 0)
-        else:
-            self.positive = False
-
-        if argData.isFlagSet(kPositiveLongFlag):
-            self.positive = argData.flagArgumentBool(kPositiveLongFlag, 0)
-        else:
-            self.positive = False
-
-        if argData.isFlagSet(kWorldSpaceFlag):
-            self.ws = argData.flagArgumentBool(kWorldSpaceFlag, 0)
-        else:
-            self.ws = False
-
-        if argData.isFlagSet(kWorldSpaceLongFlag):
-            self.ws = argData.flagArgumentBool(kWorldSpaceLongFlag, 0)
-        else:
-            self.ws = False
 
         if argData.isFlagSet(kHelpFlag):
-            self.setResult(helpMessage)
+            print self.__class__.__doc__
+            return None
 
         if argData.isFlagSet(kHelpLongFlag):
-            self.setResult(helpMessage)
+            print self.__class__.__doc__
+            return None
+
+        else:
+            self.baseGeo = argData.commandArgumentString(0) 
+            try:
+                self.targetGeo = argData.commandArgumentString(1) 
+            except RuntimeError:
+                selList =om2.MGlobal.getActiveSelectionList()
+                self.targetGeo = selList.getSelectionStrings(0)[0]
+
+            if argData.isFlagSet(kPercentageFlag):
+                self.percentage = argData.flagArgumentDouble(kPercentageFlag, 0) 
+            else:
+                self.percentage = 1.0
+
+            if argData.isFlagSet(kPercentageLongFlag):
+                self.percentage = argData.flagArgumentDouble(kPercentageLongFlag, 0)
+            else:
+                self.percentage = 1.0
+
+            if argData.isFlagSet(kAxisFlag):
+                self.axis = "{}".format(argData.flagArgumentString(kAxisFlag, 0))
+            else:
+                self.axis = 'xyz'
+
+            if argData.isFlagSet(kAxisLongFlag):
+                self.axis = "{}".format(argData.flagArgumentString(kAxisLongFlag, 0))   
+            else:
+                self.axis = 'xyz'
+
+            if argData.isFlagSet(kPositiveFlag):
+                self.positive = argData.flagArgumentBool(kPositiveFlag, 0)
+            else:
+                self.positive = False
+
+            if argData.isFlagSet(kPositiveLongFlag):
+                self.positive = argData.flagArgumentBool(kPositiveLongFlag, 0)
+            else:
+                self.positive = False
+
+            if argData.isFlagSet(kWorldSpaceFlag):
+                self.ws = argData.flagArgumentBool(kWorldSpaceFlag, 0)
+            else:
+                self.ws = False
+
+            if argData.isFlagSet(kWorldSpaceLongFlag):
+                self.ws = argData.flagArgumentBool(kWorldSpaceLongFlag, 0)
+            else:
+                self.ws = False
+
+    def getSoftSelection(self):
+        softSelectDict = {}
+
+        softSelection = om2.MGlobal.getRichSelection()
+        richSelection = om2.MRichSelection(softSelection)
+        richeSelectionList = richSelection.getSelection()
+        component =  richeSelectionList.getComponent(0)
+
+        componentIndex = om2.MFnSingleIndexedComponent(component[1])
+        vertexList =  componentIndex.getElements()
+
+        for loop in xrange(len(vertexList)):
+            weight = componentIndex.weight(loop)
+            softSelectDict[vertexList[loop]] = float(format(weight.influence, '.5f'))
+
+        return softSelectDict
 
     def setAllVertexPositions(self, geoObj, positions=[], worldSpace=True):
         """
@@ -99,7 +215,6 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
         else:
             mSpace = om.MSpace.kObject
 
-        # Attach a MFnMesh functionSet and set the positions
         mSL = om2.MSelectionList()
         mSL.add(geoObj)
         
@@ -113,7 +228,8 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
         """
         Reset target geo's vertex to initial position
         """
-        self.setAllVertexPositions(self.targetGeo, self.delta_vert_positions, worldSpace=self.ws)
+        self.setAllVertexPositions(self.targetGeo, self.delta_vert_positions.values(), worldSpace=self.ws)
+    
     
     def redoIt(self):
         def getAllVertexPositions(geometry, worldSpace=True):
@@ -132,7 +248,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
             mSLmesh = om2.MGlobal.getSelectionListByName(geometry).getDependNode(0)
             dag = om2.MFnDagNode(mSLmesh).getPath()
 
-            vert_positions = []
+            vert_positions = {}
             vert_iter = om2.MItMeshVertex(dag)
 
             space = om2.MSpace.kObject
@@ -141,7 +257,8 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
 
             while not vert_iter.isDone():
                 point = vert_iter.position(space)
-                vert_positions.append([point[0], point[1], point[2]])
+                vrtxIndex = vert_iter.index()
+                vert_positions[vrtxIndex] = [point[0], point[1], point[2]]
                 vert_iter.next()
             return vert_positions
 
@@ -166,25 +283,25 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
 
             if percentage == 1.0:  
                 if len(axis) > 2:
-                    self.setAllVertexPositions(delta_geometry, base_vert_positions, worldSpace=worldSpace)
+                    self.setAllVertexPositions(delta_geometry, base_vert_positions.values(), worldSpace=worldSpace)
                 else:
                     if axis == 'x':
                         new_pos = []
-                        for base, delta in zip(base_vert_positions, self.delta_vert_positions):
+                        for base, delta in zip(base_vert_positions.values(), self.delta_vert_positions.values()):
                             pos = (base[0], delta[1], delta[2])
                             new_pos.append(pos)
                         self.setAllVertexPositions(delta_geometry, new_pos, worldSpace=worldSpace)
                         
                     elif axis == 'y':
                         new_pos = []
-                        for base, delta in zip(base_vert_positions, self.delta_vert_positions):
+                        for base, delta in zip(base_vert_positions.values(), self.delta_vert_positions.values()):
                             pos = (delta[0], base[1], delta[2])
                             new_pos.append(pos)
                         self.setAllVertexPositions(delta_geometry, new_pos, worldSpace=worldSpace)
                             
                     elif axis == 'z':
                         new_pos = []
-                        for base, delta in zip(base_vert_positions, self.delta_vert_positions):
+                        for base, delta in zip(base_vert_positions.values(), self.delta_vert_positions.values()):
                             pos = (delta[0], delta[1], base[2])
                             new_pos.append(pos)
                         self.setAllVertexPositions(delta_geometry, new_pos, worldSpace=worldSpace)
@@ -193,7 +310,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                 
                 if len(axis) > 2:  
                     new_pos= []
-                    for delta, base in zip(self.delta_vert_positions, base_vert_positions):
+                    for delta, base in zip(self.delta_vert_positions.values(), base_vert_positions.values()):
                         vector =  om2.MVector(delta) - om2.MVector(base)
                         vector *= percentage
                         if positive:
@@ -206,7 +323,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                 else:
                     if axis == 'x':
                         new_pos= []
-                        for delta, base in zip(self.delta_vert_positions, base_vert_positions):
+                        for delta, base in zip(self.delta_vert_positions.values(), base_vert_positions.values()):
                             vector =  om2.MVector(delta) - om2.MVector(base)
                             vector *= percentage
                             if positive:
@@ -219,7 +336,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                         
                     if axis == 'y':
                         new_pos= []
-                        for delta, base in zip(self.delta_vert_positions, base_vert_positions):
+                        for delta, base in zip(self.delta_vert_positions.values(), base_vert_positions.values()):
                             vector =  om2.MVector(delta) - om2.MVector(base)
                             vector *= percentage
                             if positive:
@@ -232,7 +349,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                     
                     if axis == 'z':
                         new_pos= []
-                        for delta, base in zip(self.delta_vert_positions, base_vert_positions):
+                        for delta, base in zip(self.delta_vert_positions.values(), base_vert_positions.values()):
                             vector =  om2.MVector(delta) - om2.MVector(base)
                             vector *= percentage
                             if positive:
@@ -241,7 +358,10 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                                 deltaV = om2.MVector(delta) - vector
                             pos = [delta[0], delta[1], deltaV[2]]
                             new_pos.append(pos)
-
+                        self.setAllVertexPositions(delta_geometry, new_pos, worldSpace=worldSpace)
+        
+        
+        @gShowProgress(status="Reset Selection ...")
         def _resetDeltaSelection(base_geometry, percentage=1.0, axis ='xyz', positive=False, worldSpace=False):    
             """
             Reset the vertex position between a BASE mesh and a TARGET mesh based on vertex selection
@@ -266,17 +386,40 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
 
             vertsIter = om2.MItMeshVertex(dag)
 
-            newPosDelta = self.delta_vert_positions[:]
-            replacement = []
+            if mc.softSelect(q=1, sse=1):
+                softSelect = self.getSoftSelection()
+                softIndex = softSelect.keys()
+                indexVtxList = softIndex
+            else:
+                softIndex = []
+
+            newPosDelta = self.delta_vert_positions.values()[:]
+            replacement = {}
+            
+            _step = float(100) / vertsIter.count()
+            if _resetDeltaSelection.isInterrupted(): return
+            
             while not vertsIter.isDone():
                 actual_pos = vertsIter.position(om2.MSpace.kObject)
                 vrtxIndex = vertsIter.index()
-                if vrtxIndex in indexVtxList: 
-                    replacement.append([actual_pos[0], actual_pos[1], actual_pos[2]])
-                vertsIter.next()
                 
+                if vrtxIndex in softIndex: 
+                    vector =  om2.MVector(self.delta_vert_positions[vrtxIndex]) - om2.MVector(base_vert_positions[vrtxIndex])
+                    vector*= softSelect[vrtxIndex]
+                    deltaV = list(om2.MVector(self.delta_vert_positions[vrtxIndex]) - vector)
+                    replacement[vrtxIndex] = deltaV
+                    
+                    _resetDeltaSelection.step(_step)
+                
+                elif vrtxIndex in indexVtxList: 
+                    replacement[vrtxIndex] = actual_pos
+                    
+                    _resetDeltaSelection.step(_step)
+                
+                vertsIter.next()
+            
             # replace index with replacement value
-            for (index, replace) in zip(indexVtxList, replacement):
+            for (index, replace) in zip(replacement.keys(), replacement.values()):
                 newPosDelta[index] = replace
 
             if percentage == 0.0:
@@ -288,21 +431,21 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                 else:
                     if axis == 'x':
                         new_pos = []
-                        for b, delta in zip(self.delta_vert_positions, newPosDelta):
+                        for b, delta in zip(self.delta_vert_positions.values(), newPosDelta):
                             pos = (delta[0], b[1], b[2])
                             new_pos.append(pos)
                         self.setAllVertexPositions(delta_geometry, new_pos, worldSpace=worldSpace)
                         
                     elif axis == 'y':
                         new_pos = []
-                        for target, delta in zip(self.delta_vert_positions, newPosDelta):
+                        for target, delta in zip(self.delta_vert_positions.values(), newPosDelta):
                             pos = (target[0], delta[1], target[2])
                             new_pos.append(pos)
                         self.setAllVertexPositions(delta_geometry, new_pos, worldSpace=worldSpace)
                             
                     elif axis == 'z':
                         new_pos = []
-                        for target, delta in zip(self.delta_vert_positions, newPosDelta):
+                        for target, delta in zip(self.delta_vert_positions.values(), newPosDelta):
                             pos = (target[0], target[1], delta[2])
                             new_pos.append(pos)
                         self.setAllVertexPositions(delta_geometry, new_pos, worldSpace=worldSpace)
@@ -310,7 +453,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                 percentage = max(min(percentage, 1.0), 0.0)
                 if len(axis) > 2:
                     new_pos= []
-                    for delta, base in zip(self.delta_vert_positions, newPosDelta):
+                    for delta, base in zip(self.delta_vert_positions.values(), newPosDelta):
                         vector =  om2.MVector(delta) - om2.MVector(base)
                         vector *= percentage
                         if positive:
@@ -323,7 +466,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                     if axis == 'x':
                         new_pos = []
                         deltaV_pos = []
-                        for delta, base in zip(self.delta_vert_positions, newPosDelta):
+                        for delta, base in zip(self.delta_vert_positions.values(), newPosDelta):
                             vector =  om2.MVector(delta) - om2.MVector(base)
                             vector *= percentage
                             if positive:
@@ -332,7 +475,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                                 deltaV = om2.MVector(delta) - vector
                             deltaV_pos.append(deltaV)
                             
-                        for target, delta  in zip(self.delta_vert_positions, deltaV_pos):
+                        for target, delta  in zip(self.delta_vert_positions.values(), deltaV_pos):
                             pos = (delta[0], target[1], target[2])
                             new_pos.append(pos)
                         self.setAllVertexPositions(delta_geometry, new_pos, worldSpace=worldSpace)
@@ -340,7 +483,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                     if axis == 'y':
                         new_pos = []
                         deltaV_pos = []
-                        for delta, base in zip(self.delta_vert_positions, newPosDelta):
+                        for delta, base in zip(self.delta_vert_positions.values(), newPosDelta):
                             vector =  om2.MVector(delta) - om2.MVector(base)
                             vector *= percentage
                             if positive:
@@ -349,7 +492,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                                 deltaV = om2.MVector(delta) - vector
                             deltaV_pos.append(deltaV)
                             
-                        for target, delta  in zip(self.delta_vert_positions, deltaV_pos):
+                        for target, delta  in zip(self.delta_vert_positions.values(), deltaV_pos):
                             pos = (target[0], delta[1], target[2])
                             new_pos.append(pos)
                         self.setAllVertexPositions(delta_geometry, new_pos, worldSpace=worldSpace)
@@ -357,7 +500,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                     if axis == 'z':
                         new_pos = []
                         deltaV_pos = []
-                        for delta, base in zip(self.delta_vert_positions, newPosDelta):
+                        for delta, base in zip(self.delta_vert_positions.values(), newPosDelta):
                             vector =  om2.MVector(delta) - om2.MVector(base)
                             vector *= percentage
                             if positive:
@@ -366,7 +509,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                                 deltaV = om2.MVector(delta) - vector
                             deltaV_pos.append(deltaV)
                             
-                        for target, delta  in zip(self.delta_vert_positions, deltaV_pos):
+                        for target, delta  in zip(self.delta_vert_positions.values(), deltaV_pos):
                             pos = (target[0], target[1], delta[2])
                             new_pos.append(pos)
                         self.setAllVertexPositions(delta_geometry, new_pos, worldSpace=worldSpace)
@@ -403,7 +546,15 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
             resetDelta(self.baseGeo, str(self.targetGeo), percentage=self.percentage, axis =self.axis, positive=self.positive, worldSpace=self.ws) 
         else:
             sel_type = type(pm.selected()[0])
-            if str(sel_type) == "<class 'pymel.core.general.MeshVertex'>":
+            if str(sel_type) == "<class 'pymel.core.general.MeshFace'>":
+                maya.mel.eval('PolySelectConvert 3')
+                resetDeltaSelection(self.baseGeo, percentage=self.percentage, axis=self.axis, positive=self.positive, worldSpace=self.ws)  
+
+            elif str(sel_type) == "<class 'pymel.core.general.MeshEdge'>":
+                maya.mel.eval('PolySelectConvert 3')
+                resetDeltaSelection(self.baseGeo, percentage=self.percentage, axis=self.axis, positive=self.positive, worldSpace=self.ws)  
+                
+            elif str(sel_type) == "<class 'pymel.core.general.MeshVertex'>":
                 resetDeltaSelection(self.baseGeo, percentage=self.percentage, axis=self.axis, positive=self.positive, worldSpace=self.ws)  
             else:
                 resetDelta(self.baseGeo, self.targetGeo, percentage=self.percentage, axis=self.axis, positive=self.positive, worldSpace=self.ws)
