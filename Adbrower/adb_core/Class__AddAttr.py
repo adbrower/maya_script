@@ -7,6 +7,7 @@
 # -------------------------------------------------------------------
 
 import sys
+from collections import namedtuple
 
 import pymel.core as pm
 import maya.cmds as mc
@@ -461,58 +462,91 @@ class NodeAttr(object):
 
     @staticmethod
     @undo
-    def copyAttr(targets):
+    def copyAttr(source, targets, all=True, forceConnection=False):
         """
         Select mesh and the attribute(s) to copy
         Needs to put the targets into a list
         """
         _type = type(targets)
+        source = pm.PyNode(source)
 
         if _type == str:
             targets = [targets]
         elif _type == list:
             pass
 
-        def copyAttrLoop(attribute, targets):
-            sources = pm.selected()[0]
-            source_attr = sources.name() + '.' + attribute
+        def copyAttrLoop(attribute, target):
+            source_attr = pm.PyNode(source).name() + '.' + attribute
             attr = attribute
 
-            _at = pm.addAttr(source_attr, q=True, at=True)
-            _ln = pm.addAttr(source_attr, q=True, ln=True)
-            _min = pm.addAttr(source_attr, q=True, min=True)
-            _max = pm.addAttr(source_attr, q=True, max=True)
-            _dv = pm.addAttr(source_attr, q=True, dv=True)
-            enList = []
+            _at = str(mc.addAttr(source_attr, q=True, at=True)) or None
+            _ln = mc.addAttr(source_attr, q=True, ln=True) or None
+            _min = mc.addAttr(source_attr, q=True, min=True) or None
+            _max = mc.addAttr(source_attr, q=True, max=True) or None
+            _dv = mc.addAttr(source_attr, q=True, dv=True) or 0
+            _parent = mc.addAttr(source_attr, q=True, p=True) or None
 
-            try:
-                _en = pm.attributeQuery(
-                    str(attr), node=sources.name(), listEnum=True)[0]
-                enList.append(_en)
-            except:
+            if pm.objExists('{}.{}'.format(target, attribute)):
                 pass
-
-            if _at == 'enum':
-                pm.addAttr(target, ln=str(_ln), at='enum',
-                           en=str(enList[0]), keyable=True)
-
             else:
-                pm.addAttr(target, ln=str(_ln), at=str(
-                    _at),  dv=_dv, keyable=True)
+                if _at == 'enum':
+                    enList = []
+                    _en = pm.attributeQuery(
+                        str(attr), node=source.name(), listEnum=True)[0]
+                    enList.append(_en)
 
-            target_attr = target + '.' + attr
-            if _min is not None:
-                pm.addAttr(target_attr, e=True, min=_min)
-            elif _max is not None:
-                pm.addAttr(target_attr, e=True, max=_max)
-            else:
-                pass
+                    pm.addAttr(target, ln=str(_ln), at='enum',
+                            en=str(enList[0]), keyable=True)
 
-        all_attr = [x for x in pm.channelBox(
-            "mainChannelBox", q=1, selectedMainAttributes=1)]
+                elif _parent != _ln:
+                    siblings = pm.attributeQuery(str(attr), node=source.name(), ls=True)
+                    parent = pm.attributeQuery(str(attr), node=source.name(), lp=True)[0]
+                    pm.addAttr(target, ln=parent, at='compound', nc= 1 + len(siblings), keyable=True)
+                    pm.addAttr(target, ln=str(_ln), at=str(_at),  dv=_dv, keyable=True, parent=parent)
+
+                    for sib in siblings:
+                        defaultValue = mc.addAttr('{}.{}'.format(source.name(), sib), q=True, dv=True) or 0
+                        pm.addAttr(target, ln=str(sib), at=str(_at),  dv=defaultValue, keyable=True, parent=parent)
+                else:
+                    pm.addAttr(target, ln=str(_ln), at=str(
+                        _at),  dv=_dv, keyable=True)
+
+                target_attr = target + '.' + attr
+                if _min is not None:
+                    pm.addAttr(target_attr, e=True, min=_min)
+                elif _max is not None:
+                    pm.addAttr(target_attr, e=True, max=_max)
+                else:
+                    pass
+        
+        if all:
+            temp = pm.listAttr(source, k=1, v=1, ud=1)
+
+            siblingsToRemove = []
+            parentToRemove = []
+            for a in temp:
+                siblings = pm.attributeQuery(a, node=source, ls=1)
+                if siblings:
+                    siblingsToRemove.extend(siblings)
+                    parent = pm.attributeQuery(a, node=source, lp=1)
+                    parentToRemove.extend(parent)
+
+            def Diff(li1, li2): 
+                li_dif = [i for i in li1 + li2 if i not in li1 or i not in li2] 
+                return li_dif 
+
+            temp2 = (Diff(temp, siblingsToRemove[:-1])) 
+            all_attr = (Diff(temp2, parentToRemove)) 
+        else:
+            all_attr = [x for x in pm.channelBox("mainChannelBox", q=1, selectedMainAttributes=1)]
+
         for att in all_attr:
             for target in targets:
                 copyAttrLoop(att, target)
+
+        if forceConnection:
+            for att in pm.listAttr(source, ud=1):
+                pm.connectAttr('{}.{}'.format(target, att), '{}.{}'.format(source, att))
 
     @staticmethod
     @undo
@@ -580,13 +614,16 @@ class NodeAttr(object):
 
 
 # node = NodeAttr('pCube1')
+# node.copyAttr('pCube1', 'pSphere1', all=1)
 # node.addAttr("UV", 'compound', nc=2)
-# node.addAttr("zipper", 0, min = 0, max = 100, parent = "UV")
-# node.addAttr("zipper", 0, min = 0, max = 100)
+# node.addAttr("U_pos", 0, min = 0, max = 100, parent = "UV")
 # node.addAttr("V_pos", 0.5, min = 0, max = 1, parent = "UV")
-
-# node.addAttr('adb', 50)
+# node.addAttr("zipper", 0, min = 0, max = 100)
 # node.addAttr('BowTie_Vis', 'enum',  eName = "off:on:")
+# node.addAttr('adb', 50)
+# node.addAttr("COUCOU", 'message')
+
+
 
 # -----------------------------------
 #   EXEMPLE  EXTERIOR CLASS BUILD
