@@ -169,6 +169,7 @@ class Blendshape(object):
                 return index
         return None
 
+
     def add_target(self, shape_to_add, value=1):
         """
         Add a shape as a target
@@ -186,11 +187,14 @@ class Blendshape(object):
             pm.setAttr('{}.weight[{}]'.format(self.bs_node, index + numb_target), value)
         sys.stdout.write('// Result: targets added // \n ')
 
+
     def flip_target(self, target_index, sa='X', ss=1):
         pm.blendShape(self.bs_node, e=1, ft=[0, target_index], sa=sa, ss=ss)
 
+
     def rebuild_target(self, target_index):
         return pm.sculptTarget(self.bs_node, e=1, r=1, t=target_index) or []
+
 
     def duplicate_target(self, target_index, name=None):
         new_index = mel.eval("blendShapeDuplicateTarget {} {};".format(self.bs_node, target_index))
@@ -199,10 +203,12 @@ class Blendshape(object):
         pm.aliasAttr(name, '{}.w[{}]'.format(self.bs_node, new_index))
         return new_index
 
+
     def delete_target(self, shape_to_delete):
         for shape in shape_to_delete:
             target_index = self.get_target_index_by_alias(shape)
             mel.eval("blendShapeDeleteTargetGroup {} {};".format(self.bs_node, target_index))
+
 
     def mirror_left_to_right_targets(self, sa='X', ss=1):
         [self.delete_target([shape]) for shape in sorted(self.right_targets.values())]
@@ -213,6 +219,7 @@ class Blendshape(object):
 
     def get_weight_connection(self, index):
         return pm.listConnections('{}.w[{}]'.format(self.bs_node, index), s=1)
+
 
     @property
     def combo_targets(self):
@@ -236,54 +243,70 @@ class Blendshape(object):
                                    '{}.{}'.format(self.bs_node, self.targets[target_index]), f=1)
 
 
-    def getWeightMap(self, shapeIndex = 0):
+    def getWeightMap(self, targetIndex = 0):
         """ Get Values of each vertex of a specific map
         
         Keyword Arguments:
-            shapeIndex {int} -- Index of the shape we want to query  (default: {0})
+            targetIndex {int} -- Index of the shape we want to query  (default: {0})
         
         Returns:
-            List -- all weights values per vertex
+            List -- all weights values per vertex for the Base Weights Map and the Paint Target Weights
         """
+        
         mObj = getMObject(str(self.bs_node))
         MeshDag = getMDagPath(str(self.mesh))
         blsDNode = om2.MFnDependencyNode(mObj)
         weightsPlug  = blsDNode.findPlug('inputTarget', True)
-        paintTargetIndexPlug = blsDNode.findPlug('paintTargetIndex', True)
-        
-        paintTargetIndexPlug.setInt(shapeIndex)
-        
-        basePlugs = []
+        numVerts = om2.MItMeshVertex(MeshDag).count()
+
         baseWeigthtsList = []
-
-        targetPlugs = []
         targetWeightList = []
-
-        weightPlugs = om2.MPlugArray()
-        for i in xrange(weightsPlug.numElements()-1):
+        
+        if weightsPlug.numElements() > 1:
+            _range = weightsPlug.numElements() - 1
+        else:
+            _range = 1
+        
+        for i in xrange(_range):
             weightlistIdxPlug = weightsPlug.elementByPhysicalIndex(i) 
+            
+            ## GET BASE WEIGHTS ATTRIBUTE 
             baseWeights = weightlistIdxPlug.child(1)  
             
-            for j in xrange(baseWeights.numElements()):
-                baseWeightsPlugs = baseWeights.elementByLogicalIndex(j) 
+            if baseWeights.numElements() > 2:
+                for j in xrange(baseWeights.numElements()):
+                    baseWeightsPlugs = baseWeights.elementByLogicalIndex(j) 
+                    baseWeightsValue =  baseWeightsPlugs.asFloat()
+                    baseWeigthtsList.append(baseWeightsValue)
+            else:
+                baseWeightsPlugs = baseWeights.elementByLogicalIndex(0) 
                 baseWeightsValue =  baseWeightsPlugs.asFloat()
-                baseWeigthtsList.append(baseWeightsValue)
-                basePlugs.append(baseWeightsPlugs)
-                
-            targetWeights = weightlistIdxPlug.child(3)    
+                baseWeigthtsList += numVerts * [baseWeightsValue]
+           
+            ## GET PAINT TARGET WEIGHT ATTRIBUTE 
+            targetWeights = weightlistIdxPlug.child(3)  
+            paintTargetIndexPlug = weightlistIdxPlug.child(4)  
             
-            for j in xrange(targetWeights.numElements()):
-                targetWeightsPlugs = targetWeights.elementByLogicalIndex(j) 
+            paintTargetIndexPlug.setInt(targetIndex)
+            
+            if targetWeights.numElements() > 2:
+                for j in xrange(targetWeights.numElements()):
+                    targetWeightsPlugs = targetWeights.elementByLogicalIndex(j) 
+                    targetWeightsValue =  targetWeightsPlugs.asFloat()
+                    targetWeightList.append(targetWeightsValue)
+            else:
+                targetWeightsPlugs = targetWeights.elementByLogicalIndex(0) 
                 targetWeightsValue =  targetWeightsPlugs.asFloat()
-                targetWeightList.append(targetWeightsValue)
-                targetPlugs.append(targetWeightsPlugs)
+                targetWeightList += numVerts * [targetWeightsValue]
                 
         return baseWeigthtsList, targetWeightList 
 
     
-    def getWeightPlug(self):
+    def getWeightPlug(self, targetIndex=0):
         """ Get the MPlugs of each vertex to be able to sets weights 
-        
+        Keyword Arguments:
+            targetIndex {int} -- Index of the shape we want to query  (default: {0})
+            
         Returns:
             List -- MPlugs
         """
@@ -291,24 +314,43 @@ class Blendshape(object):
         MeshDag = getMDagPath(str(self.mesh))
         blsDNode = om2.MFnDependencyNode(mObj)
         weightsPlug  = blsDNode.findPlug('inputTarget', True)
-        
+        numVerts = om2.MItMeshVertex(MeshDag).count()
+
         basePlugs = []
         targetPlugs = []
-
-        weightPlugs = om2.MPlugArray()
-        for i in xrange(weightsPlug.numElements()-1):
+        
+        if weightsPlug.numElements() > 1:
+            _range = weightsPlug.numElements() - 1
+        else:
+            _range = 1
+        
+        for i in xrange(_range):
             weightlistIdxPlug = weightsPlug.elementByPhysicalIndex(i) 
+            
+            ## GET BASE WEIGHTS ATTRIBUTE 
             baseWeights = weightlistIdxPlug.child(1)  
             
-            for j in xrange(baseWeights.numElements()):
-                baseWeightsPlugs = baseWeights.elementByLogicalIndex(j) 
-                basePlugs.append(baseWeightsPlugs)
-                
-            targetWeights = weightlistIdxPlug.child(3)    
+            if baseWeights.numElements() > 2:
+                for j in xrange(baseWeights.numElements()):
+                    baseWeightsPlugs = baseWeights.elementByLogicalIndex(j) 
+                    basePlugs.append(baseWeightsValue)
+            else:
+                baseWeightsPlugs = baseWeights.elementByLogicalIndex(0) 
+                basePlugs += numVerts * [baseWeightsPlugs]
+           
+            ## GET PAINT TARGET WEIGHT ATTRIBUTE 
+            targetWeights = weightlistIdxPlug.child(3)  
+            paintTargetIndexPlug = weightlistIdxPlug.child(4)  
             
-            for j in xrange(targetWeights.numElements()):
-                targetWeightsPlugs = targetWeights.elementByLogicalIndex(j) 
-                targetPlugs.append(targetWeightsPlugs)
+            paintTargetIndexPlug.setInt(targetIndex)
+            
+            if targetWeights.numElements() > 2:
+                for j in xrange(targetWeights.numElements()):
+                    targetWeightsPlugs = targetWeights.elementByLogicalIndex(j) 
+                    targetPlugs.append(targetWeightsPlugs)
+            else:
+                targetWeightsPlugs = targetWeights.elementByLogicalIndex(0) 
+                targetPlugs += numVerts * [targetWeightsPlugs]
                 
         return basePlugs, targetPlugs
 
@@ -493,8 +535,7 @@ def mirror_left_to_right_poses(bs_node):
     bs = Blendshape(bs_node)
     combo_data = bs.combo_targets
     bs.mirror_left_to_right_targets()
-    import pprint
-    pprint.pprint(bs.targets)
+
     pose_interpolators = [PI(mc.listRelatives(pose_interpolator, p=1)[0]) for pose_interpolator in
                           mc.ls(typ='poseInterpolator')]
     [mc.delete(pose_interpolator.node) for pose_interpolator in pose_interpolators if pose_interpolator.side == 'R']
