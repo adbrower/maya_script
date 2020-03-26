@@ -14,9 +14,21 @@ import maya.cmds as mc
 import maya.mel as mel
 import pymel.core as pm
 from adbrower import flatList, undo
+import backUp.Functions__topology as adbTopo
 
 from maya.api import OpenMaya as om2
 import maya.OpenMayaAnim as oma
+
+
+def loadPlugin(plugin):
+    if not mc.pluginInfo(plugin, query=True, loaded=True):
+        try:
+            mc.loadPlugin(plugin)
+        except RuntimeError:
+            pm.warning('could not load plugin {}'.format(plugin))
+
+loadPlugin('mirrorBlsWeights')
+
 
 def getMDagPath(node):
     """
@@ -34,6 +46,7 @@ def getMObject(node):
     selList = om2.MSelectionList()
     selList.add(node)
     return selList.getDependNode(0)
+
 
 def findBlendShape(_tranformToCheck):
     """
@@ -177,7 +190,7 @@ class Blendshape(object):
         @target : String. Mesh getting the blendshape
         @shape_to_add : List. Shape to add to the target
         """
-        numb_target = len(self.targets)
+        numb_target = len(self.targets) + 1
         if numb_target == 0:
             numb_target = 1
 
@@ -230,6 +243,7 @@ class Blendshape(object):
                 if pm.objectType(connections[0]) == 'combinationShape':
                     combo_shapes[self.targets[target_index]] = pm.listConnections(connections[0], s=1, d=0, p=1)
         return combo_shapes
+
 
     def set_combo_targets(self, combo_data):
         for combo_target_alias in combo_data.keys():
@@ -330,7 +344,6 @@ class Blendshape(object):
         paintTargetWeightsPlug = sl1.getPlug(0)
     
         mc.getAttr('{0}.inputTarget[0].baseWeights[0:{1}]'.format(self.bs_node, numVerts))
-
         if paintTargetWeightsPlug.numElements() == 0:
             self.floodBls(self.mesh)
 
@@ -402,53 +415,72 @@ class Blendshape(object):
         if paintTargetWeightsPlug.numElements() == 0:
             self.floodBls(self.mesh)
 
-        oldBaseWeigthtsList = []
-        oldTargetWeightList = []
-        
-        targetWeightPlugs = om2.MPlugArray()
-        baseWeightPlugs = om2.MPlugArray()
-        ## GET BASE WEIGHTS ATTRIBUTE 
-        baseWeights = weightlistIdxPlug.child(1)  
-        
-        if baseWeights.numElements() > 2:
-            for j in xrange(baseWeights.numElements()):
-                baseWeightsPlugs = baseWeights.elementByLogicalIndex(j) 
-                baseWeightPlugs.append(baseWeightsPlugs)
-                baseWeightsValue =  baseWeightsPlugs.asFloat()
-                oldBaseWeigthtsList.append(baseWeightsValue)
-        else:
-            baseWeightsPlugs = baseWeights.elementByLogicalIndex(0) 
-            baseWeightPlugs.append(baseWeightsPlugs)
-            baseWeightsValue =  baseWeightsPlugs.asFloat()
-            oldBaseWeigthtsList += numVerts * [baseWeightsValue]
-        
-        ## GET PAINT TARGET WEIGHT ATTRIBUTE 
-        targetWeights = weightlistIdxPlug.child(3)  
-        paintTargetIndexPlug = weightlistIdxPlug.child(4)  
-        
-        paintTargetIndexPlug.setInt(targetIndex)
-        
-        if targetWeights.numElements() > 2:
-            for j in xrange(targetWeights.numElements()):
-                targetWeightsPlugs = targetWeights.elementByLogicalIndex(j) 
-                targetWeightPlugs.append(targetWeightsPlugs)
-                targetWeightsValue =  targetWeightsPlugs.asFloat()
-                oldTargetWeightList.append(targetWeightsValue)
-        else:
-            targetWeightsPlugs = targetWeights.elementByLogicalIndex(0) 
-            targetWeightPlugs.append(targetWeightsPlugs)
-            targetWeightsValue =  targetWeightsPlugs.asFloat()
-            oldTargetWeightList += numVerts * [targetWeightsValue]
-
-        inverseValuesTarget = om2.MDoubleArray([(lambda x: 1-x)(x) for x in oldTargetWeightList])                
-        inverseValuesBase = om2.MDoubleArray([(lambda x: 1-x)(x) for x in oldBaseWeigthtsList])   
-
         if baseWeight:
-            for plug, value in zip(baseWeightPlugs, inverseValuesBase):
-                plug.setFloat(value)
+            ## GET BASE WEIGHTS ATTRIBUTE 
+            baseWeights = weightlistIdxPlug.child(1)  
+
+            for j in xrange(numVerts):
+                baseWeightsPlugs = baseWeights.elementByLogicalIndex(j) 
+                baseWeightsValue =  baseWeightsPlugs.asFloat()
+                baseWeightsPlugs.setFloat(1-baseWeightsValue)
         else:
-            for plug, value in zip(targetWeightPlugs, inverseValuesTarget):
-                plug.setFloat(value)
+            ## GET PAINT TARGET WEIGHT ATTRIBUTE 
+            targetWeights = weightlistIdxPlug.child(3)  
+
+            for j in xrange(numVerts):
+                targetWeightsPlugs = targetWeights.elementByLogicalIndex(j) 
+                targetWeightsValue =  targetWeightsPlugs.asFloat()
+                targetWeightsPlugs.setFloat(1-targetWeightsValue)
+
+
+
+    def mirrorMap(self, center_edge, mirror_src):
+        """Mirror Weight Map
+        
+        Arguments:
+            center_edge {String} -- Edge from with we separate Left from Right
+            mirror_src {String} -- LEFT or RIGHT
+
+        """
+        mObj = getMObject(str(self.bs_node))
+        MeshDag = getMDagPath(str(self.mesh))
+        numVerts = om2.MItMeshVertex(MeshDag).count()
+        vert_iter = om2.MItMeshVertex(MeshDag)
+    
+        targetWeight = {}
+
+        while not vert_iter.isDone():
+            vrtxIndex = vert_iter.index()
+            sl1 = om2.MSelectionList()
+            sl1.add("{}.inputTarget[0].paintTargetWeights[{}]".format(self.bs_node, vrtxIndex))
+            paintTargetWeightsPlug = sl1.getPlug(0)
+
+            targetWeightsValue =  paintTargetWeightsPlug.asFloat()
+            targetWeight[vrtxIndex] = targetWeightsValue
+            vert_iter.next()
+
+        geometry, edge_index = center_edge.split('.')
+        edge_index = int(edge_index.split('e[')[1].split(']')[0])
+        if edge_index > (mc.polyEvaluate(geometry, e=True) - 1):
+            raise RuntimeError("Edge '{}' is not valid.".format(center_edge))
+        
+        lf_verts, cn_verts, rt_verts = adbTopo.getSymmetry(center_edge)
+
+        mirror_pairs, cn_verts = adbTopo._getSelectionPairs(geometry, lf_verts, mirror_src, 
+                                            lf_verts, cn_verts, rt_verts)
+
+        for pair in mirror_pairs:
+            sl2 = om2.MSelectionList()
+            sl2.add("{}.inputTarget[0].paintTargetWeights[{}]".format(self.bs_node, pair[0]))
+            plug = sl2.getPlug(0)     
+            plug.setFloat(targetWeight[pair[1]])   
+
+        for pair in cn_verts:
+            sl3 = om2.MSelectionList()
+            sl3.add("{}.inputTarget[0].paintTargetWeights[{}]".format(self.bs_node, pair[0]))
+            plug = sl3.getPlug(0)     
+            plug.setFloat(targetWeight[pair[1]])   
+
 
 
     @staticmethod
