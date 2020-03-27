@@ -168,6 +168,12 @@ class Blendshape(object):
         return left_targets
 
 
+    @property
+    def paintTargetIndex(self):
+        paintTargetIndex = mc.getAttr('{}.inputTarget[0].paintTargetIndex'.format(self.bs_node))
+        return paintTargetIndex
+
+
     def init_targets(self):
         if pm.objExists(self.bs_node):
             if pm.PyNode(self.bs_node).getTarget():
@@ -257,7 +263,7 @@ class Blendshape(object):
                                    '{}.{}'.format(self.bs_node, self.targets[target_index]), f=1)
 
 
-    def getWeightMap(self, targetIndex = 0):
+    def getWeightMap(self, targetIndex = 'Auto'):
         """ Get Values of each vertex of a specific map
         
         Keyword Arguments:
@@ -286,6 +292,12 @@ class Blendshape(object):
         if paintTargetWeightsPlug.numElements() == 0:
             self.floodBls(self.mesh)
 
+        if targetIndex != 'Auto':
+            paintTargetIndexPlug = weightlistIdxPlug.child(4)          
+            paintTargetIndexPlug.setInt(targetIndex)
+        else:
+            pass
+
         baseWeigthtsList = []
         targetWeightList = []
             
@@ -304,9 +316,6 @@ class Blendshape(object):
         
         ## GET PAINT TARGET WEIGHT ATTRIBUTE 
         targetWeights = weightlistIdxPlug.child(3)  
-        paintTargetIndexPlug = weightlistIdxPlug.child(4)  
-        
-        paintTargetIndexPlug.setInt(targetIndex)
         
         if targetWeights.numElements() > 2:
             for j in xrange(targetWeights.numElements()):
@@ -321,7 +330,7 @@ class Blendshape(object):
         return baseWeigthtsList, targetWeightList 
 
     
-    def getWeightPlug(self, targetIndex=0):
+    def getWeightPlug(self, targetIndex='Auto'):
         """ Get the MPlugs of each vertex to be able to sets weights 
         Keyword Arguments:
             targetIndex {int} -- Index of the shape we want to query  (default: {0})
@@ -347,6 +356,12 @@ class Blendshape(object):
         if paintTargetWeightsPlug.numElements() == 0:
             self.floodBls(self.mesh)
 
+        if targetIndex != 'Auto':
+            paintTargetIndexPlug = weightlistIdxPlug.child(4)          
+            paintTargetIndexPlug.setInt(targetIndex)
+        else:
+            pass
+
         basePlugs = []
         targetPlugs = []   
              
@@ -363,9 +378,6 @@ class Blendshape(object):
         
         ## GET PAINT TARGET WEIGHT ATTRIBUTE 
         targetWeights = weightlistIdxPlug.child(3)  
-        paintTargetIndexPlug = weightlistIdxPlug.child(4)  
-        
-        paintTargetIndexPlug.setInt(targetIndex)
         
         if targetWeights.numElements() > 2:
             for j in xrange(targetWeights.numElements()):
@@ -389,12 +401,11 @@ class Blendshape(object):
             plug.setFloat(value)
 
 
-    def invertWeight(self, targetIndex=0, baseWeight=False):
+    def invertWeight(self, baseWeight=False):
         """Invert current Weight value of each vertex
         
         Keyword Arguments:
-             targetIndex {int} -- Index of the shape we want to query  (default: {0})
-             baseWeight {Bool} -- To invert the base layer  (default: False)
+            baseWeight {Bool} -- To invert the base layer  (default: False)
         """
         mObj = getMObject(str(self.bs_node))
         MeshDag = getMDagPath(str(self.mesh))
@@ -433,8 +444,7 @@ class Blendshape(object):
                 targetWeightsPlugs.setFloat(1-targetWeightsValue)
 
 
-
-    def mirrorMap(self, center_edge, mirror_src):
+    def mirrorMap(self, center_edge, mirror_src='RIGHT'):
         """Mirror Weight Map
         
         Arguments:
@@ -442,45 +452,7 @@ class Blendshape(object):
             mirror_src {String} -- LEFT or RIGHT
 
         """
-        mObj = getMObject(str(self.bs_node))
-        MeshDag = getMDagPath(str(self.mesh))
-        numVerts = om2.MItMeshVertex(MeshDag).count()
-        vert_iter = om2.MItMeshVertex(MeshDag)
-    
-        targetWeight = {}
-
-        while not vert_iter.isDone():
-            vrtxIndex = vert_iter.index()
-            sl1 = om2.MSelectionList()
-            sl1.add("{}.inputTarget[0].paintTargetWeights[{}]".format(self.bs_node, vrtxIndex))
-            paintTargetWeightsPlug = sl1.getPlug(0)
-
-            targetWeightsValue =  paintTargetWeightsPlug.asFloat()
-            targetWeight[vrtxIndex] = targetWeightsValue
-            vert_iter.next()
-
-        geometry, edge_index = center_edge.split('.')
-        edge_index = int(edge_index.split('e[')[1].split(']')[0])
-        if edge_index > (mc.polyEvaluate(geometry, e=True) - 1):
-            raise RuntimeError("Edge '{}' is not valid.".format(center_edge))
-        
-        lf_verts, cn_verts, rt_verts = adbTopo.getSymmetry(center_edge)
-
-        mirror_pairs, cn_verts = adbTopo._getSelectionPairs(geometry, lf_verts, mirror_src, 
-                                            lf_verts, cn_verts, rt_verts)
-
-        for pair in mirror_pairs:
-            sl2 = om2.MSelectionList()
-            sl2.add("{}.inputTarget[0].paintTargetWeights[{}]".format(self.bs_node, pair[0]))
-            plug = sl2.getPlug(0)     
-            plug.setFloat(targetWeight[pair[1]])   
-
-        for pair in cn_verts:
-            sl3 = om2.MSelectionList()
-            sl3.add("{}.inputTarget[0].paintTargetWeights[{}]".format(self.bs_node, pair[0]))
-            plug = sl3.getPlug(0)     
-            plug.setFloat(targetWeight[pair[1]])   
-
+        mc.mirrorBlsWeights(ce=center_edge, side=mirror_src)
 
 
     @staticmethod
