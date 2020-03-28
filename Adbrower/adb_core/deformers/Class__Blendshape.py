@@ -14,7 +14,7 @@ import maya.cmds as mc
 import maya.mel as mel
 import pymel.core as pm
 from adbrower import flatList, undo
-import backUp.Functions__topology as adbTopo
+
 
 from maya.api import OpenMaya as om2
 import maya.OpenMayaAnim as oma
