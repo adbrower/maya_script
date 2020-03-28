@@ -358,6 +358,14 @@ class Adbrower(object):
         def __init__():
             pass
 
+    @staticmethod
+    def loadPlugin(plugin):
+        if not mc.pluginInfo(plugin, query=True, loaded=True):
+            try:
+                mc.loadPlugin(plugin)
+            except RuntimeError:
+                pm.warning('could not load plugin {}'.format(plugin))
+
     @undo
     def List(self):
         """
@@ -493,115 +501,66 @@ class Adbrower(object):
         return result
 
     @undo
-    def connect_bls(self, source=pm.selected(), target=pm.selected(), origin="world"):
+    def connect_bls(self, source=[], target=[], origin="world"):
         """
         This function connects input|source to output|target with a blendShape.
         If the source and target are of type list, it will blendShape each of those lists together.
         Else it will take source and target and blendShape those together
 
-        @source : String. Shape to add to the target
-        @target : String. mesh getting the blendshape
+        @source : List. Shape to add to the target
+        @target : List. mesh getting the blendshape
         @origin : String. {local:world}
         """
-        # Define Variable type
-        # --------------------------
-        if isinstance(source, list) and isinstance(target, list):
-            # for pm.selected()[0], pm.selected()[1]
-            if len(source) == 2:
-                print('default')
-                source = pm.selected()[0]
-                target = pm.selected()[1]
-                try:
-                    blendShapeNode = (('{}_BLS'.format(source)).split(
-                        '|')[-1]).split(':')[1]  # remove namespace if one
-                except:
-                    blendShapeNode = ('{}_BLS'.format(source)).split('|')[-1]
 
-                if not mc.objExists(blendShapeNode):
-                    pm.blendShape(source, target, name=blendShapeNode,
-                                  o=origin, w=[(0, 1.0)], foc=False)
-                else:
-                    pm.warning('{} already Exist'.format(blendShapeNode))
-
-            # for a normal list
-            else:
-                print('list')
-                inputs = [x for x in source]
-                outputs = [x for x in target]
-                for _input, _output in zip(inputs, outputs):
-                    # print_input, _output
-                    try:
-                        blendShapeNode = (('{}_BLS'.format(_input)).split(
-                            '|')[-1]).split(':')[1]  # remove namespace if one
-                    except:
-                        blendShapeNode = (
-                            '{}_BLS'.format(_input)).split('|')[-1]
-
-                    if not mc.objExists(blendShapeNode):
-                        pm.blendShape(_input, _output, name=blendShapeNode, o=origin, w=[(0, 1.0)], foc=False)
-                    else:
-                        pm.warning('{} already Exist'.format(blendShapeNode))
-
-        # for strings
-        elif isinstance(source, str) and isinstance(target, str):
-            print('string')
+        inputs = [x for x in source]
+        outputs = [x for x in target]
+        for _input, _output in zip(inputs, outputs):
             try:
-                blendShapeNode = (('{}_BLS'.format(source)).split(
+                blendShapeNode = (('{}_BLS'.format(_input)).split(
                     '|')[-1]).split(':')[1]  # remove namespace if one
             except:
-                blendShapeNode = ('{}_BLS'.format(source)).split('|')[-1]
+                blendShapeNode = (
+                    '{}_BLS'.format(_input)).split('|')[-1]
+
             if not mc.objExists(blendShapeNode):
-                pm.blendShape(source, target, name=blendShapeNode,
-                              o=origin, w=[(0, 1.0)], foc=False)
-            else:
-                pm.warning('{} already Exist'.format(blendShapeNode))
-        else:
-            print('else')
-            try:
-                blendShapeNode = (('{}_BLS'.format(source)).split(
-                    '|')[-1]).split(':')[1]  # remove namespace if one
-            except:
-                blendShapeNode = ('{}_BLS'.format(source)).split('|')[-1]
-            if not mc.objExists(blendShapeNode):
-                pm.blendShape(source, target, name=blendShapeNode,
-                              o=origin, w=[(0, 1.0)], foc=False)
+                pm.blendShape(_input, _output, name=blendShapeNode, o=origin, w=[(0, 1.0)], foc=False)
             else:
                 pm.warning('{} already Exist'.format(blendShapeNode))
 
         sys.stdout.write('// Result: Connection Done // \n ')
 
-    def add_target(self, shape_to_add, target,  bls_node=None):
-        """
-        Add a shape as a target
 
-        @shape_to_add : (List) Shape to add to the target
-        @target :      (String) Mesh getting the blendshape
+    def add_target(self, shape_to_add, mesh,  bls_node=None, value=1):
         """
+        Add a shape as a mesh
 
+        @shape_to_add : (List) Shape to add to the mesh
+        @mesh :      (String) Mesh getting the blendshape
+        """
         if not bls_node:
-            bls_node = self.findBlendShape(target)[0]
+            bls_node = self.findBlendShape(mesh)[0]
         else:
             bls_node = bls_node
-        targets_dic = {i: pm.aliasAttr('{}.w[{}]'.format(
-            bls_node, i), q=1) for i in pm.getAttr('{}.w'.format(bls_node), multiIndices=1)}
-        numb_target = len(targets_dic.values())
 
+        if pm.objExists(bls_node):
+            if pm.PyNode(bls_node).getTarget():
+                all_targets = {i: pm.aliasAttr('{}.w[{}]'.format(bls_node, i), q=1) for i in
+                    pm.getAttr('{}.w'.format(bls_node), multiIndices=1)} 
+            else:
+                all_targets = []
+
+        numb_target = len(all_targets) + 1
         if numb_target == 0:
             numb_target = 1
 
         for index, shape in enumerate(shape_to_add):
-            pm.blendShape(bls_node, e=1, target=(
-                target, index + numb_target, shape, 1))
+            pm.blendShape(bls_node, e=1, target=(mesh, index + numb_target, shape, 1))
+            pm.setAttr('{}.weight[{}]'.format(bls_node, index + numb_target), value)
+
         sys.stdout.write('// Result: targets added // \n ')
 
-    def addBlsTarget(self):
-        """
-        Add a shape as a target from selection
-        Source function: add_target()
-        """
-        self.add_target(pm.selected()[0:-1], pm.selected()[-1],)
 
-    def blendshape(self, selection=pm.selected(), origin="world"):
+    def blendshape(self, mesh, targets = [], parallel=False, topology=True, foc=False, origin="world"):
         """
         Blendshape function that creates a blendshape and added other shape as targets
         Works on selection.
@@ -611,11 +570,19 @@ class Adbrower(object):
          -- target : mesh getting the blendshape
          -- origin : string. {local:world}
         """
-        source = selection[0:-1]
-        target = selection[-1]
+        try:
+            blendShapeNode = (('{}_BLS'.format(mesh)).split(
+                '|')[-1]).split(':')[1]  # remove namespace if one
+        except:
+            blendShapeNode = (
+                '{}_BLS'.format(mesh)).split('|')[-1]
 
-        self.connect_bls(source[0], target, origin=origin)
-        self.add_target(source[1:], target)
+        bs = pm.blendShape(mesh, parallel=parallel, tc=topology, foc=foc, n=blendShapeNode)[0]
+
+        if targets is not []:
+            for index, shape in enumerate(targets):
+                pm.blendShape(bs, e=1, target=(mesh, index + 1, shape, 1))
+                pm.setAttr('{}.weight[{}]'.format(bs, index + 1), 1)
 
     def getObjectDeformerList(self, _transform):
         """
