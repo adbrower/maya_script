@@ -73,12 +73,12 @@ class Blendshape(object):
     def __init__(self,
                  bs_node=None,
                  ):
-        
+
         self.bs_node = bs_node
 
         if isinstance(self.bs_node, list):
                 self.bs_node = pm.PyNode(self.bs_node[0])
-        
+
 
     def __repr__(self):
         return str('<{} \'{}\'>'.format(self.__class__.__name__, self.bs_node))
@@ -178,7 +178,7 @@ class Blendshape(object):
         if pm.objExists(self.bs_node):
             if pm.PyNode(self.bs_node).getTarget():
                 return {i: pm.aliasAttr('{}.w[{}]'.format(self.bs_node, i), q=1) for i in
-                        pm.getAttr('{}.w'.format(self.bs_node), multiIndices=1)} 
+                        pm.getAttr('{}.w'.format(self.bs_node), multiIndices=1)}
             else:
                 return None
 
@@ -265,14 +265,14 @@ class Blendshape(object):
 
     def getWeightMap(self, targetIndex = 'Auto'):
         """ Get Values of each vertex of a specific map
-        
+
         Keyword Arguments:
             targetIndex {int} -- Index of the shape we want to query  (default: {0})
-        
+
         Returns:
             List -- all weights values per vertex for the Base Weights Map and the Paint Target Weights
         """
-        
+
         mObj = getMObject(str(self.bs_node))
         MeshDag = getMDagPath(str(self.mesh))
         blsDNode = om2.MFnDependencyNode(mObj)
@@ -286,55 +286,55 @@ class Blendshape(object):
         sl1 = om2.MSelectionList()
         sl1.add("{}.inputTarget[0].paintTargetWeights".format(self.bs_node))
         paintTargetWeightsPlug = sl1.getPlug(0)
-    
+
         mc.getAttr('{0}.inputTarget[0].baseWeights[0:{1}]'.format(self.bs_node, numVerts))
 
         if paintTargetWeightsPlug.numElements() == 0:
             self.floodBls(self.mesh)
 
         if targetIndex != 'Auto':
-            paintTargetIndexPlug = weightlistIdxPlug.child(4)          
+            paintTargetIndexPlug = weightlistIdxPlug.child(4)
             paintTargetIndexPlug.setInt(targetIndex)
         else:
             pass
 
         baseWeigthtsList = []
         targetWeightList = []
-            
-        ## GET BASE WEIGHTS ATTRIBUTE 
-        baseWeights = weightlistIdxPlug.child(1)  
-        
+
+        ## GET BASE WEIGHTS ATTRIBUTE
+        baseWeights = weightlistIdxPlug.child(1)
+
         if baseWeights.numElements() > 2:
             for j in xrange(baseWeights.numElements()):
-                baseWeightsPlugs = baseWeights.elementByLogicalIndex(j) 
+                baseWeightsPlugs = baseWeights.elementByLogicalIndex(j)
                 baseWeightsValue =  baseWeightsPlugs.asFloat()
                 baseWeigthtsList.append(baseWeightsValue)
         else:
-            baseWeightsPlugs = baseWeights.elementByLogicalIndex(0) 
+            baseWeightsPlugs = baseWeights.elementByLogicalIndex(0)
             baseWeightsValue =  baseWeightsPlugs.asFloat()
             baseWeigthtsList += numVerts * [baseWeightsValue]
-        
-        ## GET PAINT TARGET WEIGHT ATTRIBUTE 
-        targetWeights = weightlistIdxPlug.child(3)  
-        
+
+        ## GET PAINT TARGET WEIGHT ATTRIBUTE
+        targetWeights = weightlistIdxPlug.child(3)
+
         if targetWeights.numElements() > 2:
             for j in xrange(targetWeights.numElements()):
-                targetWeightsPlugs = targetWeights.elementByLogicalIndex(j) 
+                targetWeightsPlugs = targetWeights.elementByLogicalIndex(j)
                 targetWeightsValue =  targetWeightsPlugs.asFloat()
                 targetWeightList.append(targetWeightsValue)
         else:
-            targetWeightsPlugs = targetWeights.elementByLogicalIndex(0) 
+            targetWeightsPlugs = targetWeights.elementByLogicalIndex(0)
             targetWeightsValue =  targetWeightsPlugs.asFloat()
             targetWeightList += numVerts * [targetWeightsValue]
-                
-        return baseWeigthtsList, targetWeightList 
 
-    
+        return baseWeigthtsList, targetWeightList
+
+
     def getWeightPlug(self, targetIndex='Auto'):
-        """ Get the MPlugs of each vertex to be able to sets weights 
+        """ Get the MPlugs of each vertex to be able to sets weights
         Keyword Arguments:
             targetIndex {int} -- Index of the shape we want to query  (default: {0})
-            
+
         Returns:
             List -- MPlugs
         """
@@ -351,48 +351,48 @@ class Blendshape(object):
         sl1 = om2.MSelectionList()
         sl1.add("{}.inputTarget[0].paintTargetWeights".format(self.bs_node))
         paintTargetWeightsPlug = sl1.getPlug(0)
-    
+
         mc.getAttr('{0}.inputTarget[0].baseWeights[0:{1}]'.format(self.bs_node, numVerts))
         if paintTargetWeightsPlug.numElements() == 0:
             self.floodBls(self.mesh)
 
         if targetIndex != 'Auto':
-            paintTargetIndexPlug = weightlistIdxPlug.child(4)          
+            paintTargetIndexPlug = weightlistIdxPlug.child(4)
             paintTargetIndexPlug.setInt(targetIndex)
         else:
             pass
 
         basePlugs = []
-        targetPlugs = []   
-             
-        ## GET BASE WEIGHTS ATTRIBUTE 
-        baseWeights = weightlistIdxPlug.child(1)  
-        
+        targetPlugs = []
+
+        ## GET BASE WEIGHTS ATTRIBUTE
+        baseWeights = weightlistIdxPlug.child(1)
+
         if baseWeights.numElements() > 2:
             for j in xrange(baseWeights.numElements()):
-                baseWeightsPlugs = baseWeights.elementByLogicalIndex(j) 
+                baseWeightsPlugs = baseWeights.elementByLogicalIndex(j)
                 basePlugs.append(baseWeightsPlugs)
         else:
-            baseWeightsPlugs = baseWeights.elementByLogicalIndex(0) 
+            baseWeightsPlugs = baseWeights.elementByLogicalIndex(0)
             basePlugs += numVerts * [baseWeightsPlugs]
-        
-        ## GET PAINT TARGET WEIGHT ATTRIBUTE 
-        targetWeights = weightlistIdxPlug.child(3)  
-        
+
+        ## GET PAINT TARGET WEIGHT ATTRIBUTE
+        targetWeights = weightlistIdxPlug.child(3)
+
         if targetWeights.numElements() > 2:
             for j in xrange(targetWeights.numElements()):
-                targetWeightsPlugs = targetWeights.elementByLogicalIndex(j) 
+                targetWeightsPlugs = targetWeights.elementByLogicalIndex(j)
                 targetPlugs.append(targetWeightsPlugs)
         else:
-            targetWeightsPlugs = targetWeights.elementByLogicalIndex(0) 
+            targetWeightsPlugs = targetWeights.elementByLogicalIndex(0)
             targetPlugs += numVerts * [targetWeightsPlugs]
-                
+
         return basePlugs, targetPlugs
 
 
     def setWeightMap(self, allPlugs, allWeights):
         """ Set new values to a map
-        
+
         Arguments:
             allPlugs {List} -- Mplugs
             allWeights {List} -- Weights Values
@@ -403,7 +403,7 @@ class Blendshape(object):
 
     def invertWeight(self, baseWeight=False):
         """Invert current Weight value of each vertex
-        
+
         Keyword Arguments:
             baseWeight {Bool} -- To invert the base layer  (default: False)
         """
@@ -420,33 +420,33 @@ class Blendshape(object):
         sl1 = om2.MSelectionList()
         sl1.add("{}.inputTarget[0].paintTargetWeights".format(self.bs_node))
         paintTargetWeightsPlug = sl1.getPlug(0)
-    
+
         mc.getAttr('{0}.inputTarget[0].baseWeights[0:{1}]'.format(self.bs_node, numVerts))
 
         if paintTargetWeightsPlug.numElements() == 0:
             self.floodBls(self.mesh)
 
         if baseWeight:
-            ## GET BASE WEIGHTS ATTRIBUTE 
-            baseWeights = weightlistIdxPlug.child(1)  
+            ## GET BASE WEIGHTS ATTRIBUTE
+            baseWeights = weightlistIdxPlug.child(1)
 
             for j in xrange(numVerts):
-                baseWeightsPlugs = baseWeights.elementByLogicalIndex(j) 
+                baseWeightsPlugs = baseWeights.elementByLogicalIndex(j)
                 baseWeightsValue =  baseWeightsPlugs.asFloat()
                 baseWeightsPlugs.setFloat(1-baseWeightsValue)
         else:
-            ## GET PAINT TARGET WEIGHT ATTRIBUTE 
-            targetWeights = weightlistIdxPlug.child(3)  
+            ## GET PAINT TARGET WEIGHT ATTRIBUTE
+            targetWeights = weightlistIdxPlug.child(3)
 
             for j in xrange(numVerts):
-                targetWeightsPlugs = targetWeights.elementByLogicalIndex(j) 
+                targetWeightsPlugs = targetWeights.elementByLogicalIndex(j)
                 targetWeightsValue =  targetWeightsPlugs.asFloat()
                 targetWeightsPlugs.setFloat(1-targetWeightsValue)
 
 
     def mirrorMap(self, center_edge, mirror_src='RIGHT'):
         """Mirror Weight Map
-        
+
         Arguments:
             center_edge {String} -- Edge from with we separate Left from Right
             mirror_src {String} -- LEFT or RIGHT
@@ -476,7 +476,7 @@ class Blendshape(object):
         pm.artAttrCtx(pm.currentCtx(), e=1, clear=1)
         # # set the tools back to the way you found them
         pm.artAttrCtx(pm.currentCtx(), e=1, selectedattroper=currOp)
-        pm.artAttrCtx(pm.currentCtx(), e=1, value=currValue)						   
+        pm.artAttrCtx(pm.currentCtx(), e=1, value=currValue)
 
 
 class PI(object):
