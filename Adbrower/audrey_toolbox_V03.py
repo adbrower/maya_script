@@ -19,6 +19,9 @@ import ShapesLibrary as sl
 from maya_script import Adbrower
 import adbrower
 
+import CollDict
+reload(CollDict)
+
 from adbrower import changeColor, flatList, undo
 from CollDict import colordic, suffixDic
 
@@ -186,28 +189,28 @@ class AudreyToolBox():
         pm.setParent('..')
 
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=2)
-        pm.button(l="Rename", h=25, w=98, backgroundColor=colordic['darkred'], command=pm.Callback(self.renaming))
-        pm.button(l="Replace", h=25, w=99, backgroundColor=colordic['darkred'], command=pm.Callback(self.replace_Name))
+        pm.button(l="Rename", h=25, w=98, backgroundColor=colordic['blue'], command=pm.Callback(self.renaming))
+        pm.button(l="Replace", h=25, w=99, backgroundColor=colordic['blue'], command=pm.Callback(self.replace_Name))
         pm.setParent('..')
 
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=2)
-        pm.button(l="Remove", h=25, w=98, backgroundColor=colordic['darkred'], command=pm.Callback(self.removeName))
-        pm.button(l="Remove 'Pasted'", h=25, w=99, backgroundColor=colordic['darkred'], command=pm.Callback(self.no_Pasted))
+        pm.button(l="Remove", h=25, w=98, backgroundColor=colordic['blue'], command=pm.Callback(self.removeName))
+        pm.button(l="Remove 'Pasted'", h=25, w=99, backgroundColor=colordic['blue'], command=pm.Callback(self.no_Pasted))
         pm.setParent('..')
 
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=4)
-        pm.button(l="Add Prefix", h=25, w=65, backgroundColor=colordic['darkred3'], command=pm.Callback(self.add_Prefix), ann='popup menu available')
+        pm.button(l="Add Prefix", h=25, w=65, backgroundColor=colordic['blue4'], command=pm.Callback(self.add_Prefix), ann='popup menu available')
         pm.popupMenu()
         pm.menuItem(l="C_", command=pm.Callback(self.add_Prefix_predefined, 'C_'))
         pm.menuItem(l="L_", command=pm.Callback(self.add_Prefix_predefined, 'L_'))
         pm.menuItem(l="R_", command=pm.Callback(self.add_Prefix_predefined, 'R_'))
-        pm.button(l="Add Suffix", h=25, w=65, backgroundColor=colordic['darkred3'], command=pm.Callback(self.add_Suffix), ann='popup menu available')
+        pm.button(l="Add Suffix", h=25, w=65, backgroundColor=colordic['blue4'], command=pm.Callback(self.add_Suffix), ann='popup menu available')
         pm.popupMenu()
         pm.menuItem(l="_CTRL",  command=pm.Callback(self.add_Suffix_predefined, '_CTRL'))
         pm.menuItem(l="_GRP",   command=pm.Callback(self.add_Suffix_predefined, '_GRP'))
         pm.menuItem(l="_JNT",   command=pm.Callback(self.add_Suffix_predefined, '_JNT'))
 
-        pm.button(l="Auto Suffix", h=25, w=65, backgroundColor=colordic['darkred3'], command=lambda *args: adb.AutoSuffix(pm.selected()))
+        pm.button(l="Auto Suffix", h=25, w=65, backgroundColor=colordic['blue4'], command=lambda *args: adb.AutoSuffix(pm.selected()))
         pm.setParent('..')
         pm.setParent('..')
         pm.setParent('..')
@@ -257,7 +260,7 @@ class AudreyToolBox():
 
 ## ------------ SECTION CONSTRAINTS ###
 
-        pm.frameLayout(cll=True, w=200, bgc=(.12, .12, .12), cl=False, label="CONSTRAINTS")
+        pm.frameLayout(cll=True, w=200, bgc=colordic['grey5'], cl=False, label="CONSTRAINTS")
         pm.columnLayout()
 
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=5)
@@ -999,10 +1002,9 @@ class AudreyToolBox():
         Personnal Palette UI
         '''
 
-        reload(CollDict)
-        template = uiTemplate('ExampleTemplate', force=True)
-        template.define(button, width=200, height=35)
-        template.define(frameLayout, borderVisible=False, labelVisible=False)
+        template = pm.uiTemplate('ExampleTemplate', force=True)
+        template.define(pm.button, width=200, height=35)
+        template.define(pm.frameLayout, borderVisible=False, labelVisible=False)
 
         # if pm.window('ColorPalette_win', q=1, ex=1):
         #     pm.deleteUI('ColorPalette_win')
@@ -1010,52 +1012,54 @@ class AudreyToolBox():
         try:
             pm.deleteUI("ColorPalette_win", window=True)
         except:
-            with window("ColorPalette_win", t="adbrower - ColorPalette v1.0", tlb=True, s=True, rtf=True) as win:
+            with pm.window("ColorPalette_win", t="adbrower - ColorPalette v1.0", tlb=True, s=True, rtf=True) as win:
                 with template:
-                        with frameLayout():
-                            with columnLayout(adj=True, rs=1):
-                                with rowLayout(adj=True,  numberOfColumns=1):
-                                    gridLayout(numberOfColumns=4, cellWidthHeight=(100, 40))
-                                    button(bgc=colordic['grey'], l='grey', c=pm.Callback(self.getRGB, 'grey'))
-                                    button(bgc=colordic['grey1'], l='grey1', c=pm.Callback(self.getRGB, 'grey1'))
-                                    button(bgc=colordic['grey2'], l='grey2', c=pm.Callback(self.getRGB, 'grey2'))
-                                    button(bgc=colordic['grey4'], l='grey4', c=pm.Callback(self.getRGB, 'grey4'))
+                        with pm.frameLayout():
+                            with pm.columnLayout(adj=True, rs=1):
+                                with pm.rowLayout(adj=True,  numberOfColumns=1):
+                                    pm.gridLayout(numberOfColumns=4, cellWidthHeight=(100, 40))
+                                    pm.button(bgc=colordic['grey'], l='grey', c=pm.Callback(self.getRGB, 'grey'))
+                                    pm.button(bgc=colordic['grey1'], l='grey1', c=pm.Callback(self.getRGB, 'grey1'))
+                                    pm.button(bgc=colordic['grey2'], l='grey2', c=pm.Callback(self.getRGB, 'grey2'))
+                                    pm.button(bgc=colordic['grey4'], l='grey4', c=pm.Callback(self.getRGB, 'grey4'))
+                                    pm.button(bgc=colordic['grey5'], l='grey5', c=pm.Callback(self.getRGB, 'grey5'))
 
-                                    button(bgc=colordic['blue'], l='blue', c=pm.Callback(self.getRGB, 'blue'))
-                                    button(bgc=colordic['blue2'], l='blue2', c=pm.Callback(self.getRGB, 'blue2'))
-                                    button(bgc=colordic['blue3'], l='blue3', c=pm.Callback(self.getRGB, 'blue3'))
+                                    pm.button(bgc=colordic['blue'], l='blue', c=pm.Callback(self.getRGB, 'blue'))
+                                    pm.button(bgc=colordic['blue2'], l='blue2', c=pm.Callback(self.getRGB, 'blue2'))
+                                    pm.button(bgc=colordic['blue3'], l='blue3', c=pm.Callback(self.getRGB, 'blue3'))
+                                    pm.button(bgc=colordic['blue4'], l='blue4', c=pm.Callback(self.getRGB, 'blue4'))
+                                    pm.button(bgc=colordic['blue5'], l='blue5', c=pm.Callback(self.getRGB, 'blue5'))
 
-                                    button(bgc=colordic['darkblue'], l='darkblue', c=pm.Callback(self.getRGB, 'darkblue'))
-                                    button(bgc=colordic['lightpurple'], l='lightpurple', c=pm.Callback(self.getRGB, 'lightpurple'))
-                                    button(bgc=colordic['lightpurple2'], l='lightpurple2', c=pm.Callback(self.getRGB, 'lightpurple2'))
+                                    pm.button(bgc=colordic['darkblue'], l='darkblue', c=pm.Callback(self.getRGB, 'darkblue'))
+                                    pm.button(bgc=colordic['lightpurple'], l='lightpurple', c=pm.Callback(self.getRGB, 'lightpurple'))
+                                    pm.button(bgc=colordic['lightpurple2'], l='lightpurple2', c=pm.Callback(self.getRGB, 'lightpurple2'))
 
-                                    button(bgc=colordic['green'], l='green', c=pm.Callback(self.getRGB, 'green'))
-                                    button(bgc=colordic['green2'], l='green2', c=pm.Callback(self.getRGB, 'green2'))
-                                    button(bgc=colordic['green3'], l='green3', c=pm.Callback(self.getRGB, 'green3'))
-                                    button(bgc=colordic['greenish'], l='greenish', c=pm.Callback(self.getRGB, 'greenish'))
-                                    button(bgc=colordic['lightgreen'], l='lightgreen', c=pm.Callback(self.getRGB, 'lightgreen'))
+                                    pm.button(bgc=colordic['green'], l='green', c=pm.Callback(self.getRGB, 'green'))
+                                    pm.button(bgc=colordic['green2'], l='green2', c=pm.Callback(self.getRGB, 'green2'))
+                                    pm.button(bgc=colordic['green3'], l='green3', c=pm.Callback(self.getRGB, 'green3'))
+                                    pm.button(bgc=colordic['greenish'], l='greenish', c=pm.Callback(self.getRGB, 'greenish'))
+                                    pm.button(bgc=colordic['lightgreen'], l='lightgreen', c=pm.Callback(self.getRGB, 'lightgreen'))
 
-                                    button(bgc=colordic['red'], l='red', c=pm.Callback(self.getRGB, 'red'))
-                                    button(bgc=colordic['lightred'], l='lightred', c=pm.Callback(self.getRGB, 'lightred'))
-                                    button(bgc=colordic['darkred'], l='darkred', c=pm.Callback(self.getRGB, 'darkred'))
-                                    button(bgc=colordic['darkred2'], l='darkred2', c=pm.Callback(self.getRGB, 'darkred2'))
-                                    button(bgc=colordic['darkred3'], l='darkred3', c=pm.Callback(self.getRGB, 'darkred3'))
+                                    pm.button(bgc=colordic['red'], l='red', c=pm.Callback(self.getRGB, 'red'))
+                                    pm.button(bgc=colordic['lightred'], l='lightred', c=pm.Callback(self.getRGB, 'lightred'))
+                                    pm.button(bgc=colordic['darkred'], l='darkred', c=pm.Callback(self.getRGB, 'darkred'))
+                                    pm.button(bgc=colordic['darkred2'], l='darkred2', c=pm.Callback(self.getRGB, 'darkred2'))
+                                    pm.button(bgc=colordic['darkred3'], l='darkred3', c=pm.Callback(self.getRGB, 'darkred3'))
 
-                                    button(bgc=colordic['orange'], l='orange', c=pm.Callback(self.getRGB, 'orange'))
-                                    button(bgc=colordic['orange2'], l='orange2', c=pm.Callback(self.getRGB, 'orange2'))
-                                    button(bgc=colordic['orange3'], l='orange3', c=pm.Callback(self.getRGB, 'orange3'))
-                                    button(bgc=colordic['orange4'], l='orange4', c=pm.Callback(self.getRGB, 'orange4'))
+                                    pm.button(bgc=colordic['orange'], l='orange', c=pm.Callback(self.getRGB, 'orange'))
+                                    pm.button(bgc=colordic['orange2'], l='orange2', c=pm.Callback(self.getRGB, 'orange2'))
+                                    pm.button(bgc=colordic['orange3'], l='orange3', c=pm.Callback(self.getRGB, 'orange3'))
+                                    pm.button(bgc=colordic['orange4'], l='orange4', c=pm.Callback(self.getRGB, 'orange4'))
 
-                                    button(bgc=colordic['yellow'], l='yellow', c=pm.Callback(self.getRGB, 'yellow'))
+                                    pm.button(bgc=colordic['yellow'], l='yellow', c=pm.Callback(self.getRGB, 'yellow'))
 
-                                    button(bgc=colordic['pink'], l='pink', c=pm.Callback(self.getRGB, 'pink'))
-                                    button(bgc=colordic['pink2'], l='pink2', c=pm.Callback(self.getRGB, 'pink2'))
+                                    pm.button(bgc=colordic['pink'], l='pink', c=pm.Callback(self.getRGB, 'pink'))
+                                    pm.button(bgc=colordic['pink2'], l='pink2', c=pm.Callback(self.getRGB, 'pink2'))
 
-                                    button(bgc=colordic['purple'], l='purple', c=pm.Callback(self.getRGB, 'purple'))
-                                    button(bgc=colordic['purple2'], l='purple2', c=pm.Callback(self.getRGB, 'purple2'))
+                                    pm.button(bgc=colordic['purple'], l='purple', c=pm.Callback(self.getRGB, 'purple'))
 
-                                    button(bgc=colordic['darkbrown'], l='darkbrown', c=pm.Callback(self.getRGB, 'darkbrown'))
-                                    button(bgc=colordic['black'], l='black', c=pm.Callback(self.getRGB, 'black'))
+                                    pm.button(bgc=colordic['darkbrown'], l='darkbrown', c=pm.Callback(self.getRGB, 'darkbrown'))
+                                    pm.button(bgc=colordic['black'], l='black', c=pm.Callback(self.getRGB, 'black'))
 
     @undo
     def getRGB(self, key):
