@@ -20,7 +20,6 @@ from maya_script import Adbrower
 import adbrower
 
 import CollDict
-reload(CollDict)
 
 from adbrower import changeColor, flatList, undo
 from CollDict import colordic, suffixDic
@@ -189,28 +188,28 @@ class AudreyToolBox():
         pm.setParent('..')
 
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=2)
-        pm.button(l="Rename", h=25, w=98, backgroundColor=colordic['blue'], command=pm.Callback(self.renaming))
-        pm.button(l="Replace", h=25, w=99, backgroundColor=colordic['blue'], command=pm.Callback(self.replace_Name))
+        pm.button(l="Rename", h=25, w=98, backgroundColor=colordic['darkred'], command=pm.Callback(self.renaming))
+        pm.button(l="Replace", h=25, w=99, backgroundColor=colordic['darkred'], command=pm.Callback(self.replace_Name))
         pm.setParent('..')
 
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=2)
-        pm.button(l="Remove", h=25, w=98, backgroundColor=colordic['blue'], command=pm.Callback(self.removeName))
-        pm.button(l="Remove 'Pasted'", h=25, w=99, backgroundColor=colordic['blue'], command=pm.Callback(self.no_Pasted))
+        pm.button(l="Remove", h=25, w=98, backgroundColor=colordic['darkred'], command=pm.Callback(self.removeName))
+        pm.button(l="Remove 'Pasted'", h=25, w=99, backgroundColor=colordic['darkred'], command=pm.Callback(self.no_Pasted))
         pm.setParent('..')
 
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=4)
-        pm.button(l="Add Prefix", h=25, w=65, backgroundColor=colordic['blue4'], command=pm.Callback(self.add_Prefix), ann='popup menu available')
+        pm.button(l="Add Prefix", h=25, w=65, backgroundColor=colordic['darkred3'], command=pm.Callback(self.add_Prefix), ann='popup menu available')
         pm.popupMenu()
         pm.menuItem(l="C_", command=pm.Callback(self.add_Prefix_predefined, 'C_'))
         pm.menuItem(l="L_", command=pm.Callback(self.add_Prefix_predefined, 'L_'))
         pm.menuItem(l="R_", command=pm.Callback(self.add_Prefix_predefined, 'R_'))
-        pm.button(l="Add Suffix", h=25, w=65, backgroundColor=colordic['blue4'], command=pm.Callback(self.add_Suffix), ann='popup menu available')
+        pm.button(l="Add Suffix", h=25, w=65, backgroundColor=colordic['darkred3'], command=pm.Callback(self.add_Suffix), ann='popup menu available')
         pm.popupMenu()
         pm.menuItem(l="_CTRL",  command=pm.Callback(self.add_Suffix_predefined, '_CTRL'))
         pm.menuItem(l="_GRP",   command=pm.Callback(self.add_Suffix_predefined, '_GRP'))
         pm.menuItem(l="_JNT",   command=pm.Callback(self.add_Suffix_predefined, '_JNT'))
 
-        pm.button(l="Auto Suffix", h=25, w=65, backgroundColor=colordic['blue4'], command=lambda *args: adb.AutoSuffix(pm.selected()))
+        pm.button(l="Auto Suffix", h=25, w=65, backgroundColor=colordic['darkred3'], command=lambda *args: adb.AutoSuffix(pm.selected()))
         pm.setParent('..')
         pm.setParent('..')
         pm.setParent('..')

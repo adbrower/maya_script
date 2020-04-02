@@ -59,14 +59,14 @@ class NodeAttr(object):
                  ):
 
         self._nodeType = _node
-        
+
 
         if isinstance(self._nodeType, str):
             self.node = [pm.PyNode(_node)]
 
         elif isinstance(self._nodeType, list):
             self.node = [pm.PyNode(x) for x in _node]
-            
+
         else:
             self.node = [pm.PyNode(_node)]
 
@@ -348,6 +348,33 @@ class NodeAttr(object):
                 pm.PyNode(sub).setAttr(att, lock=False, keyable=True)
 
     @staticmethod
+    def addPaintAttribute(shape, attrName, subName = 'mesh'):
+        """Create a attribute with is paintable
+
+        Arguments:
+            shape {String} -- shape of the mesh
+            attrName {String} -- Name of the attribute
+
+        Returns:
+            Plug -- Plug of the attribute
+        """
+        plug = '{}.{}'.format(shape, attrName)
+        vertCount = mc.polyEvaluate(shape, vertex=True)
+
+        if not mc.objExists(plug):
+            mc.addAttr(shape, longName=attrName, dataType='doubleArray')
+            mc.makePaintable(subName, attrName)
+            pm.PyNode(plug).set([0] * vertCount, type='doubleArray')
+        else:
+            if not vertCount == len(list(mc.getAttr(plug))):
+                pm.PyNode(plug).set([0] * pm.polyEvaluate(shape, vertex=True), type='doubleArray')
+        return plug
+
+    @staticmethod
+    def rmvPaintAttribute(subName, attrName):
+        mc.makePaintable(subName, attrName, rm=1)
+
+    @staticmethod
     def getLock_attr(subject):
         """
         Get Current list of channel box attributes which are unlock
@@ -365,7 +392,6 @@ class NodeAttr(object):
             if 0: shift Down
             if 1: shift Up
         """
-
         obj = _obj
         if obj:
             attr = _attr
@@ -443,7 +469,7 @@ class NodeAttr(object):
                 break
 
         en = "................................................................:"
-        
+
         if label:
             pm.addAttr(node, ln=name, keyable=False, en=label, at="enum", nn=en)
         else:
@@ -518,7 +544,7 @@ class NodeAttr(object):
                     pm.addAttr(target_attr, e=True, max=_max)
                 else:
                     pass
-        
+
         if all:
             temp = pm.listAttr(source, k=1, v=1, ud=1)
 
@@ -531,12 +557,12 @@ class NodeAttr(object):
                     parent = pm.attributeQuery(a, node=source, lp=1)
                     parentToRemove.extend(parent)
 
-            def Diff(li1, li2): 
-                li_dif = [i for i in li1 + li2 if i not in li1 or i not in li2] 
-                return li_dif 
+            def Diff(li1, li2):
+                li_dif = [i for i in li1 + li2 if i not in li1 or i not in li2]
+                return li_dif
 
-            temp2 = (Diff(temp, siblingsToRemove[:-1])) 
-            all_attr = (Diff(temp2, parentToRemove)) 
+            temp2 = (Diff(temp, siblingsToRemove[:-1]))
+            all_attr = (Diff(temp2, parentToRemove))
         else:
             all_attr = [x for x in pm.channelBox("mainChannelBox", q=1, selectedMainAttributes=1)]
 
