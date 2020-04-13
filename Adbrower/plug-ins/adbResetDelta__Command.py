@@ -590,7 +590,7 @@ def initializePlugin(mobject):
     """
     Initialize the script plug-in
     """
-    mplugin = OpenMayaMPx.MFnPlugin(mobject)
+    mplugin = OpenMayaMPx.MFnPlugin(mobject, "Audrey Deschamps-Brower", "1.0.0")
     try:
         mplugin.registerCommand(commandName, cmdCreator, syntaxCreator)
     except:
@@ -607,12 +607,3 @@ def uninitializePlugin(mobject):
     except:
         sys.stderr.write( "Failed to unregister command: {}\n".format(commandName))
 
-
-
-#====================
-# BUILD
-#====================
-
-
-# mc.unloadPlugin("resetDelta.py")
-# mc.loadPlugin("resetDelta.py", qt=True)

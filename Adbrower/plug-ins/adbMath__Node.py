@@ -102,9 +102,8 @@ def nodeInitializer():
     adbMath.attributeAffects(adbMath.input2, adbMath.output)
 
 
-
 def initializePlugin(mobject):
-    mplugin = OpenMayaMPx.MFnPlugin(mobject)
+    mplugin = OpenMayaMPx.MFnPlugin(mobject, "Audrey Deschamps-Brower", "1.0.0")
     try:
         mplugin.registerNode(nodeName, nodeId ,nodeCreator, nodeInitializer)
     except:
@@ -118,9 +117,3 @@ def uninitializePlugin(mobject):
         mplugin.deregisterNode( nodeId )
     except:
         sys.stderr.write( "Failed to deregister node: {} \n".format(nodeName))
-
-
-
-
-
-
