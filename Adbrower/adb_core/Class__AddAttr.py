@@ -354,6 +354,7 @@ class NodeAttr(object):
         Arguments:
             shape {String} -- shape of the mesh
             attrName {String} -- Name of the attribute
+            subName {String} -- Name of the node ex: mesh.polyHide, deformer.weights
 
         Returns:
             Plug -- Plug of the attribute
