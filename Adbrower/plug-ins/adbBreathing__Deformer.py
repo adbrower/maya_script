@@ -5,24 +5,24 @@ import maya.OpenMayaMPx as ommpx
 import maya.cmds as cmds
 
 
-class BlendDeformerNode(ommpx.MPxDeformerNode):
+class BreathingDeformerNode(ommpx.MPxDeformerNode):
 
     TYPE_NAME = "adbBreathing"
     TYPE_ID = om.MTypeId(0x0007F7FD)
 
     def __init__(self):
-        super(BlendDeformerNode, self).__init__()
+        super(BreathingDeformerNode, self).__init__()
 
     def deform(self, data_block, geo_iter, matrix, geometryIndex):
         envelopeValue = data_block.inputValue(self.envelope).asFloat()
         if envelopeValue == 0:
             return
 
-        blend_weight = data_block.inputValue(BlendDeformerNode.blend_weight).asFloat()
+        blend_weight = data_block.inputValue(BreathingDeformerNode.blend_weight).asFloat()
         if blend_weight == 0:
             return
 
-        amplitudeValue = data_block.inputValue(BlendDeformerNode.amplitudeValue).asFloat()
+        amplitudeValue = data_block.inputValue(BreathingDeformerNode.amplitudeValue).asFloat()
         if amplitudeValue == 0:
             return
 
@@ -57,7 +57,7 @@ class BlendDeformerNode(ommpx.MPxDeformerNode):
 
     @classmethod
     def creator(cls):
-        return BlendDeformerNode()
+        return BreathingDeformerNode()
 
     @classmethod
     def initialize(cls):
@@ -89,24 +89,24 @@ def initializePlugin(plugin):
 
     plugin_fn = ommpx.MFnPlugin(plugin, vendor, version)
     try:
-        plugin_fn.registerNode(BlendDeformerNode.TYPE_NAME,
-                               BlendDeformerNode.TYPE_ID,
-                               BlendDeformerNode.creator,
-                               BlendDeformerNode.initialize,
+        plugin_fn.registerNode(BreathingDeformerNode.TYPE_NAME,
+                               BreathingDeformerNode.TYPE_ID,
+                               BreathingDeformerNode.creator,
+                               BreathingDeformerNode.initialize,
                                ommpx.MPxNode.kDeformerNode)
     except:
-        om.MGlobal.displayError("Failed to register node: {0}".format(BlendDeformerNode.TYPE_NAME))
-    cmds.makePaintable(BlendDeformerNode.TYPE_NAME, "weights", attrType="multiFloat", shapeMode="deformer")
+        om.MGlobal.displayError("Failed to register node: {0}".format(BreathingDeformerNode.TYPE_NAME))
+    cmds.makePaintable(BreathingDeformerNode.TYPE_NAME, "weights", attrType="multiFloat", shapeMode="deformer")
 
 
 def uninitializePlugin(plugin):
-    cmds.makePaintable(BlendDeformerNode.TYPE_NAME, "weights", remove=True)
+    cmds.makePaintable(BreathingDeformerNode.TYPE_NAME, "weights", remove=True)
 
     plugin_fn = ommpx.MFnPlugin(plugin)
     try:
-        plugin_fn.deregisterNode(BlendDeformerNode.TYPE_ID)
+        plugin_fn.deregisterNode(BreathingDeformerNode.TYPE_ID)
     except:
-        om.MGlobal.displayError("Failed to deregister node: {0}".format(BlendDeformerNode.TYPE_NAME))
+        om.MGlobal.displayError("Failed to deregister node: {0}".format(BreathingDeformerNode.TYPE_NAME))
 
 
 
