@@ -17,6 +17,42 @@ RIGTH_SIDE_PREFIX          = 'R'
 #                FUNCTIONS UTILS
 # ===================================================
 
+def renameBasename(_transform, newName):
+    """ Changed the basename while keeping the naming convention
+
+    Arguments:
+        _transform {object} -- [description]
+        newName {String} -- New basename
+
+    Returns:
+        String -- new full name
+    """
+    if isinstance(_transform, list):
+            transform = str(_transform[0])
+    else:
+        transform = str(_transform)
+
+    for valid_side in valideSideNames:
+        validator = transform.startswith('{}__'.format(valid_side))
+        if validator:
+             _basename = transform.split('__')[1]
+             _side = transform.split('__')[0]
+        else:
+            name_conv_validator = len(transform.split('__'))
+            if name_conv_validator == 3:
+                _basename = transform.split('__')[1]
+                _side = transform.split('__')[0]
+                _suffix = transform.split('__')[-1]
+            else:
+                _basename = transform.split('__')[0]
+                _side = ''
+                _suffix = ''
+
+    _newName = '{}__{}__{}'.format(_side, newName, _suffix)
+    pm.rename(_transform, _newName)
+
+    return _newName
+
 
 def getSideFromPosition(_transform):
     """
@@ -46,7 +82,7 @@ def getBasename(_transform):
     Get the base Name of a transfrom.
     Name without Prefix or Suffix
 
-    returns sting
+    returns string
     """
     if isinstance(_transform, list):
         transform = str(_transform[0])
