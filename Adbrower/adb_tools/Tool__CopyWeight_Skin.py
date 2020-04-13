@@ -47,7 +47,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(SkinCopyWEIGHTS, self).__init__(parent=parent)
         self.setObjectName('test')
-        self.starting_height = 810
+        self.starting_height = 700
         self.starting_width = 390
         self.setWindowTitle('adbrower - Copy Weights Tool' + ' v' + str(VERSION))
         self.setWindowFlags(QtCore.Qt.Tool)
@@ -366,9 +366,9 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             ['Select skn Joints',    self.selectSknJntsAB,         3,      pyQtDic['colorLightGrey'],     pyQtDic['colorDarkGrey3'],   self.framelayout['JOINTS'],               '',         ''],
             ['Verify Joint Sides',   self.verifyJointSideAB,       3,      pyQtDic['colorLightGrey'],     pyQtDic['colorDarkGrey3'],   self.framelayout['JOINTS'],               '',         ''],
 
-            ['Create BLS',           self.test,                    3,      pyQtDic['colorLightGrey'],     pyQtDic['colorDarkGrey3'],   self.framelayout['BLENDSHAPES'],          '',         ''],
-            ['Add Target',           self.addTargetsAB,            3,      pyQtDic['colorLightGrey'],     pyQtDic['colorDarkGrey3'],   self.framelayout['BLENDSHAPES'],          '',         ''],
-            ['Mirror BLS',           self.mirrorBSAB,              3,      pyQtDic['colorLightGrey'],     pyQtDic['colorDarkGrey3'],   self.framelayout['BLENDSHAPES'],          '',         ''],
+            # ['Create BLS',           self.test,                    3,      pyQtDic['colorLightGrey'],     pyQtDic['colorDarkGrey3'],   self.framelayout['BLENDSHAPES'],          '',         ''],
+            # ['Add Target',           self.addTargetsAB,            3,      pyQtDic['colorLightGrey'],     pyQtDic['colorDarkGrey3'],   self.framelayout['BLENDSHAPES'],          '',         ''],
+            # ['Mirror BLS',           self.mirrorBSAB,              3,      pyQtDic['colorLightGrey'],     pyQtDic['colorDarkGrey3'],   self.framelayout['BLENDSHAPES'],          '',         ''],
 
         ]
 
@@ -465,7 +465,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.framelayout['WEIGHTS'].addLayout(self.glayout['apply'])
 
         self.vlayout['framelayout'].addWidget(self.framelayout['JOINTS'])
-        self.vlayout['framelayout'].addWidget(self.framelayout['BLENDSHAPES'])
+        # self.vlayout['framelayout'].addWidget(self.framelayout['BLENDSHAPES'])
 
         self.hlayout['icons'].addStretch()
         self.vlayout['framelayout'].addStretch()
@@ -996,7 +996,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
         msgBox = QtWidgets.QMessageBox()
         msgBox.setText('Joints are label')
-        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setIcon(QtWidgets.QMessageBox.Information)
         msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
         msgBox.setDefaultButton(QtWidgets.QMessageBox.Ok)
         ret = msgBox.exec_()
