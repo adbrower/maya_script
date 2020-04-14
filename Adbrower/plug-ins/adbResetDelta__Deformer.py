@@ -72,18 +72,18 @@ class BlendDeformerNode(ommpx.MPxDeformerNode):
 
         cls.axisXvalue = numeric_attr.create("axisX", "aX", om.MFnNumericData.kFloat, 10.0)
         numeric_attr.setKeyable(True)
-        numeric_attr.setMin(0.0)
+        numeric_attr.setMin(-10.0)
         numeric_attr.setMax(10.0)
 
         cls.axisYvalue = numeric_attr.create("axisY", "aY", om.MFnNumericData.kFloat, 10.0)
         numeric_attr.setKeyable(True)
-        numeric_attr.setMin(0.0)
+        numeric_attr.setMin(-10.0)
         numeric_attr.setMax(10.0)
 
         numeric_attr = om.MFnNumericAttribute()
         cls.axisZvalue = numeric_attr.create("axisZ", "aZ", om.MFnNumericData.kFloat, 10.0)
         numeric_attr.setKeyable(True)
-        numeric_attr.setMin(0.0)
+        numeric_attr.setMin(-10.0)
         numeric_attr.setMax(10.0)
 
         cls.addAttribute(cls.blend_mesh)
