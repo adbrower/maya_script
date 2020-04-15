@@ -15,18 +15,7 @@ import pymel.core as pm
 import maya.cmds as mc
 import maya.mel
 
-commandName = "resetDelta"
-
-kHelpFlag = "-h"
-kHelpLongFlag = "-help"
-kPercentageFlag = "-p"
-kPercentageLongFlag = "-percentage"
-kAxisFlag = "-ax"
-kAxisLongFlag = "-axis"
-kPositiveFlag = "-pos"
-kPositiveLongFlag = "-positive"
-kWorldSpaceFlag = "-ws"
-kWorldSpaceLongFlag = "-worldSpace"
+CMD_CLASSES = []
 
 class gShowProgress(object):
     """
@@ -122,6 +111,19 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
         - pos / positive {bool} -- The calculation of the vectors (default: {False})
         - ws / worldSpace {bool} -- world space or Local space (default: {False})
     """
+    commandName = "resetDelta"
+
+    kHelpFlag = "-h"
+    kHelpLongFlag = "-help"
+    kPercentageFlag = "-p"
+    kPercentageLongFlag = "-percentage"
+    kAxisFlag = "-ax"
+    kAxisLongFlag = "-axis"
+    kPositiveFlag = "-pos"
+    kPositiveLongFlag = "-positive"
+    kWorldSpaceFlag = "-ws"
+    kWorldSpaceLongFlag = "-worldSpace"
+
     def __init__(self):
         OpenMayaMPx.MPxCommand.__init__(self)
         self.baseGeo = None
@@ -130,11 +132,11 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
     def argumentParser(self, argList):
         argData = om.MArgParser(self.syntax(), argList)
 
-        if argData.isFlagSet(kHelpFlag):
+        if argData.isFlagSet(resetDeltaCmd.kHelpFlag):
             print self.__class__.__doc__
             return None
 
-        if argData.isFlagSet(kHelpLongFlag):
+        if argData.isFlagSet(resetDeltaCmd.kHelpLongFlag):
             print self.__class__.__doc__
             return None
 
@@ -143,46 +145,46 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
             try:
                 self.targetGeo = argData.commandArgumentString(1)
             except RuntimeError:
-                selList =om2.MGlobal.getActiveSelectionList()
+                selList = om2.MGlobal.getActiveSelectionList()
                 self.targetGeo = selList.getSelectionStrings(0)[0]
 
-            if argData.isFlagSet(kPercentageFlag):
-                self.percentage = argData.flagArgumentDouble(kPercentageFlag, 0)
+            if argData.isFlagSet(resetDeltaCmd.kPercentageFlag):
+                self.percentage = argData.flagArgumentDouble(resetDeltaCmd.kPercentageFlag, 0)
             else:
                 self.percentage = 1.0
 
-            if argData.isFlagSet(kPercentageLongFlag):
-                self.percentage = argData.flagArgumentDouble(kPercentageLongFlag, 0)
+            if argData.isFlagSet(resetDeltaCmd.kPercentageLongFlag):
+                self.percentage = argData.flagArgumentDouble(resetDeltaCmd.kPercentageLongFlag, 0)
             else:
                 self.percentage = 1.0
 
-            if argData.isFlagSet(kAxisFlag):
-                self.axis = "{}".format(argData.flagArgumentString(kAxisFlag, 0))
+            if argData.isFlagSet(resetDeltaCmd.kAxisFlag):
+                self.axis = "{}".format(argData.flagArgumentString(resetDeltaCmd.kAxisFlag, 0))
             else:
                 self.axis = 'xyz'
 
-            if argData.isFlagSet(kAxisLongFlag):
-                self.axis = "{}".format(argData.flagArgumentString(kAxisLongFlag, 0))
+            if argData.isFlagSet(resetDeltaCmd.kAxisLongFlag):
+                self.axis = "{}".format(argData.flagArgumentString(resetDeltaCmd.kAxisLongFlag, 0))
             else:
                 self.axis = 'xyz'
 
-            if argData.isFlagSet(kPositiveFlag):
-                self.positive = argData.flagArgumentBool(kPositiveFlag, 0)
+            if argData.isFlagSet(resetDeltaCmd.kPositiveFlag):
+                self.positive = argData.flagArgumentBool(resetDeltaCmd.kPositiveFlag, 0)
             else:
                 self.positive = False
 
-            if argData.isFlagSet(kPositiveLongFlag):
-                self.positive = argData.flagArgumentBool(kPositiveLongFlag, 0)
+            if argData.isFlagSet(resetDeltaCmd.kPositiveLongFlag):
+                self.positive = argData.flagArgumentBool(resetDeltaCmd.kPositiveLongFlag, 0)
             else:
                 self.positive = False
 
-            if argData.isFlagSet(kWorldSpaceFlag):
-                self.ws = argData.flagArgumentBool(kWorldSpaceFlag, 0)
+            if argData.isFlagSet(resetDeltaCmd.kWorldSpaceFlag):
+                self.ws = argData.flagArgumentBool(resetDeltaCmd.kWorldSpaceFlag, 0)
             else:
                 self.ws = False
 
-            if argData.isFlagSet(kWorldSpaceLongFlag):
-                self.ws = argData.flagArgumentBool(kWorldSpaceLongFlag, 0)
+            if argData.isFlagSet(resetDeltaCmd.kWorldSpaceLongFlag):
+                self.ws = argData.flagArgumentBool(resetDeltaCmd.kWorldSpaceLongFlag, 0)
             else:
                 self.ws = False
 
@@ -229,7 +231,6 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
         Reset target geo's vertex to initial position
         """
         self.setAllVertexPositions(self.targetGeo, self.delta_vert_positions.values(), worldSpace=self.ws)
-
 
     def redoIt(self):
         def getAllVertexPositions(geometry, worldSpace=True):
@@ -359,7 +360,6 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                             pos = [delta[0], delta[1], deltaV[2]]
                             new_pos.append(pos)
                         self.setAllVertexPositions(delta_geometry, new_pos, worldSpace=worldSpace)
-
 
         @gShowProgress(status="Reset Selection ...")
         def _resetDeltaSelection(base_geometry, percentage=1.0, axis ='xyz', positive=False, worldSpace=False):
@@ -559,42 +559,133 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
             else:
                 resetDelta(self.baseGeo, self.targetGeo, percentage=self.percentage, axis=self.axis, positive=self.positive, worldSpace=self.ws)
 
+    def doIt(self,argList):
+        self.argumentParser(argList)
+        if self.baseGeo is not None:
+            self.redoIt()
+
+    @classmethod
+    def cmdCreator(cls):
+        return OpenMayaMPx.asMPxPtr(cls())
+
+    @classmethod
+    def syntaxCreator(cls):
+        syntax = om.MSyntax()
+        syntax.addFlag(cls.kHelpFlag, cls.kHelpLongFlag)
+        syntax.addFlag(cls.kPercentageFlag, cls.kPercentageLongFlag, om.MSyntax.kDouble)
+        syntax.addFlag(cls.kAxisFlag, cls.kAxisLongFlag, om.MSyntax.kString)
+        syntax.addFlag(cls.kPositiveFlag, cls.kPositiveLongFlag, om.MSyntax.kBoolean)
+        syntax.addFlag(cls.kWorldSpaceFlag, cls.kWorldSpaceLongFlag, om.MSyntax.kBoolean)
+        syntax.addArg(om.MSyntax.kString)
+        syntax.addArg(om.MSyntax.kString)
+        return syntax
+
+CMD_CLASSES.append(resetDeltaCmd)
+
+# ================================================== CLASS ====================================================================
+
+class resetDeltaDeformerCmd(OpenMayaMPx.MPxCommand):
+    """This command apply adbResetDeltaDeformer
+    Command Arguments:
+        baseGeo {str} -- transform on wich we apply the changes
+        targetGeo {str} -- works as a blendshape target
+
+    Keyword Arguments:
+        -p / percentage {float} -- amount of percentage of transformation (default: {100.0})
+    """
+
+    commandName = 'resetDeltaDeformer'
+
+    HELP_FLAG =['-h', '-help']
+    PERCENTAGE_FLAG =['-p', '-percentage', om.MSyntax.kDouble]
+
+    def __init__(self):
+        OpenMayaMPx.MPxCommand.__init__(self)
+        self.baseGeo = None
+        self.targetGeo = None
+
+    def argumentParser(self, argList):
+        argData = om.MArgParser(self.syntax(), argList)
+
+        if argData.isFlagSet(resetDeltaDeformerCmd.HELP_FLAG[0]):
+            print self.__class__.__doc__
+            return None
+
+        if argData.isFlagSet(resetDeltaDeformerCmd.HELP_FLAG[1]):
+            print self.__class__.__doc__
+            return None
+        else:
+            try:
+                self.baseGeo = argData.commandArgumentString(0)
+            except RuntimeError:
+                selList = om2.MGlobal.getActiveSelectionList()
+                self.baseGeo = selList.getSelectionStrings(0)[0]
+
+            try:
+                self.targetGeo = argData.commandArgumentString(1)
+            except RuntimeError:
+                selList = om2.MGlobal.getActiveSelectionList()
+                self.targetGeo = selList.getSelectionStrings(1)[0]
+
+            if argData.isFlagSet(resetDeltaDeformerCmd.PERCENTAGE_FLAG[0]):
+                self.percentage = argData.flagArgumentDouble(resetDeltaDeformerCmd.PERCENTAGE_FLAG[0], 0)
+            else:
+                self.percentage = 100.0
+
+            if argData.isFlagSet(resetDeltaDeformerCmd.PERCENTAGE_FLAG[1]):
+                self.percentage = argData.flagArgumentDouble(resetDeltaDeformerCmd.PERCENTAGE_FLAG[1], 0)
+            else:
+                self.percentage = 100.0
+
+
+    def isUndoable(self):
+        return True
+
+    def undoIt(self):
+        return True
+
+    def redoIt(self):
+        self.deformerNode = mc.deformer(self.targetGeo, type='adbResetDeltaDeformer')[0]
+        shape = pm.PyNode(self.baseGeo).getShape()
+        mc.connectAttr('{}.outMesh'.format(shape), '{}.blendMesh'.format(self.deformerNode))
+        mc.setAttr('{}.percentage'.format(self.deformerNode), self.percentage)
 
     def doIt(self,argList):
         self.argumentParser(argList)
         if self.baseGeo is not None:
             self.redoIt()
 
+    @classmethod
+    def cmdCreator(cls):
+        return OpenMayaMPx.asMPxPtr(cls())
 
-def cmdCreator():
-    return OpenMayaMPx.asMPxPtr(resetDeltaCmd())
-
-
-def syntaxCreator():
-	syntax = om.MSyntax()
-	syntax.addFlag(kHelpFlag, kHelpLongFlag)
-	syntax.addFlag(kPercentageFlag, kPercentageLongFlag, om.MSyntax.kDouble)
-	syntax.addFlag(kAxisFlag, kAxisLongFlag, om.MSyntax.kString)
-	syntax.addFlag(kPositiveFlag, kPositiveLongFlag, om.MSyntax.kBoolean)
-	syntax.addFlag(kWorldSpaceFlag, kWorldSpaceLongFlag, om.MSyntax.kBoolean)
-	syntax.addArg(om.MSyntax.kString)
-	syntax.addArg(om.MSyntax.kString)
-	return syntax
+    @classmethod
+    def syntaxCreator(cls):
+        syntax = om.MSyntax()
+        syntax.addFlag(*cls.HELP_FLAG)
+        syntax.addFlag(*cls.PERCENTAGE_FLAG)
+        syntax.addArg(om.MSyntax.kString)
+        syntax.addArg(om.MSyntax.kString)
+        return syntax
 
 
-#====================
+CMD_CLASSES.append(resetDeltaDeformerCmd)
+
+
+#==============================
 # INITIALIZING THE PLUG-IN
-#====================
+#==============================
 
 def initializePlugin(mobject):
     """
     Initialize the script plug-in
     """
     mplugin = OpenMayaMPx.MFnPlugin(mobject, "Audrey Deschamps-Brower", "1.0.0")
-    try:
-        mplugin.registerCommand(commandName, cmdCreator, syntaxCreator)
-    except:
-        sys.stderr.write( "Failed to register command: {}\n".format(commandName))
+    for cmd in CMD_CLASSES:
+        try:
+            mplugin.registerCommand(cmd.commandName, cmd.cmdCreator, cmd.syntaxCreator)
+        except:
+            sys.stderr.write( "Failed to register command: {}\n".format(cmd.commandName))
 
 
 def uninitializePlugin(mobject):
@@ -602,8 +693,9 @@ def uninitializePlugin(mobject):
     Uninitialize the script plug-in
     """
     mplugin = OpenMayaMPx.MFnPlugin(mobject)
-    try:
-        mplugin.deregisterCommand(commandName)
-    except:
-        sys.stderr.write( "Failed to unregister command: {}\n".format(commandName))
+    for cmd in CMD_CLASSES:
+        try:
+            mplugin.deregisterCommand(cmd.commandName)
+        except:
+            sys.stderr.write( "Failed to unregister command: {}\n".format(cmd.commandName))
 
