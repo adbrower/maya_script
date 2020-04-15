@@ -23,10 +23,13 @@ class BlendDeformerNode(ommpx.MPxDeformerNode):
         if percentageValue == 0:
             return
 
+        factorValue = data_block.inputValue(BlendDeformerNode.factorValue).asFloat()
+        if factorValue == 0:
+            return
+
         axisXvalue = data_block.inputValue(BlendDeformerNode.axisXvalue).asFloat()
         axisYvalue = data_block.inputValue(BlendDeformerNode.axisYvalue).asFloat()
         axisZvalue = data_block.inputValue(BlendDeformerNode.axisZvalue).asFloat()
-
 
         target_mesh = data_block.inputValue(BlendDeformerNode.blend_mesh).asMesh()
         if target_mesh.isNull():
@@ -36,7 +39,10 @@ class BlendDeformerNode(ommpx.MPxDeformerNode):
         target_mesh_fn = om.MFnMesh(target_mesh)
         target_mesh_fn.getPoints(target_points)
 
-        global_weight = (percentageValue/10) * envelope
+        global_weight = (percentageValue/100) * envelope
+        _axisXvalue = (axisXvalue/100) * global_weight
+        _axisYvalue = (axisYvalue/100) * global_weight
+        _axisZvalue = (axisZvalue/100) * global_weight
 
         mPointArray_meshVert = om.MPointArray()
         geo_iter.reset()
@@ -45,9 +51,9 @@ class BlendDeformerNode(ommpx.MPxDeformerNode):
             target_pt = target_points[geo_iter.index()]
             source_weight = self.weightValue(data_block, multi_index, geo_iter.index())
 
-            source_pt.x = source_pt.x + ((target_pt.x - source_pt.x) * (axisXvalue/10) * global_weight * source_weight)
-            source_pt.y = source_pt.y + ((target_pt.y - source_pt.y) * (axisYvalue/10) * global_weight * source_weight)
-            source_pt.z = source_pt.z + ((target_pt.z - source_pt.z) * (axisZvalue/10) * global_weight * source_weight)
+            source_pt.x = source_pt.x + ((target_pt.x - source_pt.x) * _axisXvalue * source_weight * factorValue)
+            source_pt.y = source_pt.y + ((target_pt.y - source_pt.y) * _axisYvalue * source_weight * factorValue)
+            source_pt.z = source_pt.z + ((target_pt.z - source_pt.z) * _axisZvalue * source_weight * factorValue)
 
             mPointArray_meshVert.append(source_pt)
             geo_iter.next()
@@ -56,7 +62,7 @@ class BlendDeformerNode(ommpx.MPxDeformerNode):
 
     @classmethod
     def creator(cls):
-        return BlendDeformerNode()
+        return cls()
 
     @classmethod
     def initialize(cls):
@@ -65,28 +71,34 @@ class BlendDeformerNode(ommpx.MPxDeformerNode):
         cls.blend_mesh = typed_attr.create("blendMesh", "bMesh", om.MFnData.kMesh)
 
         numeric_attr = om.MFnNumericAttribute()
+
         cls.percentageValue = numeric_attr.create("percentage", "p", om.MFnNumericData.kFloat, 0.0)
         numeric_attr.setKeyable(True)
         numeric_attr.setMin(0.0)
-        numeric_attr.setMax(10.0)
+        numeric_attr.setMax(100.0)
 
-        cls.axisXvalue = numeric_attr.create("axisX", "aX", om.MFnNumericData.kFloat, 10.0)
+        cls.factorValue = numeric_attr.create("factor", "fa", om.MFnNumericData.kFloat, 1.0)
         numeric_attr.setKeyable(True)
-        numeric_attr.setMin(-10.0)
-        numeric_attr.setMax(10.0)
+        numeric_attr.setMin(-1.0)
+        numeric_attr.setMax(2.0)
 
-        cls.axisYvalue = numeric_attr.create("axisY", "aY", om.MFnNumericData.kFloat, 10.0)
+        cls.axisXvalue = numeric_attr.create("axisX", "aX", om.MFnNumericData.kFloat, 100.0)
         numeric_attr.setKeyable(True)
-        numeric_attr.setMin(-10.0)
-        numeric_attr.setMax(10.0)
+        numeric_attr.setMin(-100.0)
+        numeric_attr.setMax(100.0)
 
-        numeric_attr = om.MFnNumericAttribute()
-        cls.axisZvalue = numeric_attr.create("axisZ", "aZ", om.MFnNumericData.kFloat, 10.0)
+        cls.axisYvalue = numeric_attr.create("axisY", "aY", om.MFnNumericData.kFloat, 100.0)
         numeric_attr.setKeyable(True)
-        numeric_attr.setMin(-10.0)
-        numeric_attr.setMax(10.0)
+        numeric_attr.setMin(-100.0)
+        numeric_attr.setMax(100.0)
+
+        cls.axisZvalue = numeric_attr.create("axisZ", "aZ", om.MFnNumericData.kFloat, 100.0)
+        numeric_attr.setKeyable(True)
+        numeric_attr.setMin(-100.0)
+        numeric_attr.setMax(100.0)
 
         cls.addAttribute(cls.blend_mesh)
+        cls.addAttribute(cls.factorValue)
         cls.addAttribute(cls.percentageValue)
         cls.addAttribute(cls.axisXvalue)
         cls.addAttribute(cls.axisYvalue)
@@ -96,6 +108,7 @@ class BlendDeformerNode(ommpx.MPxDeformerNode):
 
         cls.attributeAffects(cls.blend_mesh, output_geom)
         cls.attributeAffects(cls.percentageValue, output_geom)
+        cls.attributeAffects(cls.factorValue, output_geom)
         cls.attributeAffects(cls.axisXvalue, output_geom)
         cls.attributeAffects(cls.axisYvalue, output_geom)
         cls.attributeAffects(cls.axisZvalue, output_geom)
