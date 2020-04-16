@@ -87,7 +87,7 @@ class LimbLeg(moduleBase.ModuleBase):
     def start(self, _metaDataNode = 'transform'):
         super(LimbLeg, self)._start('', metaDataNode = _metaDataNode)          
         
-        # TODO: Create Guide setup
+        # TODO: Create Guide Setup
         
     def build(self, GUIDES):
         """      

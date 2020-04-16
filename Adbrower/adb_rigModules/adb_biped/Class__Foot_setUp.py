@@ -17,7 +17,7 @@ from ShapesLibrary import *
 adb = adbrower.Adbrower()
 import adb_core.Class__AddAttr as adbAttr
 
-# TODO: Replace Class__OrientJoint with Joint Class
+# BUG: Replace Class__OrientJoint with Joint Class
 # import adb_utils.rig_utils.Class__OrientJoint as adbOrient
 
 

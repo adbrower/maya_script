@@ -583,7 +583,6 @@ class CheckUp():
             oldSel = pm.selected()
             pm.select(allGeo)
             pm.hyperShade(assign='lambert1')
-            #TODO: debug this to make sure it is always "hyperShadePanel1"
             pm.mel.hyperShadePanelMenuCommand("hyperShadePanel1", "deleteUnusedNodes")
             pm.select(oldSel)
    

@@ -80,7 +80,7 @@ class SpaceSwitch(object):
                 'decomposeMatrix', n='{}_dectM'.format(parent_transform))
             
             if mo is True:
-                #TODO: GET ALL LOCALOFFSET
+                #TODO: Get All Local Offset
                 localOffset = getLocalOffset(p, ch)
 
                 # matrix Mult Node CONNECTIONS

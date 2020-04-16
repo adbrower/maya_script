@@ -5,13 +5,13 @@ import maya.cmds as cmds
 
 
 
-class BlendDeformerNode(ommpx.MPxDeformerNode):
+class ResetDeltaDeformerNode(ommpx.MPxDeformerNode):
 
     TYPE_NAME = "adbResetDeltaDeformer"
     TYPE_ID = om.MTypeId(0x0007F7FD)
 
     def __init__(self):
-        super(BlendDeformerNode, self).__init__()
+        super(ResetDeltaDeformerNode, self).__init__()
 
     def deform(self, data_block, geo_iter, matrix, multi_index):
 
@@ -19,19 +19,19 @@ class BlendDeformerNode(ommpx.MPxDeformerNode):
         if envelope == 0:
             return
 
-        percentageValue = data_block.inputValue(BlendDeformerNode.percentageValue).asFloat()
+        percentageValue = data_block.inputValue(ResetDeltaDeformerNode.percentageValue).asFloat()
         if percentageValue == 0:
             return
 
-        factorValue = data_block.inputValue(BlendDeformerNode.factorValue).asFloat()
+        factorValue = data_block.inputValue(ResetDeltaDeformerNode.factorValue).asFloat()
         if factorValue == 0:
             return
 
-        axisXvalue = data_block.inputValue(BlendDeformerNode.axisXvalue).asFloat()
-        axisYvalue = data_block.inputValue(BlendDeformerNode.axisYvalue).asFloat()
-        axisZvalue = data_block.inputValue(BlendDeformerNode.axisZvalue).asFloat()
+        axisXvalue = data_block.inputValue(ResetDeltaDeformerNode.axisXvalue).asFloat()
+        axisYvalue = data_block.inputValue(ResetDeltaDeformerNode.axisYvalue).asFloat()
+        axisZvalue = data_block.inputValue(ResetDeltaDeformerNode.axisZvalue).asFloat()
 
-        target_mesh = data_block.inputValue(BlendDeformerNode.blend_mesh).asMesh()
+        target_mesh = data_block.inputValue(ResetDeltaDeformerNode.blend_mesh).asMesh()
         if target_mesh.isNull():
             return
 
@@ -121,24 +121,24 @@ def initializePlugin(plugin):
 
     plugin_fn = ommpx.MFnPlugin(plugin, vendor, version)
     try:
-        plugin_fn.registerNode(BlendDeformerNode.TYPE_NAME,
-                               BlendDeformerNode.TYPE_ID,
-                               BlendDeformerNode.creator,
-                               BlendDeformerNode.initialize,
+        plugin_fn.registerNode(ResetDeltaDeformerNode.TYPE_NAME,
+                               ResetDeltaDeformerNode.TYPE_ID,
+                               ResetDeltaDeformerNode.creator,
+                               ResetDeltaDeformerNode.initialize,
                                ommpx.MPxNode.kDeformerNode)
     except:
-        om.MGlobal.displayError("Failed to register node: {0}".format(BlendDeformerNode.TYPE_NAME))
+        om.MGlobal.displayError("Failed to register node: {0}".format(ResetDeltaDeformerNode.TYPE_NAME))
 
-    cmds.makePaintable(BlendDeformerNode.TYPE_NAME, "weights", attrType="multiFloat", shapeMode="deformer")
+    cmds.makePaintable(ResetDeltaDeformerNode.TYPE_NAME, "weights", attrType="multiFloat", shapeMode="deformer")
 
 
 def uninitializePlugin(plugin):
-    cmds.makePaintable(BlendDeformerNode.TYPE_NAME, "weights", remove=True)
+    cmds.makePaintable(ResetDeltaDeformerNode.TYPE_NAME, "weights", remove=True)
 
     plugin_fn = ommpx.MFnPlugin(plugin)
     try:
-        plugin_fn.deregisterNode(BlendDeformerNode.TYPE_ID)
+        plugin_fn.deregisterNode(ResetDeltaDeformerNode.TYPE_ID)
     except:
-        om.MGlobal.displayError("Failed to deregister node: {0}".format(BlendDeformerNode.TYPE_NAME))
+        om.MGlobal.displayError("Failed to deregister node: {0}".format(ResetDeltaDeformerNode.TYPE_NAME))
 
 

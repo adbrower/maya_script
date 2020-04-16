@@ -450,7 +450,7 @@ def fk_shape(scale=0.054):
     mc.FreezeTransformations()
     return new_shape
 
-# TODO: FIX THIS
+# FIXME: IK - FK Shape Overlapping
 @undo
 def ik_fk_shape():
     def CombineShape(driver, driven):
