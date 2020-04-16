@@ -8,7 +8,7 @@ import maya.cmds as cmds
 class BreathingDeformerNode(ommpx.MPxDeformerNode):
 
     TYPE_NAME = "adbBreathing"
-    TYPE_ID = om.MTypeId(0x0007F7FD)
+    TYPE_ID = om.MTypeId(0x103fff)
 
     def __init__(self):
         super(BreathingDeformerNode, self).__init__()
