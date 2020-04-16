@@ -17,6 +17,23 @@ import maya.mel
 
 CMD_CLASSES = []
 
+def timeit(method):
+    """
+    from: https://medium.com/pythonhive/python-decorator-to-measure-the-execution-time-of-methods-fa04cb6bb36d
+    """
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+        if 'log_time' in kw:
+            name = kw.get('log_name', method.__name__.upper())
+            kw['log_time'][name] = int((te - ts) * 1000)
+        else:
+            print 'TIME: %r ----  %2.2f ms' % (method.__name__, (te - ts) * 1000)
+        return result
+    return timed
+
+
 class gShowProgress(object):
     """
     Based on: http://josbalcaen.com/maya-python-progress-decorator
@@ -106,7 +123,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
         base_geometry {str} -- transform on wich we apply the changes
 
     Keyword Arguments:
-        -p / percentage {float} -- amount of percentage of transformation (default: {1.0})
+        - p / percentage {float} -- amount of percentage of transformation (default: {1.0})
         - ax / axis {str} -- axis on which transformation will be applied (default: {'xyz'})
         - pos / positive {bool} -- The calculation of the vectors (default: {False})
         - ws / worldSpace {bool} -- world space or Local space (default: {False})
@@ -263,6 +280,8 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                 vert_iter.next()
             return vert_positions
 
+        @gShowProgress(status="Reset Selection ...")
+        @timeit
         def _resetDelta(base_geometry, delta_geometry, percentage=1.0, axis = 'xyz', positive=False, worldSpace=False):
             """Reset the vertex position between a BASE mesh and a TARGET mesh.
 
@@ -278,6 +297,8 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
             """
             base_vert_positions = getAllVertexPositions(base_geometry,  worldSpace=worldSpace)
             self.delta_vert_positions = getAllVertexPositions(delta_geometry,  worldSpace=worldSpace)
+
+            if _resetDelta.isInterrupted(): return
 
             if percentage == 0.0:
                 return
@@ -362,6 +383,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                         self.setAllVertexPositions(delta_geometry, new_pos, worldSpace=worldSpace)
 
         @gShowProgress(status="Reset Selection ...")
+        @timeit
         def _resetDeltaSelection(base_geometry, percentage=1.0, axis ='xyz', positive=False, worldSpace=False):
             """
             Reset the vertex position between a BASE mesh and a TARGET mesh based on vertex selection
@@ -373,7 +395,12 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                 percentage {float} -- Amount of % the vertex position is blending. Between 0.0 and 1.0 (default: {1.0})
                 axis {str} -- On Which axis the vertex are moving (default: {'xyz'})
                 positive {bool} -- The deformation is expanding. False: The deformation is resetting towards the BASE mesh  (default: {False})
+            
+            #CBB: Optimization could be done
             """
+            if _resetDeltaSelection.isInterrupted():
+                 return
+
             selectionVtx = mc.ls(sl=1, flatten=1)
             delta_geometry = selectionVtx[0].split('.vtx')[0]
             indexVtxList = [int(x.split('[')[-1].split(']')[0]) for x in selectionVtx]
@@ -396,8 +423,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
             newPosDelta = self.delta_vert_positions.values()[:]
             replacement = {}
 
-            _step = float(100) / vertsIter.count()
-            if _resetDeltaSelection.isInterrupted(): return
+            gShowProgress_step = float(100) / vertsIter.count()
 
             while not vertsIter.isDone():
                 actual_pos = vertsIter.position(om2.MSpace.kObject)
@@ -408,17 +434,15 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                     vector*= softSelect[vrtxIndex]
                     deltaV = list(om2.MVector(self.delta_vert_positions[vrtxIndex]) - vector)
                     replacement[vrtxIndex] = deltaV
-
-                    _resetDeltaSelection.step(_step)
+                    # _resetDeltaSelection.step(gShowProgress_step)
 
                 elif vrtxIndex in indexVtxList:
                     replacement[vrtxIndex] = actual_pos
-
-                    _resetDeltaSelection.step(_step)
+                    # _resetDeltaSelection.step(gShowProgress_step)
 
                 vertsIter.next()
 
-            # replace index with replacement value
+            ## replace index with replacement value
             for (index, replace) in zip(replacement.keys(), replacement.values()):
                 newPosDelta[index] = replace
 
