@@ -396,7 +396,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
                 axis {str} -- On Which axis the vertex are moving (default: {'xyz'})
                 positive {bool} -- The deformation is expanding. False: The deformation is resetting towards the BASE mesh  (default: {False})
             
-            #CBB: Optimization could be done
+            #CBB: Optimization could be done, Maybe use OpenMaya.MFnMesh.setPoints() ??
             """
             if _resetDeltaSelection.isInterrupted():
                  return
