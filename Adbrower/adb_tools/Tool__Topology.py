@@ -24,7 +24,7 @@ from CollDict import colordic
 import adbrower
 from maya_script import Adbrower
 from adbrower import undo, timeit
-import backUp.Functions__topology as adbTopo
+import adb_library.adb_utils.Functions__topology as adbTopo
 import adb_core.deformers.Class__Blendshape as adbBLS
 
 
@@ -480,4 +480,4 @@ def showUI():
     TopoTool()
 
 
-# showUI()
+showUI()
