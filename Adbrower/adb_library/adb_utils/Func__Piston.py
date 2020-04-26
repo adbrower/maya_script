@@ -7,9 +7,26 @@ import adbrower
 
 adb = adbrower.Adbrower()
 
-test = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5__LOC', 'joint6__LOC']
 
-def createPiston(
+
+def createPiston(parent, child, control):
+    """
+    createPiston('joint1', 'joint2', 'Control')
+    """
+    try:
+        pm.parent(child, parent)
+    except RuntimeError:
+        pass
+
+    ikNode, effector = pm.ikHandle( n='{}_IkHandle'.format(control), sj=parent, ee=child)
+    ik_group = adb.makeroot_func(ikNode, forceNameConvention=False)
+    pm.matchTransform(ik_group, control, pos=1, rot=0)
+    pm.parent(ik_group, control)
+    ikNode.v.set(0)
+
+
+
+def createDoublePiston(
                  lowRootjnt,
                  lowEndjnt,
                  topRootjnt,
@@ -18,11 +35,13 @@ def createPiston(
                  top_ctrl,
                  ):
     """
-    Creates a piston system   
-    
+    Creates a piston system
+
     import adb_rig.Func__Piston as adbPiston
     reload (adbPiston)
-    """   
+
+    test = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5__LOC', 'joint6__LOC']
+    """
     ## create a root group over the controller
     rootGrp_low = adb.makeroot_func(low_ctrl)
     rootGrp_top = adb.makeroot_func(top_ctrl)
@@ -34,7 +53,7 @@ def createPiston(
     ## creating the Ik handles
     lowIk = pm.ikHandle( n='{}_IkHandle'.format(lowRootjnt), sj=lowRootjnt, ee=lowEndjnt, )
     topIk = pm.ikHandle( n='{}_IkHandle'.format(topRootjnt), sj=topRootjnt, ee=topEndjnt, )
-    
+
     pm.parent(lowIk[0],top_ctrl)
     pm.parent(topIk[0],low_ctrl)
 
@@ -57,7 +76,7 @@ def createPiston(
 
 
 
-  
+
 
 
 
