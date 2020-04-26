@@ -64,14 +64,14 @@ def getSideFromPosition(_transform):
     else:
         transform = pm.PyNode(_transform)
 
-    totalBox = transform.getBoundingBox()
-    if totalBox.center()[0] > 0.0:
+    worldPos = transform.getRotatePivot(space='world')
+    if worldPos[0] > 0.0:
         _side = LEFT_SIDE_PREFIX
 
-    elif totalBox.center()[0] < 0.0:
+    elif worldPos[0] < 0.0:
         _side = RIGTH_SIDE_PREFIX
 
-    else:
+    else: 
         _side = MID_SIDE_PREFIX
 
     return _side
