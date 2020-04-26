@@ -89,6 +89,8 @@ def locGenerator(intervals, obj1, obj2):
     
         mFTransMiddle.setTranslation(newPosV, om.MSpace.kWorld)
 
+    return locsList
+
 
 
 # locGenerator(5, 'pCube1', 'pCube2')
