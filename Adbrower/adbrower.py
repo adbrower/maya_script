@@ -319,23 +319,27 @@ class Adbrower(object):
         chain_parent(pm.selected(type='transform'))
 
     @undo
-    def makeroot_func(self, subject=pm.selected(), suff='root'):
+    def makeroot_func(self, subject=pm.selected(), suff='root', forceNameConvention=False):
         pm.select(subject)
         oColl = pm.selected()
 
+        oColl = pm.selected()
         for each in oColl:
             try:
                 suffix = each.name().split('__')[-2]
                 cutsuffix = '__{}__'.format(suffix)
             except:
                 suffix, cutsuffix = '', ''
-            oRoot = pm.group(n=each.name() + '_' + suff +
-                             '__{}'.format(NC.GRP), em=True)
-
+            if forceNameConvention:
+                groupName =  '{}_{}__{}'.format(NC.getNameNoSuffix(each.name()), suff,  NC.GRP)
+            else:
+                groupName = each.name() + '__' + suff + '__{}'.format(NC.GRP)
+            oRoot = pm.group(n=groupName, em=True)
             for i in xrange(4):
                 oRoot.rename(oRoot.name().replace('___', '__'))
             oRoot.setTranslation(each.getRotatePivot(space='world'))
-            oRoot.setRotation(each.getRotation(space='world'), space='world')
+            oRoot.setRotation(each.getRotation(
+                space='world'), space='world')
             try:
                 pm.parent(oRoot, each.getParent())
             except:

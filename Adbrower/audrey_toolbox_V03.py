@@ -310,7 +310,7 @@ class AudreyToolBox():
         pm.iconTextButton(l="   Select Children", i="aselect.png", style="iconAndTextVertical", command=pm.Callback(self.selectchildparent))
         pm.setParent('..')
 
-        pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=4)
+        pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=5)
         pm.iconTextButton(l="R. Hiearchy", i='outliner.png', style='iconAndTextVertical',   command=lambda * args: [pm.reorder(x, back=True) for x in pm.selected()])
         pm.popupMenu()
         pm.menuItem(l='Hiearchy Builder', c=lambda * args: adb.hiearchyBuilder(pm.selected(), 'ctrl'))
@@ -325,7 +325,7 @@ class AudreyToolBox():
         mc.menuItem(image=imageColorGreen, l="Green",  c=pm.Callback(self.add_material, 'mat_green'))
         mc.menuItem(image=imageColorDarkGrey, l="Dark Grey",  c=pm.Callback(self.add_material, 'mat_darkGrey'))
 
-        # pm.separator(vis=0, w=10)
+        pm.separator(vis=0, w=10)
         pm.iconTextButton(l="Make Root",  style='iconAndTextVertical', i='selectByHierarchy.png', command=pm.Callback(self.makeroot), ann='popup meunu available')
         pm.popupMenu()
         pm.menuItem(l=' Delete grp', c=lambda * args: [pm.ungroup(x) for x in pm.selected()])
