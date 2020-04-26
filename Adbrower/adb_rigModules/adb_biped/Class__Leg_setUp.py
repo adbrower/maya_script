@@ -564,7 +564,7 @@ class LegSetUp(object):
             pm.select(piston_joints_top[2], add = True)
             Joint(pm.selected()).orientAxis = 'Y'
                    
-            adbPiston.createPiston(
+            adbPiston.createDoublePiston(
                                  lowRootjnt = piston_joints_top[3],
                                  lowEndjnt = piston_joints_top[2],
                                  topRootjnt = piston_joints_top[0],
@@ -609,7 +609,7 @@ class LegSetUp(object):
             pm.select(piston_joints_bot[2], add = True)
             Joint(pm.selected()).orientAxis = 'Y'
                      
-            adbPiston.createPiston(
+            adbPiston.createDoublePiston(
                                  lowRootjnt = piston_joints_bot[3],
                                  lowEndjnt = piston_joints_bot[2],
                                  topRootjnt = piston_joints_bot[0],

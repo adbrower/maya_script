@@ -560,7 +560,7 @@ class ArmSetUp():
             piston_joints_top_2 = adbOrient.OrientJoint(pm.selected())
             piston_joints_top_2.OrientAxis = 'Y'
                    
-            adbPiston.createPiston(
+            adbPiston.createDoublePiston(
                                  lowRootjnt = piston_joints_top[3],
                                  lowEndjnt = piston_joints_top[2],
                                  topRootjnt = piston_joints_top[0],
@@ -611,7 +611,7 @@ class ArmSetUp():
             piston_joints_bot_2 = adbOrient.OrientJoint(pm.selected())
             piston_joints_bot_2.OrientAxis = 'Y'
                      
-            adbPiston.createPiston(
+            adbPiston.createDoublePiston(
                                  lowRootjnt = piston_joints_bot[3],
                                  lowEndjnt = piston_joints_bot[2],
                                  topRootjnt = piston_joints_bot[0],
