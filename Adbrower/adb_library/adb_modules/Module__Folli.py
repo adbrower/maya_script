@@ -102,8 +102,8 @@ class Folli(moduleBase.ModuleBase):
     # METHOD
     # =========================
 
-    def start(self, _metaDataNode = 'network'):
-        super(Folli, self)._start(metaDataNode = _metaDataNode)  
+    def start(self, metaDataNode = 'network'):
+        super(Folli, self)._start(_metaDataNode = metaDataNode)  
         
         # add attribute on METADATA node
 
@@ -343,7 +343,7 @@ class Folli(moduleBase.ModuleBase):
             pm.select(None)
 
 
-# arm = Folli('ArmFolli', 1, 5, radius = 0.5, subject = 'nurbsPlane1')
+# arm = Folli('ArmFolli', 1, 5, radius = 0.5, subject = 'proxy_plane')
 # arm.start()
 # arm.build()
 

@@ -103,8 +103,8 @@ class MotionPathJnt(moduleBase.ModuleBase):
     # METHOD
     # =========================
 
-    def start(self, _metaDataNode = 'transform'):
-        super(MotionPathJnt, self)._start(metaDataNode = _metaDataNode)  
+    def start(self, metaDataNode = 'transform'):
+        super(MotionPathJnt, self)._start(_metaDataNode = metaDataNode)  
 
     def build(self):
         super(MotionPathJnt, self)._build()

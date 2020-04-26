@@ -131,8 +131,8 @@ class stretchyIK(moduleBase.ModuleBase):
     # METHOD
     # =========================
 
-    def start(self, _metaDataNode = 'transform'):
-        super(stretchyIK, self)._start(metaDataNode = _metaDataNode)  
+    def start(self, metaDataNode = 'transform'):
+        super(stretchyIK, self)._start(_metaDataNode = metaDataNode)  
 
         self.metaData_GRP.addAttr('Ik_Handle', at='message', keyable=False)
         self.metaData_GRP.addAttr('Ik_Distance', at='double', dv=0, keyable=False)
