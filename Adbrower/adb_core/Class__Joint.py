@@ -13,6 +13,7 @@ import pymel.core.datatypes as dt
 import adb_core.Class__Transforms as adbTransform
 import adbrower
 import pymel.core as pm
+import maya.cmds as mc
 
 adb = adbrower.Adbrower()
 
@@ -116,7 +117,7 @@ class Joint(adbTransform.Transform):
 
         # example
         points =[[0.0, 0.0, 0.0], [-2.54, 4.68, -0.96], [2.66, 4.66, -6.16], [0.66, 8.22, -6.83]]
-        test = adbLoc.Joint.selection_base()
+        test = adbJnt.Joint.selection_base()
         """
 
         name = kwargs.pop('name', 'joint1')
@@ -134,7 +135,8 @@ class Joint(adbTransform.Transform):
             else:
                 _joint = pm.joint(p=pos, n=name)
             jnts_array.append(_joint)
-            return cls(jnts_array)
+
+        return cls(jnts_array)
 
     def __init__(self,
                  _joint,
@@ -190,7 +192,7 @@ class Joint(adbTransform.Transform):
         for joint in self.joints:
             pm.PyNode(joint).radius.set(rad)
 
-        
+
     def orient_joint(self):
         if self._orient_axis == 'Y':
             pm.select(self.joints)
@@ -247,13 +249,13 @@ class Joint(adbTransform.Transform):
         else:
             vec = self.getVectors(str(self.joints))
         return self.getAxis(vec.aimV)
-        
-    
+
+
     @orientAxis.setter
     def orientAxis(self, val):
         self._orient_axis = val
         self.orient_joint()
-        
+
     @staticmethod
     def label_jnts(left_side='L_', right_side='R_'):
         for sel in pm.ls(type='joint'):
@@ -270,13 +272,13 @@ class Joint(adbTransform.Transform):
             pm.setAttr('{0}.side'.format(sel), side)
             pm.setAttr('{0}.type'.format(sel), 18)
             pm.setAttr('{0}.otherType'.format(sel), other, type='string')
-            
-    
+
+
     @staticmethod
     def getClosestVector(v, axies=None):
         """
         returns the vector in axies that is the closets to the vector v
-    
+
         :param tuple v: input vector
         :param list axies: list of vectors to match against.
                            defaults to the vectors of [+x, -x, +y, -y, +z, -z]
@@ -285,12 +287,12 @@ class Joint(adbTransform.Transform):
         axies = axies or [(1, 0, 0), (0, 1, 0), (0, 0, 1),
                           (-1, 0, 0), (0, -1, 0), (0, 0, -1)]
         return sorted(axies, key=lambda a: dt.Vector(v).dot(a))[-1]
-    
-    
+
+
     def getVectors(self, obj, child=None, normal=(0, 0, 1)):
         """
         get local aim and up vectors
-    
+
         :param str obj: name of the transform
         :param tuple normal: inVector to compute the upVector defaults to (0,0,1)
         :return: (aimVector, upVector) as tuple
@@ -299,30 +301,30 @@ class Joint(adbTransform.Transform):
         # Get first child joint or, if no children, use the joint itself
         # to get translation vector (if has a parent, otherwise error...)
         if not child:
-            children = cmds.listRelatives(obj, c=True, type="joint")
+            children = mc.listRelatives(obj, c=True, type="joint")
             if not children:
-                parent = cmds.listRelatives(obj, p=True, type="joint")[0]
+                parent = mc.listRelatives(obj, p=True, type="joint")[0]
                 if not parent:
                     raise RuntimeError("Can't get vectors for '{}' since it has no joint hierarchy...")
                 else:
                     child = obj
             else:
                 child = children[0]
-        v = cmds.xform(child, q=True, translation=True)
-        
+        v = mc.xform(child, q=True, translation=True)
+
         aim = self.getClosestVector(v)
         up = tuple(dt.Vector(normal).cross(aim))
-        
+
         jntOrientation = namedtuple('jointOrientation', ['aimV', 'upV'])
         getJntOriention = jntOrientation(aim, up)
-        
-        return getJntOriention           
-                            
+
+        return getJntOriention
+
     @staticmethod
     def getAxis(vector):
         """
         returns the name of the vector (x,y or z)
-    
+
         :param tuple vector: a vector
         :rtype: str
         """
@@ -333,5 +335,5 @@ class Joint(adbTransform.Transform):
             (0, -1, 0): "-y",
             (0, 0, 1): "z",
             (0, 0, -1): "-z",
-        }[vector]    
-        
+        }[vector]
+
