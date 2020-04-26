@@ -213,7 +213,6 @@ def getSymmetry(center_edge):
                 continue
 
             edge_iter.setIndex(lf_current_edge)
-
             connected = edge_iter.connectedToEdge(lf_face_edge_index)
             if not connected or lf_current_edge == lf_face_edge_index:
                 continue
@@ -244,12 +243,14 @@ def getSymmetry(center_edge):
                     continue
 
                 rt_vert_1, rt_vert_2 = fn_mesh.getEdgeVertices(rt_face_edge_index)
-
                 lf_checked_mirror = checked_verts[lf_checked_vert]
+
                 if rt_vert_1 == lf_checked_mirror or rt_vert_2 == lf_checked_mirror:
                     rt_checked_state = 0
-                    if checked_verts[rt_vert_1] != -1: rt_checked_state += 1
-                    if checked_verts[rt_vert_2] != -1: rt_checked_state += 1
+                    if checked_verts[rt_vert_1] != -1: 
+                        rt_checked_state += 1
+                    if checked_verts[rt_vert_2] != -1: 
+                        rt_checked_state += 1
                     if lf_checked_state != rt_checked_state:
                         raise SymmetryError('Geometry is not symmetrical!')
 
@@ -259,28 +260,25 @@ def getSymmetry(center_edge):
                 if rt_vert_1 == lf_checked_mirror:
                     checked_verts[lf_non_checked_vert] = rt_vert_2
                     checked_verts[rt_vert_2] = lf_non_checked_vert
-                    side_verts[lf_non_checked_vert] = 2
-                    side_verts[rt_vert_2] = 1
+                    side_verts[lf_non_checked_vert] = "Right"
+                    side_verts[rt_vert_2] = "Left"
                     break
 
                 elif rt_vert_2 == lf_checked_mirror:
                     checked_verts[lf_non_checked_vert] = rt_vert_1
                     checked_verts[rt_vert_1] = lf_non_checked_vert
-                    side_verts[lf_non_checked_vert] = 2
-                    side_verts[rt_vert_1] = 1
+                    side_verts[lf_non_checked_vert] = "Right"
+                    side_verts[rt_vert_1] = "Left"
                     break
 
     average_a = average_b = 0
-
-    total_len_x = 0
     for index in range(vert_count):
         mirror_vert = checked_verts[index]
         if mirror_vert != index and mirror_vert != -1:
-            point_pos = fn_mesh.getPoint(mirror_vert)
-            if side_verts[index] == 2:
-                total_len_x += 1
+            point_pos = fn_mesh.getPoint(mirror_vert, om2.MSpace.kObject)
+            if side_verts[index] == "Right":
                 average_b += point_pos.x
-            elif side_verts[index] == 1:
+            elif side_verts[index] == "Left":
                 average_a += point_pos.x
 
     if average_a < average_b:
@@ -297,12 +295,12 @@ def getSymmetry(center_edge):
             if not switch_side:
                 side_map.append(side_verts[index])
             else:
-                if side_verts[index] == 1:
-                    side_map.append(2)
+                if side_verts[index] == 'Left':
+                    side_map.append('Right')
                 else:
-                    side_map.append(1)
+                    side_map.append('Left')
         else:
-            side_map.append(0)
+            side_map.append('Center')
 
     lf_verts = []
     cn_verts = []
@@ -310,10 +308,10 @@ def getSymmetry(center_edge):
 
     mirror_dict = {}
     for index, (side, mirror) in enumerate(zip(side_map, mirror_map)):
-        if side == 0:
-            cn_verts.append(index);
+        if side == 'Center':
+            cn_verts.append(index)
             continue
-        if side == 2:
+        if side == 'Right':
             continue
         mirror_dict[index] = mirror
 
