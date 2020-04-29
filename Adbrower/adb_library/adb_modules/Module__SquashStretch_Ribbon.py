@@ -9,88 +9,147 @@
 
 import maya.cmds as mc
 import adb_core.NameConv_utils as NC
+import adb_core.ModuleBase as moduleBase
 import pymel.core as pm
 from adb_core.Class__Transforms import Transform
 from adbrower import undo
 
 
-MODULE_NAME = 'ribbon_squash_stretch'
-METADATA_grp_name = '{}_METADATA'.format(MODULE_NAME)
+class SquashStrechModel(moduleBase.ModuleBaseModel):
+    def __init__(self):
+        super(SquashStrechModel, self).__init__()
+        self.getFollicules = []
+        self.getFolliGrp = []
 
 
-class SquashStrech(object):
+class SquashStrech(moduleBase.ModuleBase):
     """
     Squash and Strech for a ribbon system
 
-    import adb_utils.Class__SquashStretch_Ribbon as adb_ST_Ribbon
-    reload(adb_utils.Class__SquashStretch_Ribbon)
+    Arguments:
+        module_name {String} -- Name of the module
+        ExpCtrl {String or None} -- Transform on which we add attributes settings. 
+                                    Default: None, So it will be on the SETTINGS_GRP module group
+        ribbon_ctrl {List} -- start and end for the distance calculation. Top first, then bottom
+        jointList {List} -- List of the joints that will be squash and strech
+        
+        jointListA {Tuple (List, int)} -- Section A of jointList, exposant Value of the squash and strech
+        jointListB {Tuple (List, int)} -- Section B of jointList, exposant Value of the squash and strech
+        jointListC {Tuple (List, int)} -- Section C of jointList, exposant Value of the squash and strech
 
+    example:
+        import adb_utils.Class__SquashStretch_Ribbon as adb_ST_Ribbon
+        reload(adb_utils.Class__SquashStretch_Ribbon)
 
-    adb_ST_Ribbon.SquashStrech(
-                    ExpCtrl = "l__Leg_Options__ctrl__",
-                    jointList = ['joint1', 'joint2' ... ],
-                    ribbon_ctrl = ['l__Leg_IK_offset__ctrl__', 'l__Leg__thigh_result__jnt__'], ## bottom first, then top
-                    intervalA_1 = 0,
-                    intervalA_2 = 3,
+        ribbonStretch = adb_ST_Ribbon.SquashStrech('Test',
+                        ExpCtrl="cog_ctrl",
+                        ribbon_ctrl=['L__Leg_Base_Hips__JNT', 'L__Leg_Base_Knee__JNT']
 
-                    intervalB_1 = 4,
-                    intervalB_2 = 17,
+                        jointList=['L__Leg_upper_proxy_plane_end_0{}__GRP'.format(x + 1) for x in xrange(5)],
+                        jointListA = ['L__Leg_upper_proxy_plane_end_01__GRP'],
+                        jointListB = ['L__Leg_upper_proxy_plane_end_02__GRP', 'L__Leg_upper_proxy_plane_end_03__GRP', 'L__Leg_upper_proxy_plane_end_04__GRP'],
+                        jointListC = ['L__Leg_upper_proxy_plane_end_05__GRP'],
 
-                    intervalC_1 = 7,
-
-                    expA = 1.25,
-                    expB = 1.5,
-                    expC = 1.25,  )
-
+                        expA=0,
+                        expB=1.5,
+                        expC=0,
+                    )
+        ribbonStretch.start()
+        ribbonStretch.build()
     """
 
     def __init__(self,
-                 ExpCtrl="ball_ctrl",
-                 jointList=['X__test_0{}__GRP'.format(x + 1) for x in xrange(5)],
+                 module_name,
+                 ExpCtrl     = None,
+                 ribbon_ctrl = [],  # Top first, then bottom
 
-                 ribbon_ctrl=['bendy_01__CTRL__', 'bendy_02__CTRL__'],  # bottom first, then top
-                 intervalA_1=1,
-                 intervalA_2=2,
-
-                 intervalB_1=2,
-                 intervalB_2=3,
-
-                 intervalC_1=3,
-                 intervalC_2=-1,
-
-                 expA=0,
-                 expB=1.5,
-                 expC=0,
+                 jointList   = [],
+                 jointListA  = ([], 0),
+                 jointListB  = ([], 1.5),
+                 jointListC  = ([], 0),
                  ):
 
+        super(SquashStrech, self).__init__()
+
+        self._MODEL = SquashStrechModel()
+
+        self.NAME = module_name
         self.ExpCtrl = ExpCtrl
         self.jointList = jointList
         self.ribbon_ctrl = ribbon_ctrl
 
-        self.jointListA = self.jointList[intervalA_1:intervalA_2]
-        self.jointListB = self.jointList[intervalB_1:intervalB_2]
-        self.jointListC = self.jointList[intervalC_1:intervalC_2]
+        if len(jointListA)>1:
+            self.jointListA, self.expA = jointListA
+            self.jointListB, self.expB = jointListB
+            self.jointListC, self.expC = jointListC
+        else:
+            self.jointListA = jointListA
+            self.jointListB = jointListB
+            self.jointListC = jointListC
 
-        self.expA = expA
-        self.expB = expB
-        self.expC = expC
+            self.expA = 0
+            self.expB = 1.5
+            self.expC = 0
+
+
+    def __repr__(self):
+        return str('{} : {} \n {}'.format(self.__class__.__name__, self.subject, self.__class__))
+
+    # =========================
+    # PROPERTY
+    # =========================
+
+    @property
+    def getFolliGrp(self):
+        return self._MODEL.getFolliGrp
+
+    @property
+    def getFollicules(self):
+        """ Returns the follicules """
+        return self._MODEL.getFollicules
+
+    @getFollicules.setter
+    def getFollicules(self, value):
+        """ Returns the follicules """
+        self._MODEL.getFollicules = value
+
+    # =========================
+    # METHOD
+    # =========================
+
+    def start(self, metaDataNode = 'network'):
+        super(SquashStrech, self)._start(_metaDataNode = metaDataNode)
+
+    def build(self):
+        super(SquashStrech, self)._build()
 
         self.addExposant_attrs(self.expA, self.expB, self.expC)
-        self.CreateNodes()
+        self.nodeData = self.CreateNodes()
         self.MakeConnections()
         self.JointConnections()
         self.setFinal_hiearchy()
         self.set_TAGS()
 
+    def remove(self):
+        self.removeSetup()
+
+    # =========================
+    # SOLVERS
+    # =========================
+
     @undo
     def addExposant_attrs(self, expA, expB, expC):
         """Create the Exp Attribute on a selected Controler """
+        if self.ExpCtrl is None:
+            self.ExpCtrl = self.metaData_GRP
+
         if pm.objExists('{}.ExpA'.format(self.ExpCtrl)):
             pass
         else:
             pm.PyNode(self.ExpCtrl).addAttr('ExpA', keyable=True, dv=expA, at='double', min=0)
             pm.PyNode(self.ExpCtrl).addAttr('ExpB', keyable=True, dv=expB, at='double', min=0)
             pm.PyNode(self.ExpCtrl).addAttr('ExpC', keyable=True, dv=expC, at='double', min=0)
+
 
     @undo
     def CreateNodes(self):
@@ -119,6 +178,7 @@ class SquashStrech(object):
         pm.rename(self.DistanceLoc, 'bendy_distDimShape')
         pm.rename(pm.PyNode(self.DistanceLoc).getParent(), 'bendy_distDim')
         distance = self.DistanceLoc.distance.get()
+        pm.parent(self.DistanceLoc.getParent(), self.RIG_GRP)
 
         pm.parent(posLocs[0], self.ribbon_ctrl[0])
         pm.parent(posLocs[1], self.ribbon_ctrl[1])
@@ -152,6 +212,9 @@ class SquashStrech(object):
         self.expC_MD.operation.set(3)
         self.expC_MD.input1X.set(1)
 
+        return self.expA_MD, self.expB_MD, self.expC_MD, self.Squash_MD,  self.Stretch_MD, self.CurveInfoNode, posLocs[0], posLocs[1]
+
+
     def create_scale_distance(self):
         distObjs_LIST_QDT = self.ribbon_ctrl
 
@@ -173,11 +236,12 @@ class SquashStrech(object):
 
         [loc.v.set(0) for loc in [end_point_loc, start_point_loc]]
 
-        self.scale_grp = pm.group(n='{}_scale__{}'.format(MODULE_NAME, NC.GRP), w=True, em=True)
+        self.scale_grp = pm.group(n='{}_scale__{}'.format(self.NAME, NC.GRP), w=True, em=True)
         pm.parent(distanceNode, start_point_loc, end_point_loc, self.scale_grp)
         self.scale_grp.v.set(0)
 
         return distanceNode_shape
+
 
     @undo
     def MakeConnections(self):
@@ -215,6 +279,7 @@ class SquashStrech(object):
         pm.PyNode(self.ExpCtrl).ExpB >> self.expB_MD.input2Z
         pm.PyNode(self.ExpCtrl).ExpC >> self.expC_MD.input2Z
 
+
     def JointConnections(self):
         """Connections on joints in Scale Y and Scale Z """
 
@@ -234,20 +299,42 @@ class SquashStrech(object):
             pm.PyNode(expC_MD).outputX >> pm.PyNode(each).scaleY
             pm.PyNode(expC_MD).outputX >> pm.PyNode(each).scaleZ
 
-    def setFinal_hiearchy(self):
-        final_grp = NC.setFinalHiearchy('{}'.format(MODULE_NAME),
-                                        RIG_GRP_LIST=[self.DistanceLoc.getParent()],
-                                        INPUT_GRP_LIST=[],
-                                        OUTPUT_GRP_LIST=[],
-                                        mod=0)
 
-        self.Do_not_touch_grp = pm.group(n=NC.NO_TOUCH, em=1, parent=final_grp[1])
-        # hiearchy
+    def setFinal_hiearchy(self):
+        self.Do_not_touch_grp = pm.group(n=NC.NO_TOUCH, em=1, parent=self.RIG_GRP)
         pm.parent(self.scale_grp, self.Do_not_touch_grp)
-        [pm.delete(grp) for grp in final_grp[2:]]
+
 
     def set_TAGS(self):
         Transform(str(self.scale_grp)).addAttr(NC.TAG_GlOBAL_SCALE, '')
 
 
-# SquashStrech()
+    def removeSetup(self):
+        def breakConnection(sel='', attributes=['v']):
+            """
+            Break Connection
+            @param attributes : list of different attribute:  ['tx','ty','tz','rx','ry','rz','sx','sy','sz', 'v']
+
+            The default value is : ['v']
+            """
+
+            for att in attributes:
+                attr = sel + '.' + att
+
+                destinationAttrs = pm.listConnections(
+                    attr, plugs=True, source=False) or []
+                sourceAttrs = pm.listConnections(
+                    attr, plugs=True, destination=False) or []
+
+                for destAttr in destinationAttrs:
+                    pm.disconnectAttr(attr, destAttr)
+                for srcAttr in sourceAttrs:
+                    pm.disconnectAttr(srcAttr, attr)
+
+        for jnt in self.jointList:
+            breakConnection(jnt, attributes=('sx', 'sy', 'sz'))
+            [pm.setAttr('{}.{}'.format(jnt, attr)) for attr in ('sx', 'sy', 'sz')]
+
+        [pm.deleteAttr("{}.{}".format(self.ExpCtrl, attr)) for attr in ('ExpA', 'ExpB', 'ExpC')]
+        pm.delete(self.MOD_GRP)
+        [pm.delete(node) for node in self.nodeData]
