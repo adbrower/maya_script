@@ -479,13 +479,12 @@ class NodeAttr(object):
                    keyable=False, lock=True)
 
     @staticmethod
-    def enumAttr(sel=pm.selected(), name='name', en="On:Off"):
+    def enumAttr(_transform, name='name', en="On:Off"):
         """
         Create an enum On:Off
         """
-        for each in sel:
-            pm.PyNode(each).addAttr(name, keyable=True,
-                                    attributeType='enum', en=en)
+        pm.PyNode(_transform).addAttr(name, keyable=True,
+                                attributeType='enum', en=en)
 
     @staticmethod
     @undo
@@ -574,6 +573,31 @@ class NodeAttr(object):
         if forceConnection:
             for att in pm.listAttr(source, ud=1):
                 pm.connectAttr('{}.{}'.format(target, att), '{}.{}'.format(source, att))
+
+
+    @staticmethod
+    @undo
+    def breakConnection(_transform, attributes=['v']):
+        """
+        Break Connection
+        @param attributes : list of different attribute:  ['tx','ty','tz','rx','ry','rz','sx','sy','sz', 'v']
+
+        The default value is : ['v']
+        """
+
+        for att in attributes:
+            attr = _transform + '.' + att
+
+            destinationAttrs = pm.listConnections(
+                attr, plugs=True, source=False) or []
+            sourceAttrs = pm.listConnections(
+                attr, plugs=True, destination=False) or []
+
+            for destAttr in destinationAttrs:
+                pm.disconnectAttr(attr, destAttr)
+            for srcAttr in sourceAttrs:
+                pm.disconnectAttr(srcAttr, attr)
+
 
     @staticmethod
     @undo
