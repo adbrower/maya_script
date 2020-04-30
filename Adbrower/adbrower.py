@@ -55,7 +55,7 @@ def timeit(method):
         return result
     return timed
 
-def repeat(label):       
+def repeat(label):
     """
     Make a function repeatable and adds it to the recent List Command
     original from: https://gist.github.com/justinfx/f86320b6d9b567e6b8e2
@@ -63,22 +63,22 @@ def repeat(label):
     def repeatLastCommand():
         if _repeat_function is not None:
             _repeat_function(*_args, **_kwargs)
-            
+
     def real_repeate(func):
         def _repeatfunc(*args, **kwargs):
             global _repeat_function
             global _args
             global _kwargs
-            
+
             _repeat_function = func(*args, **kwargs)
-         
+
             sys.modules[__name__].repeatLastCommand = lambda : func(*args, **kwargs)
             rplString = 'python("{}.repeatLastCommand()")'.format(__name__)
             pm.repeatLast(ac=rplString, acl=func.__name__, h=10)
-            
+
         return _repeatfunc
     return real_repeate
-    
+
 
 def undo(func):
     """
@@ -113,36 +113,16 @@ def changeColor(type='rgb', col=(0.8, 0.5, 0.2)):
             _func = func(*args, **kwargs)
             pm.select(_func)
             ctrls = pm.selected()
-            shapes = []
 
             for ctrl in ctrls:
-                try:
-                    shape = ctrl.getShapes()
-                    shapes.append(shape)
-                except AttributeError:
-                    pass
-            all_shapes = [x for i in shapes for x in i] or []
-            if all_shapes:
-                for ctrl in ctrls:
-                    pm.PyNode(ctrl).overrideEnabled.set(1)
+                pm.PyNode(ctrl).overrideEnabled.set(1)
+                if type == 'rgb':
+                    pm.PyNode(ctrl).overrideRGBColors.set(1)
+                    pm.PyNode(ctrl).overrideColorRGB.set(col)
 
-                    if type == 'rgb':
-                        pm.PyNode(ctrl).overrideRGBColors.set(1)
-                        pm.PyNode(ctrl).overrideColorRGB.set(col)
-
-                    if type == 'index':
-                        pm.PyNode(ctrl).overrideRGBColors.set(0)
-                        pm.PyNode(ctrl).overrideColor.set(col)
-            else:
-                for ctrl in ctrls:
-                    pm.PyNode(ctrl).overrideEnabled.set(1)
-                    if type == 'rgb':
-                        pm.PyNode(ctrl).overrideRGBColors.set(1)
-                        pm.PyNode(ctrl).overrideColorRGB.set(col)
-
-                    if type == 'index':
-                        pm.PyNode(ctrl).overrideRGBColors.set(0)
-                        pm.PyNode(ctrl).overrideColor.set(col)
+                if type == 'index':
+                    pm.PyNode(ctrl).overrideRGBColors.set(0)
+                    pm.PyNode(ctrl).overrideColor.set(col)
             pm.select(None)
             return _func
         return _changeColorfunc
@@ -204,7 +184,8 @@ def propScale(func):
     #NOTE: Works on the Transform
     """
     def _proportional_Scale(*args, **kwargs):
-        for sel in pm.selected():
+        my_selection = pm.selected()
+        for sel in my_selection:
             Bbox = sel.getBoundingBox()
             minZ = [Bbox.max()[0], Bbox.center()[1], Bbox.min()[2]]
             maxZ = [Bbox.max()[0], Bbox.center()[1], Bbox.max()[2]]
@@ -222,18 +203,34 @@ def propScale(func):
                 miniloc.localScaleY.set(0.2)
                 miniloc.localScaleZ.set(0.2)
 
-            if (minZ[0] - maxX[0]) > (minX[2] - maxX[2]):
-                newScale = (minZ[0] - maxX[0])
-            else:
-                newScale = (minX[2] - maxX[2])
             pm.select(None)
-            func(*args, **kwargs)
-
-            obj = pm.selected()[0]
-            obj.scaleX.set(newScale)
-            obj.scaleY.set(newScale)
-            obj.scaleZ.set(newScale)
+            obj = func(*args, **kwargs)
             pm.matchTransform(obj, sel, pos=True)
+
+            BboxCTL = obj.getBoundingBox()
+            minZCTL = [BboxCTL.max()[0], BboxCTL.center()[1], BboxCTL.min()[2]]
+            maxZCTL = [BboxCTL.max()[0], BboxCTL.center()[1], BboxCTL.max()[2]]
+
+            minXCTL = [BboxCTL.min()[0], BboxCTL.center()[1], BboxCTL.max()[2]]
+            maxXCTL = [BboxCTL.min()[0], BboxCTL.center()[1], BboxCTL.min()[2]]
+
+            if (minZ[0] - maxX[0]) + 0.01 > (minX[2] - maxX[2]):
+                axis = 'x'
+            else:
+                axis = 'z'
+
+            if maxX > maxXCTL:
+                newScaleX = (maxX[0] - maxXCTL[0])
+            else:
+                newScaleX =  (maxXCTL[0] - maxX[0])
+
+            if newScaleX > 1.0:
+                newScale = newScaleX
+                obj.scaleX.set(newScale)
+                obj.scaleY.set(newScale)
+                obj.scaleZ.set(newScale)
+
+        return obj
     return _proportional_Scale
 
 # ===============================================================================
@@ -549,7 +546,7 @@ class Adbrower(object):
         if pm.objExists(bls_node):
             if pm.PyNode(bls_node).getTarget():
                 all_targets = {i: pm.aliasAttr('{}.w[{}]'.format(bls_node, i), q=1) for i in
-                    pm.getAttr('{}.w'.format(bls_node), multiIndices=1)} 
+                    pm.getAttr('{}.w'.format(bls_node), multiIndices=1)}
             else:
                 all_targets = []
 
@@ -1505,8 +1502,8 @@ class Adbrower(object):
         }
 
         print('\nCurve Info:')
-        print('    points : ' + str(crvShapeDict["fpoints"]).replace("'", ""))
-        print('    knots : ' + str(crvShapeDict["knots"]))
+        print('    points : ' + str(crvShapeDict["fpoints"]).replace("'", "") + '\n')
+        print('    knots : ' + str(crvShapeDict["knots"]) + '\n')
         print('    degree : ' + str(crvShapeDict["degree"]))
         # mc.curve(p=crvShapeDict["points"], k=crvShapeDict["knots"], d=crvShapeDict["degree"])
 
@@ -1530,6 +1527,7 @@ class Adbrower(object):
             _ctrl = shape_name()
             return [_ctrl]
 
+
     def makeCtrl_Prop(self, sl_shape_name):
         """ Controller builder
 
@@ -1540,7 +1538,6 @@ class Adbrower(object):
         oColl = pm.selected()
 
         @propScale
-        @changeColor()
         def _makeCtrl(sl_shape_name):
             func = sl_shape_name()
             Ctrls.append(func)
@@ -1804,4 +1801,3 @@ class Adbrower(object):
         for each in pm.selected():
             new_name = each.split(':')[1]
             pm.PyNode(each).rename(new_name)
-
