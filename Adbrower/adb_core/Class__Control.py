@@ -11,7 +11,6 @@ import pymel.core as pm
 import ShapesLibrary as sl
 import adb_core.Class__Transforms as adbTransform
 import adbrower
-reload(adbrower)
 
 adb = adbrower.Adbrower()
 
@@ -24,8 +23,9 @@ class Control(object):
 
     ## EXTERIOR CLASS BUILD
     #------------------------
+        import adb_core.Class__Control as CTL
 
-        control = Control('test', sl.cube_shape, 5)
+        control = CTL.Control('test', sl.cube_shape, 5)
 
     """
 
@@ -37,7 +37,6 @@ class Control(object):
         self.matchTransforms = matchTransforms
 
         self.create()
-
 
     #===================
     # PROPERTIES
@@ -124,11 +123,11 @@ class ShapeManagement(object):
 
     ## EXTERIOR CLASS BUILD
     #------------------------
-    import adb_core.Class__Control as CTL
-    reload (CTL)
+        import adb_core.Class__Control as CTL
+        reload (CTL)
 
-    sm = CTL.ShapeManagement()
-    sm.shape = sl.diamond_shape
+        sm = CTL.ShapeManagement()
+        sm.shape = sl.diamond_shape
     """
 
     def __init__(self,
@@ -157,8 +156,6 @@ class ShapeManagement(object):
 
         @param old_ctrl: The controller that you want to change the shape
         @param new_ctrl: The new shape you want to give to your old controller
-
-        # TODO: Set the same color as the orignal controler and do a propScale??
         """
 
         original_ctl = old_ctrl
