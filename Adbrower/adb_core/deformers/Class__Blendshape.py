@@ -27,7 +27,7 @@ def loadPlugin(plugin):
         except RuntimeError:
             pm.warning('could not load plugin {}'.format(plugin))
 
-loadPlugin('mirrorBlsWeights')
+loadPlugin('adbMirrorBlsWeights__Command')
 
 
 def getMDagPath(node):
