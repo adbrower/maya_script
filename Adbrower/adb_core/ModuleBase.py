@@ -23,13 +23,13 @@ class ModuleBase(object):
 
     def _start(self, _metaDataNode = 'transform'):
         """
-        - Creates Rig Group hiearchy  
-        - Create Meta Data Node      
+        - Creates Rig Group hiearchy
+        - Create Meta Data Node
         """
         self.metaData_GRP = self.createMetaDataGrp(type=_metaDataNode)
         self.hiearchy_setup(self.NAME, is_module=True)
-        
-    
+
+
     def _guides(self):
         """
         - Creates all the guides
@@ -111,11 +111,9 @@ class ModuleBase(object):
         self.INPUT_GRP = pm.group(n='{}_INPUT__GRP'.format(module_name), em=1)
         self.OUTPUT_GRP = pm.group(n='{}_OUTPUT__GRP'.format(module_name), em=1)
 
-        # self.CONTROLS_GRP = pm.group(n='{}_CONTROLS__GRP'.format(module_name), em=1)
         self.VISRULE_GRP = pm.group(n='{}_VISRULE__GRP'.format(module_name), em=1)
 
         [pm.parent(grp, self.MOD_GRP) for grp in [self.RIG_GRP, self.INPUT_GRP, self.OUTPUT_GRP]]
-        # pm.parent(self.CONTROLS_GRP, self.INPUT_GRP)
         pm.parent(self.VISRULE_GRP, self.MOD_GRP)
 
         return self.MOD_GRP, self.RIG_GRP, self.INPUT_GRP, self.OUTPUT_GRP
@@ -133,15 +131,15 @@ class ModuleBase(object):
         [pm.parent(child, self.INPUT_GRP) for child in INPUT_GRP_LIST]
         [pm.parent(child, self.OUTPUT_GRP) for child in OUTPUT_GRP_LIST]
 
-  
+
     def createMetaDataGrp(self, type ='transform'):
         """
         Create a Meta Data Node
-        @param type: string. 
+        @param type: string.
                 'transform': empty node
                 'network' : network node
 
-        """    
+        """
         METADATA_grp_name = self.NAME + '__METADATA'
 
         if pm.objExists(METADATA_grp_name):

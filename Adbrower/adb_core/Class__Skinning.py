@@ -100,8 +100,8 @@ class Skinning(object):
 
     ## EXTERIOR CLASS BUILD
     #------------------------
-    import adb_utils.Class__Skinning as skin
-    reload (skin)
+        import adb_core..Class__Skinning as skin
+        reload (skin)
     """
 
     def __init__(self,
@@ -375,8 +375,9 @@ class Skinning(object):
                 interpWeights(start, end, mod, infs, weights, skcls)
         solveBetween()
 
+    @staticmethod
     @undo
-    def conform_weights(self):
+    def conform_weights():
         """
         It conforms the weights of the selected vertices. The selection needs to be vertices of a mesh and
         the mesh should have attached a skinCluster.
