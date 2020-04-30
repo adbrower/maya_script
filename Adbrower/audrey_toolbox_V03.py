@@ -35,8 +35,9 @@ import adb_tools.Tool__Match_IkFK_PySide as Tool__Match_IkFK_PySide
 import adb_tools.Tool__Tilt as Tool__Tilt
 import adb_core.Class__AddAttr as adbAttr
 import adb_core.Class__Transforms
-import adb_library.adb_utils.Class__ShapeManagement as adbShape
+import adb_core.Class__Control as Control
 import adb_tools.Tool__Topology as adbTopoTool
+import adb_core.Class__Skinning as skin
 
 adb = adbrower.Adbrower()
 
@@ -338,6 +339,75 @@ class AudreyToolBox():
         self.mroot = pm.textField(w=99, tx='root')
         pm.setParent('..')
 
+        pm.setParent('..')
+        pm.setParent('..')
+
+
+## ------------ SECTION JOINTS ###
+
+
+        def jointOrient(options):
+            if options == "X":
+                oCollJoints = pm.selected()
+                pm.joint(zso=1, ch=1, e=1, oj='xyz', secondaryAxisOrient='xup')
+                pm.select(cl=True)
+
+                #Orient the last joint to the world#
+                selLastJnt = pm.select(oCollJoints[-1])
+                pm.joint(e=1, oj='none')
+                pm.select(None)
+
+            elif options == "Y":
+                oCollJoints = pm.selected()
+                pm.joint(zso=1, ch=1, e=1, oj='yxz', secondaryAxisOrient='xdown')
+                pm.select(cl=True)
+
+                #Orient the last joint to the world#
+                selLastJnt = pm.select(oCollJoints[-1])
+                pm.joint(e=1, oj='none')
+                pm.select(None)
+
+        pm.frameLayout(cll=True, w=200, bgc=(.12, .12, .12), cl=False, label="JOINTS AND BIND")
+        pm.text(l="---------------------- JOINTS ---------------------", h=18)
+        pm.columnLayout(adj=False)
+
+        pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=5)
+        pm.iconTextButton(style='iconAndTextVertical', l="Joint Tool", i='kinJoint.png', command=mc.JointTool)
+        pm.iconTextButton(style='iconAndTextVertical', l="Joint at Center", i='kinConnect.png', command=lambda * args: adb.jointAtCenter())
+        pm.iconTextButton(style='iconAndTextVertical', l="Orient Joint", i='orientJoint.png', command=mc.OrientJointOptions)
+        pm.setParent('..')
+
+        pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=2)
+        pm.text(l='Orient Presets :', h=35)
+        pm.optionMenu(cc=jointOrient)
+        pm.menuItem(label="- Joint Orient -")
+        pm.menuItem(label="X")
+        pm.menuItem(label="Y")
+        pm.setParent('..')
+
+        pm.separator(h=3)
+        pm.text(l="---------------- BIND AND SKIN --------------", h=20)
+
+        pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=5)
+        pm.iconTextButton(style='iconAndTextVertical', l="Bind Skin", i='smoothSkin.png', command=mc.SmoothBindSkin, ann='popup menu available')
+        pm.popupMenu()
+        pm.menuItem(l='options window', c=mc.SmoothBindSkinOptions)
+        pm.iconTextButton(style='iconAndTextVertical', l="Copy Weight", i='copySkinWeight.png', command=mc.CopySkinWeightsOptions)
+        pm.iconTextButton(style='iconAndTextVertical', l="Mirror Weight", i='mirrorSkinWeight.png', command=mc.MirrorSkinWeightsOptions)
+        pm.setParent('..')
+
+        pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=4)
+        pm.iconTextButton(style='iconAndTextVertical', l="Unbind Skin", i='detachSkin.png', command=mc.DetachSkin)
+        pm.iconTextButton(style='iconAndTextVertical', l="Add Influence", i='addWrapInfluence.png', command=mc.AddInfluenceOptions)
+        pm.iconTextButton(style='iconAndTextVertical', l="  Cluster", i='cluster.png', command=lambda *args: pm.mel.newCluster(" -envelope 1"), ann='popup menu available')
+        pm.popupMenu()
+        pm.menuItem(l='Cluster on each Cvs', c=lambda *args: adb.clusterCvs(pm.selected()))
+        pm.setParent('..')
+
+        pm.separator(h=3)
+        pm.button(l="Conform Weights", w=200, h=30, backgroundColor=colordic['grey'], c=lambda *args: skin.Skinning().conform_weights())
+        pm.separator(h=2)
+        pm.button(l="Hammer Wieghts", w=200, backgroundColor=colordic['grey'], c=lambda *args: mel.eval("weightHammerVerts;"))
         pm.setParent('..')
         pm.setParent('..')
 
@@ -915,73 +985,6 @@ class AudreyToolBox():
 
         pm.setParent('..')
 
-
-## ------------ SECTION JOINTS ###
-
-        def jointOrient(options):
-            if options == "X":
-                oCollJoints = pm.selected()
-                pm.joint(zso=1, ch=1, e=1, oj='xyz', secondaryAxisOrient='xup')
-                pm.select(cl=True)
-
-                #Orient the last joint to the world#
-                selLastJnt = pm.select(oCollJoints[-1])
-                pm.joint(e=1, oj='none')
-                pm.select(None)
-
-            elif options == "Y":
-                oCollJoints = pm.selected()
-                pm.joint(zso=1, ch=1, e=1, oj='yxz', secondaryAxisOrient='xdown')
-                pm.select(cl=True)
-
-                #Orient the last joint to the world#
-                selLastJnt = pm.select(oCollJoints[-1])
-                pm.joint(e=1, oj='none')
-                pm.select(None)
-
-        pm.frameLayout(cll=True, w=200, bgc=(.12, .12, .12), cl=False, label="JOINTS AND BIND")
-        pm.text(l="---------------------- JOINTS ---------------------", h=18)
-        pm.columnLayout(adj=False)
-
-        pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=5)
-        pm.iconTextButton(style='iconAndTextVertical', l="Joint Tool", i='kinJoint.png', command=mc.JointTool)
-        pm.iconTextButton(style='iconAndTextVertical', l="Joint at Center", i='kinConnect.png', command=lambda * args: adb.jointAtCenter())
-        pm.iconTextButton(style='iconAndTextVertical', l="Orient Joint", i='orientJoint.png', command=mc.OrientJointOptions)
-        pm.setParent('..')
-
-        pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=2)
-        pm.text(l='Orient Presets :', h=35)
-        pm.optionMenu(cc=jointOrient)
-        pm.menuItem(label="- Joint Orient -")
-        pm.menuItem(label="X")
-        pm.menuItem(label="Y")
-        pm.setParent('..')
-
-        pm.separator(h=3)
-        pm.text(l="---------------- BIND AND SKIN --------------", h=20)
-
-        pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=5)
-        pm.iconTextButton(style='iconAndTextVertical', l="Bind Skin", i='smoothSkin.png', command=mc.SmoothBindSkin, ann='popup menu available')
-        pm.popupMenu()
-        pm.menuItem(l='options window', c=mc.SmoothBindSkinOptions)
-        pm.iconTextButton(style='iconAndTextVertical', l="Copy Weight", i='copySkinWeight.png', command=mc.CopySkinWeightsOptions)
-        pm.iconTextButton(style='iconAndTextVertical', l="Mirror Weight", i='mirrorSkinWeight.png', command=mc.MirrorSkinWeightsOptions)
-        pm.setParent('..')
-
-        pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=4)
-        pm.iconTextButton(style='iconAndTextVertical', l="Unbind Skin", i='detachSkin.png', command=mc.DetachSkin)
-        pm.iconTextButton(style='iconAndTextVertical', l="Add Influence", i='addWrapInfluence.png', command=mc.AddInfluenceOptions)
-        pm.iconTextButton(style='iconAndTextVertical', l="  Cluster", i='cluster.png', command=lambda *args: pm.mel.newCluster(" -envelope 1"), ann='popup menu available')
-        pm.popupMenu()
-        pm.menuItem(l='Cluster on each Cvs', c=lambda *args: adb.clusterCvs(pm.selected()))
-        pm.setParent('..')
-
-        pm.separator(h=3)
-        pm.button(l="Paint Skin Tool", w=200, h=30, backgroundColor=colordic['grey'], command=mc.ArtPaintSkinWeightsToolOptions)
-        pm.separator(h=2)
-        pm.button(l="NgSkin Tool", w=200, backgroundColor=colordic['grey'], command=pm.Callback(self.NgskinBA))
-        pm.setParent('..')
-        pm.setParent('..')
 
         '''---------------------------------------'''
         ''' # end # '''
@@ -1630,24 +1633,12 @@ class AudreyToolBox():
         '''
         Change RGB Colors
         '''
-
         values = (pm.colorInputWidgetGrp('RGB', q=True, rgbValue=True))
         oControler = pm.selected()
-        shapes = [x.getShapes() for x in oControler]
-
-        all_shapes = [x for i in shapes for x in i]
-
-        if all_shapes == []:
-            for ctrl in oControler:
-                pm.PyNode(ctrl).overrideEnabled.set(1)
-                pm.PyNode(ctrl).overrideRGBColors.set(1)
-                pm.PyNode(ctrl).overrideColorRGB.set(values)
-        else:
-            for ctrl in all_shapes:
-                pm.PyNode(ctrl).overrideEnabled.set(1)
-                pm.PyNode(ctrl).overrideRGBColors.set(1)
-                pm.PyNode(ctrl).overrideColorRGB.set(values)
-
+        for ctrl in oControler:
+            pm.PyNode(ctrl).overrideEnabled.set(1)
+            pm.PyNode(ctrl).overrideRGBColors.set(1)
+            pm.PyNode(ctrl).overrideColorRGB.set(values)
         self.allgrey()
 
     @undo
@@ -2075,32 +2066,22 @@ class AudreyToolBox():
         Change the color override of the selection
         '''
         ctrls = pm.selected()
-        shapes = [x.getShapes() for x in ctrls]
-        all_shapes = [x for i in shapes for x in i] or []
-
-        if all_shapes != []:
-            for ctrl in all_shapes:
-                pm.PyNode(ctrl).overrideEnabled.set(1)
-                pm.PyNode(ctrl).overrideRGBColors.set(0)
-                pm.PyNode(ctrl).overrideColor.set(col)
-            print(col)
-        else:
-            for each in ctrls:
-                ctrl = pm.PyNode(each)
-                ctrl.overrideEnabled.set(1)
-                ctrl.overrideRGBColors.set(0)
-                ctrl.overrideColor.set(col)
-                pm.select(None)
-            print(col)
+        for each in ctrls:
+            ctrl = pm.PyNode(each)
+            ctrl.overrideEnabled.set(1)
+            ctrl.overrideRGBColors.set(0)
+            ctrl.overrideColor.set(col)
+            pm.select(None)
+        print(col)
 
     @changeColor()
     def shape_replacement(self, shape_name):
         '''
         Replace Shape according to the ShapesLibrary.py file
         '''
-        sm = adbShape.shapeManagement(subject = pm.selected())
-        sm.shapes = shape_name
-        return sm.shapes
+        sm = Control.ShapeManagement(subject = pm.selected())
+        sm.shape = shape_name
+        return sm.shape
 
 
 
