@@ -23,8 +23,8 @@ adb = adbrower.Adbrower()
 # POSminZ = [pos[3], ((pos[1] + pos[4])/2), pos[2]]
 # POSminZ = [pos[3], ((pos[1] + pos[4])/2), pos[5]]
 
-# POSminX = [pos[0], ((pos[1] + pos[4])/2), pos[5]]
-# POSmaxX = [pos[0], ((pos[1] + pos[4])/2), pos[2]]
+# POSminX = [pos[0], ((pos[1] + pos[4])/2), pos[2]]
+# POSmaxX = [pos[3], ((pos[1] + pos[4])/2), pos[2]]
 
 # print POSminZ, POSminZ, POSminX, POSmaxX
 
