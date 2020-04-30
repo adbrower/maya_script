@@ -59,7 +59,7 @@ class Folli(moduleBase.ModuleBase):
     arm.addControls()
 
     """
-    def __init__(self, 
+    def __init__(self,
                 module_name,
                 countU,
                 countV,
@@ -67,7 +67,7 @@ class Folli(moduleBase.ModuleBase):
                 radius = 0.2,
                 subject=pm.selected()):
         super(Folli, self).__init__()
-        
+
         self._MODEL = FolliModel()
 
         self.NAME = module_name
@@ -76,7 +76,7 @@ class Folli(moduleBase.ModuleBase):
         self.countV = countV
         self.vDir = vDir
         self.radius = radius
-    
+
     def __repr__(self):
         return str('{} : {} \n {}'.format(self.__class__.__name__, self.subject, self.__class__))
 
@@ -103,12 +103,12 @@ class Folli(moduleBase.ModuleBase):
     # =========================
 
     def start(self, metaDataNode = 'network'):
-        super(Folli, self)._start(_metaDataNode = metaDataNode)  
-        
+        super(Folli, self)._start(_metaDataNode = metaDataNode)
+
         # add attribute on METADATA node
 
     def build(self):
-        super(Folli, self)._build()  
+        super(Folli, self)._build()
 
         if self.subject.getShape().type() == 'nurbsSurface':
             plugs = pm.listConnections(str(self.subject.getShape()) + '.local', d=True, sh=True)
@@ -119,8 +119,9 @@ class Folli(moduleBase.ModuleBase):
         if current_numb_foll == []:
             self.many_follicles(self.subject, self.countU, self.countV, self.vDir)
         else:
-            self.add_folli(self.countV) 
+            self.add_folli(self.countV)
 
+        # CBB: Put the group under the INPUT_GRP ???
         self.setFinalHiearchy(
                     RIG_GRP_LIST=[self.getFolliGrp],
                     INPUT_GRP_LIST=[],
@@ -133,7 +134,7 @@ class Folli(moduleBase.ModuleBase):
     # =========================
     # SOLVERS
     # =========================
-        
+
     def create_follicle(self, oNurbs, count, uPos=0.0, vPos=0.0):
         # manually place and connect a follicle onto a nurbs surface.
         if oNurbs.type() == 'transform':
@@ -217,7 +218,7 @@ class Folli(moduleBase.ModuleBase):
         self._MODEL.getFolliGrp = pm.spaceLocator(n='{}{}_FOLLI_{}__{}'.format(NC.getSideFromName(obj), NC.getBasename(obj), NC.SYSTEM, NC.GRP))
         pm.delete(self._MODEL.getFolliGrp.getShape())
         currentFollNumber = 0
-                
+
         for i in range(countU):
             for j in range(countV):
                 currentFollNumber += 1
@@ -244,7 +245,7 @@ class Folli(moduleBase.ModuleBase):
                 self._MODEL.getResetJoints.append(oGrp)
                 oGrp.setTranslation(oFoll.getParent().getTranslation(space='world'), space='world')
 
-                oJoint = pm.joint(n=pName + '_foll_0{}__{}'.format(currentFollNumber, NC.JOINT), rad=self.radius)
+                oJoint = pm.joint(n='{}_0{}__{}'.format(pName, currentFollNumber, NC.JOINT), rad=self.radius)
                 self._MODEL.getJoints.append(oJoint)
                 oJoint.setTranslation(oFoll.getParent().getTranslation(space='world'), space='world')
                 pm.matchTransform(oJoint, oGrp, rot=1)
@@ -260,7 +261,7 @@ class Folli(moduleBase.ModuleBase):
                 pm.parent(oGrp, oFoll.getParent())
                 pm.parent(oFoll.getParent(), self._MODEL.getFolliGrp)
                 oGrp.rotate.set(0.0, 0.0, 0.0)
-      
+
                 self._MODEL.getInputs.append(oGrp)
                 pm.select(None)
 
@@ -302,7 +303,7 @@ class Folli(moduleBase.ModuleBase):
         """
         mesh = self.subject
 
-        for x in xrange(add_value):
+        for index in xrange(add_value):
             mesh_shape = pm.PyNode(mesh).getShape()
 
             plugs = pm.listConnections(str(mesh_shape) + '.outMesh', d=True, sh=True)
@@ -314,7 +315,7 @@ class Folli(moduleBase.ModuleBase):
             pm.rename(oFoll.getParent(), '{}_0{}__{}'.format(pName, current_numb_foll + 1, NC.FOLL_SUFFIX))
             pm.rename(oFoll, '{}_{}__foll__Shape'.format(pName, current_numb_foll))
 
-            oGrp = pm.group(em=True)
+            oGrp = pm.group(em=True, n='{}_0{}__{}'.format(pName, index, NC.GRP))
             oGrp.setTranslation(oFoll.getParent().getTranslation(space='world'), space='world')
 
             oJoint = pm.joint(rad=radius)
@@ -329,7 +330,7 @@ class Folli(moduleBase.ModuleBase):
             uParam.connect(oFoll.getParent().u_param)
             vParam.connect(oFoll.getParent().v_param)
 
-            pm.rename(oJoint, '{}_foll_0{}_{}'.format(pName, current_numb_foll + 1, NC.JOINT))
+            pm.rename(oJoint, '{}_0{}__{}'.format(pName, index, NC.JOINT))
             pm.rename(oJoint.getParent(), '{}_0{}__{}'.format(pName, current_numb_foll + 1, NC.GRP))
 
             pm.parent(oGrp, oFoll.getParent())
