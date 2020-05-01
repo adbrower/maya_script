@@ -14,6 +14,10 @@ import adb_core.ModuleBase as moduleBase
 # reload(moduleBase)
 import adb_core.Class__AddAttr as adbAttr
 from adb_core.Class__Transforms import Transform
+
+import adb_core.Class__Control as Control
+reload(Control)
+
 import adbrower
 import maya.cmds as mc
 import maya.mel as mel
@@ -267,31 +271,29 @@ class Folli(moduleBase.ModuleBase):
 
         return self._MODEL.getFollicules
 
-    @changeColor()
-    def addControls(self, shape=sl.ball_shape):
+    
+    def addControls(self, shape=sl.ball_shape, scale=1, color=('index', 13)):
         """ add Controls to the follicules """
-        pm.select(self._MODEL.getJoints, r=True)
-        create_ctrls = flatList(sl.makeCtrls(shape))
-        [pm.rename(ctrl, jnt.replace('JNT', NC.CTRL)) for ctrl, jnt in zip(create_ctrls, self._MODEL.getJoints)]
 
-        # get the scale of the joint to add 0.5 on the scale of the controller
-        [x.scaleX.set((pm.PyNode(self._MODEL.getJoints[0]).radius.get()) + 0.5) for x in create_ctrls]
-        [x.scaleY.set((pm.PyNode(self._MODEL.getJoints[0]).radius.get()) + 0.5) for x in create_ctrls]
-        [x.scaleZ.set((pm.PyNode(self._MODEL.getJoints[0]).radius.get()) + 0.5) for x in create_ctrls]
+        create_ctrls =  [Control.Control(str(joint), 
+                            shape = shape, 
+                            scale=scale, 
+                            parent = self.INPUT_GRP,
+                            matchTransforms=(joint, 0, 0),
+                            color=color,
+                            ) for joint in self._MODEL.getJoints]
 
         for foll, ctrls in zip(self._MODEL.getFollicules,  create_ctrls):
-            offset = adb.makeroot_func(ctrls, 'OFFSET')
+            offset = adb.makeroot_func(ctrls.control, 'OFFSET')
             pm.rename(offset, '{}'.format(offset).replace('__CTRL', ''))
             Transform(foll.getTransform()).matrixConstraint(offset, channels='trh', mo=True)
-            pm.parent(offset, self.INPUT_GRP)
 
         for grp, ctrls in zip(self._MODEL.getResetJoints, create_ctrls):
-            pm.parent(grp, ctrls)
-
-        [pm.makeIdentity(x, n=0, s=1, r=1, t=1, apply=True, pn=1) for x in create_ctrls]
+            pm.parent(grp, ctrls.control)
 
         self._MODEL.getControls = create_ctrls
         return self._MODEL.getControls
+
 
     def add_folli(self, add_value, radius=0.2):
         """
