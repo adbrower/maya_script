@@ -35,6 +35,8 @@ import ShapesLibrary as sl
 from CollDict import suffixDic
 reload(NC)
 
+#TO DO: put @staticmethod
+
 # -----------------------------------
 # 2.1 DECORATORS
 # -----------------------------------
@@ -1247,33 +1249,20 @@ class Adbrower(object):
         pm.delete(starting_locs)
         return(_curve)
 
-    def changeColor_func(self, subject, type='rgb', col=(0.8, 0.5, 0.2)):
+    @staticmethod
+    def changeColor_func(subject, type='rgb', col=(0.8, 0.5, 0.2)):
         pm.select(subject)
         ctrls = pm.selected()
-        shapes = [x.getShapes() for x in ctrls] or []
-        all_shapes = [x for i in shapes for x in i] or []
+        for ctrl in ctrls:
+            pm.PyNode(ctrl).overrideEnabled.set(1)
 
-        if all_shapes == []:
-            for ctrl in ctrls:
-                pm.PyNode(ctrl).overrideEnabled.set(1)
+            if type == 'rgb':
+                pm.PyNode(ctrl).overrideRGBColors.set(1)
+                pm.PyNode(ctrl).overrideColorRGB.set(col)
 
-                if type == 'rgb':
-                    pm.PyNode(ctrl).overrideRGBColors.set(1)
-                    pm.PyNode(ctrl).overrideColorRGB.set(col)
-
-                if type == 'index':
-                    pm.PyNode(ctrl).overrideRGBColors.set(0)
-                    pm.PyNode(ctrl).overrideColor.set(col)
-        else:
-            for ctrl in all_shapes:
-                pm.PyNode(ctrl).overrideEnabled.set(1)
-                if type == 'rgb':
-                    pm.PyNode(ctrl).overrideRGBColors.set(1)
-                    pm.PyNode(ctrl).overrideColorRGB.set(col)
-
-                if type == 'index':
-                    pm.PyNode(ctrl).overrideRGBColors.set(0)
-                    pm.PyNode(ctrl).overrideColor.set(col)
+            if type == 'index':
+                pm.PyNode(ctrl).overrideRGBColors.set(0)
+                pm.PyNode(ctrl).overrideColor.set(col)
         return subject
 
     def getShapeOrig(self, _transformName=''):
