@@ -24,6 +24,43 @@ attrDic = {
     'All': ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ', 'scaleX', 'scaleY', 'scaleZ', 'visibility']
 }
 
+indexColor = {
+    'grey' : 0,
+    'black' : 1,
+    'darkGrey' : 2,
+    'lightGrey' : 3,
+    'darkRed' : 4,
+    'darkBlue' : 5,
+    'fluoBlue' : 6,
+    'darkGreen' : 7,
+    'darkPurple' : 8,
+    'fluoPurple' : 9,
+    'brown' : 10,
+    'darkBrown' : 11,
+    'red' : 12,
+    'fluoRed' : 13,
+    'fluoGreen' : 14,
+    'blue' : 15,
+    'white' : 16,
+    'yellow' : 17,
+    'lightBlue' : 18,
+    'lightGreen' : 19,
+    'lightRed' : 20,
+    'lightBrown' : 21,
+    'lightYellow' : 22,
+    'green' : 23,
+    'pastelBrown' : 24,
+    'pastelYellow' : 25,
+    'yellowGreen' : 26,
+    'pastelGreen' : 27,
+    'blueGrey' : 28,
+    'pastelBlue' : 29,
+    'purple' : 30,
+    'pastelRed' : 31,
+}
+
+
+
 
 pysideColorDic = {
 
@@ -106,7 +143,6 @@ colordic = {
 
     'darkbrown':    (0.364, 0.309, 0.264),
     'black':        (0.000, 0.000, 0.000),
-
 }
 
 
