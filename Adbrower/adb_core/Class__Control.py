@@ -7,6 +7,7 @@
 # -------------------------------------------------------------------
 
 import pymel.core as pm
+import maya.cmds as mc
 
 import ShapesLibrary as sl
 import adb_core.Class__Transforms as adbTransform
@@ -15,7 +16,8 @@ import adbrower
 adb = adbrower.Adbrower()
 
 from adbrower import changeColor, propScale
-from CollDict import colordic
+from CollDict import indexColor
+
 
 class Control(object):
     """
@@ -28,13 +30,13 @@ class Control(object):
         control = CTL.Control('test', sl.cube_shape, 5)
 
     """
-
-    def __init__(self, name, shape, scale=1, parent=None, matchTransforms=(False, 0, 0)):
+    def __init__(self, name, shape, scale=1, parent=None, matchTransforms=(False, 0, 0), color=('index', 21)):
         self.name = name
         self._shape = shape
-        self.scale = scale
+        self._scale = scale
         self.parent = parent
         self.matchTransforms = matchTransforms
+        self._color = color
 
         self.create()
 
@@ -51,13 +53,34 @@ class Control(object):
         sm = ShapeManagement([self.control])
         sm.shape = name
 
+    @property
+    def color(self):
+        return (self._color)
 
-    @changeColor()
+    @color.setter
+    def color(self, color_value):
+        adb.changeColor_func(self.control, *color_value)
+        pm.select(None)
+        return (color_value)
+
+    @property
+    def scale(self):
+        return (self._scale)
+
+    @scale.setter
+    def scale(self, scale_value):
+            if scale_value > 0:
+                self.scaleVertex('+', valuePos=scale_value)
+            else:
+                self.scaleVertex('-', valuePos=scale_value)
+
+
     def create(self):
         self.control = self._shape()
         pm.rename(self.control, self.name)
         adb.AutoSuffix([self.control])
-        self.control.scale.set(self.scale, self.scale, self.scale)
+        adb.changeColor_func(self.control, *self._color)
+        self.control.scale.set(self._scale, self._scale, self._scale)
         pm.makeIdentity(self.control, n=0, s=1, r=1, t=1, apply=True, pn=1)
         if self.matchTransforms[0] is not False:
             pm.matchTransform(self.control, self.matchTransforms[0], pos =self.matchTransforms[1], rot=self.matchTransforms[2] )
@@ -66,12 +89,14 @@ class Control(object):
             pm.parent(self.control, self.parent)
         return self.control
 
+
     def freezeCvs(self):
         """ Freeze all the cvs of a curve """
         mc.DeleteHistory(self.control)
         cluster = pm.cluster(self.control)
         pm.delete(cluster)
         return self.control
+
 
     def resetCvs(self):
         curve_name = self.control.name()
@@ -84,6 +109,7 @@ class Control(object):
                 pm.setAttr('{}.controlPoints[{}].{}Value'.format(
                     shape, number, axis), 0)
         pm.rename(self.control, curve_name)
+
 
     def selectNurbsVertx(self):
         """ Select All cvs of selected nurbs curve """
