@@ -23,7 +23,10 @@ adb = adbrower.Adbrower()
 
 
 class Joint(adbTransform.Transform):
-    """A Module containing multiples joint methods"""
+    """A Module containing multiples joint methods
+
+        import adb_core.Class__Joint as Joint
+    """
 
     def __init__(self,
                  _joints,
@@ -51,10 +54,13 @@ class Joint(adbTransform.Transform):
         return cls([(jnt) for jnt in pm.selected()])
 
     @classmethod
-    def create(cls, numb=1, name='joint1', rad=1):
+    def create(cls, numb=1, name='joint1', rad=1, padding=False):
         jnt_created = []
         for number in range(numb):
-            jnt = pm.joint(n='{}_{:02d}'.format(name, number+1), rad=rad)
+            if padding:
+                jnt = pm.joint(n='{}_{:02d}'.format(name, number+1), rad=rad)
+            else:
+                jnt = pm.joint(n='{}'.format(name), rad=rad)
             pm.parent(jnt, w=1)
             jnt_created.append(jnt)
         return cls(jnt_created)
