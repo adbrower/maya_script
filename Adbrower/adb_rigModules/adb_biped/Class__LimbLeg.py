@@ -11,6 +11,7 @@ import sys
 import pymel.core as pm
 
 import ShapesLibrary as sl
+from CollDict import indexColor
 import adbrower
 adb = adbrower.Adbrower()
 
@@ -30,8 +31,11 @@ import adb_library.adb_utils.Class__FkShapes as adbFKShape
 import adb_library.adb_modules.Module__Folli as adbFolli
 import adb_library.adb_modules.Module__IkStretch as adbIkStretch
 import adb_library.adb_modules.Module__SquashStretch_Ribbon as adbRibbon
+import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
+
 import adb_rigModules.RigBase as RigBase
 
+reload(sl)
 reload(Joint)
 reload(RigBase)
 reload(adbAttr)
@@ -129,12 +133,14 @@ class LimbLeg(moduleBase.ModuleBase):
         self.side = NC.getSideFromPosition(GUIDES[0])
 
         if self.side == 'R':
-            self.col_main = 13
+            self.col_main = indexColor['fluoRed']
+            self.col_layer1 = indexColor['darkRed']
             self.pol_vector_col = (0.5, 0.000, 0.000)
-            self.sliding_knee_col = 4
+            self.sliding_knee_col = indexColor['darkRed']
         else:
-            self.col_main = 6
-            self.sliding_knee_col = 5
+            self.col_main = indexColor['fluoBlue']
+            self.col_layer1 = indexColor['blue']
+            self.sliding_knee_col = indexColor['blue']
             self.pol_vector_col = (0, 0.145, 0.588)
 
         self.nameStructure = {
@@ -147,16 +153,22 @@ class LimbLeg(moduleBase.ModuleBase):
         # =================
         # BUILD
 
+        self.rigLocators()
         self.createBaseLegJoints()
         self.ik_fk_system()
         self.stretchyLimb()
         self.slidingKnee()
+        self.doubleKnee()
         self.ribbon()
 
 
     # =========================
     # SOLVERS
     # =========================
+    
+    def rigLocators(self):
+        self.WorldLoc = Locator.Locator.create(name='WorldTransform').locators[0]
+
 
     def createBaseLegJoints(self):
         """
@@ -244,6 +256,7 @@ class LimbLeg(moduleBase.ModuleBase):
             pm.parent(self.fk_leg_joints[0], self.ikFk_MOD.RIG_GRP)
             return self.fk_leg_joints
 
+
         def createIKFKSwitchControl():
             """Swtich Control options """
 
@@ -282,23 +295,29 @@ class LimbLeg(moduleBase.ModuleBase):
             Joint.Joint(self.base_leg_joints).radius = 5
 
         @changeColor('index', col = self.col_main )
-        def CreateFkcontrols(radius = 1,
+        def CreateFkcontrols(radius = 3,
                     normalsCtrl=(0,1,0)):
             """Creates the FK controls on the Fk joint chain """
             FkShapeSetup = adbFKShape.FkShape(self.fk_leg_joints)
             FkShapeSetup.shapeSetup(radius, normalsCtrl)
             return FkShapeSetup.controls
 
-        def CreateIKcontrols(Ikshape = sl.cube_shape, exposant = 30, pvShape = sl.ball_shape):
+        def CreateIKcontrols(Ikshape = sl.cube_shape, exposant=1, pvShape = sl.ball_shape):
             """
             Create the IK handle setup on the IK joint chain
-            #TODO : Calculate PoleVector Distance. Remove Exposant
-            #TODO : Add Space Switch for PoleVector CTL
             """
             self.nameStructure['Suffix'] = NC.IKHANDLE_SUFFIX
             leg_IkHandle = pm.ikHandle(n='{Side}__{Basename}__{Suffix}'.format(**self.nameStructure), sj=self.ik_leg_joints[0], ee=self.ik_leg_joints[-1])
             leg_IkHandle[0].v.set(0)
-            pm.select(self.ik_leg_joints[-1], r = True)
+
+            vec1 = self.base_leg_joints[0].getTranslation(space='world') # "hips"
+            vec2 = self.base_leg_joints[1].getTranslation(space='world') # "knee"
+            vec3 = self.base_leg_joints[2].getTranslation(space='world') # "ankle"
+            
+            # 1. Calculate a "nice distance" based on average of the two bone lengths.
+            legLength = (vec2-vec1).length()
+            kneeLength = (vec3-vec2).length()
+            distance = (legLength + kneeLength) * 0.5
 
             @makeroot('')
             @changeColor('index', col = self.col_main)
@@ -306,7 +325,7 @@ class LimbLeg(moduleBase.ModuleBase):
                 self.nameStructure['Suffix'] = NC.CTRL
                 leg_IkHandle_ctrl = Control.Control(name='{Side}__{Basename}_IK__{Suffix}'.format(**self.nameStructure),
                                                  shape = Ikshape,
-                                                 scale=3,
+                                                 scale=0.8,
                                                  matchTransforms = (self.ik_leg_joints[-1], 1,0)
                                                  ).control
                 return leg_IkHandle_ctrl
@@ -317,18 +336,19 @@ class LimbLeg(moduleBase.ModuleBase):
             def Ik_ctrl_offset():
                 _leg_IkHandle_ctrl_offset = Control.Control(name='{Side}__{Basename}_IK_offset__{Suffix}'.format(**self.nameStructure),
                                  shape = Ikshape,
-                                 scale = 2,
+                                 scale = 0.6,
                                  parent = self.leg_IkHandle_ctrl,
                                  matchTransforms = (self.ik_leg_joints[-1], 1, 0)
                                  ).control
                 return _leg_IkHandle_ctrl_offset
             self.leg_IkHandle_ctrl_offset = Ik_ctrl_offset()[0]
 
+
             @lockAttr(att_to_lock = ['rx','ry','rz','sx','sy','sz'])
             @changeColor('rgb', col = self.pol_vector_col)
             @makeroot()
             def pole_vector_ctrl(name ='{Side}__{Basename}_pv__{Suffix}'.format(**self.nameStructure)):
-                pv_guide = adb.PvGuide(leg_IkHandle[0],self.ik_leg_joints[-2], exposant=exposant)
+                pv_guide = adb.PvGuide(leg_IkHandle[0],self.ik_leg_joints[-2], exposant=exposant*distance)
                 self.poleVectorCtrl = pvShape()
 
                 pm.rename(self.poleVectorCtrl,name)
@@ -352,7 +372,6 @@ class LimbLeg(moduleBase.ModuleBase):
                     pm.parent(pv_base_jnt, self.ik_leg_joints[1])
                     pm.setAttr(pv_guide.inheritsTransform, 0)
                     pm.setAttr(pv_guide.overrideDisplayType, 1)
-
                     [pm.setAttr('{}.drawStyle'.format(joint),  2) for joint in [pv_tip_jnt, pv_base_jnt]]
                     pm.parent(pv_guide, self.ikFk_MOD.RIG_GRP)
 
@@ -362,6 +381,12 @@ class LimbLeg(moduleBase.ModuleBase):
                 return self.poleVectorCtrl
 
             pole_vector_ctrl()
+
+            povSpaceSwitch = SpaceSwitch.SpaceSwitch('PV', 
+                                                    spacesInputs =[self.leg_IkHandle_ctrl_offset, self.WorldLoc], 
+                                                    spaceOutput = self.poleVectorCtrl.getParent(), 
+                                                    maintainOffset = True,
+                                                    attrNames = ['ankle', 'world'],)
 
             pm.parent(leg_IkHandle[0], self.leg_IkHandle_ctrl_offset)
             pm.parent(self.leg_IkHandle_ctrl.getParent(), self.ikFk_MOD.INPUT_GRP)
@@ -391,7 +416,7 @@ class LimbLeg(moduleBase.ModuleBase):
     def slidingKnee(self):
 
         self.SLIDING_KNEE_MOD = moduleBase.ModuleBase()
-        self.SLIDING_KNEE_MOD.hiearchy_setup('{}__SlidingKnee'.format(self.side))
+        self.SLIDING_KNEE_MOD.hiearchy_setup('{Side}__SlidingKnee'.format(**self.nameStructure))
 
         def createUpperPart():
             topLocs = locGen.locGenerator(2, str(self.base_leg_joints[0]), str(self.base_leg_joints[1]))
@@ -452,8 +477,6 @@ class LimbLeg(moduleBase.ModuleBase):
 
             for jnt in topJoints:
                 adb.matrixConstraint(str(self.base_leg_joints[0]), str(jnt), channels='rs', mo=True)
-
-
 
             return hipSlidingKnee_CTL, kneeSlidingKnee01_CTL
 
@@ -520,7 +543,6 @@ class LimbLeg(moduleBase.ModuleBase):
 
             return kneeSlidingKnee02_CTL, ankleSlidingKnee_CTL
 
-
         ## BUILD
         ##-------------
         hipSlidingKnee_CTL, kneeSlidingKnee01_CTL = createUpperPart()
@@ -529,19 +551,70 @@ class LimbLeg(moduleBase.ModuleBase):
         [self.SLIDING_KNEE_MOD.getControls.append(ctl) for ctl in [hipSlidingKnee_CTL, kneeSlidingKnee01_CTL, kneeSlidingKnee02_CTL, ankleSlidingKnee_CTL]]
         [ctl.v.set(0) for ctl in self.SLIDING_KNEE_MOD.getControls if ctl is not kneeSlidingKnee01_CTL]
         pm.parent(kneeSlidingKnee02_CTL.getParent(), kneeSlidingKnee01_CTL)
+        kneeSlidingKnee01_CTL.v.set(0)
         pm.parent(self.SLIDING_KNEE_MOD.getJoints, self.SLIDING_KNEE_MOD.OUTPUT_GRP)
 
         pm.parent(self.SLIDING_KNEE_MOD.MOD_GRP, self.RIG.MODULES_GRP)
 
+
+        self.SLIDING_KNEE_MOD.getControls.append(kneeSlidingKnee01_CTL)
+        self.SLIDING_KNEE_MOD.getResetControls.append(kneeSlidingKnee01_CTL.getParent())
+
         ## CONNECT
         ##--------------
         for jnt, ctl in zip(self.base_leg_joints, [hipSlidingKnee_CTL, kneeSlidingKnee01_CTL, ankleSlidingKnee_CTL]):
-            pm.parentConstraint(jnt, ctl, mo=True)
+            pm.parentConstraint(jnt, ctl.getParent(), mo=True)
 
+
+    def doubleKnee(self):
+        self.DOUBLE_KNEE_MOD = moduleBase.ModuleBase()
+        self.DOUBLE_KNEE_MOD.hiearchy_setup('{Side}__DoubleKnee'.format(**self.nameStructure))
+
+        @makeroot()
+        def doubleKnee_ctrl():
+            doubleKnee_ctrl = Control.Control(name='{Side}__{Basename}_baseDoubleKnee'.format(**self.nameStructure),
+                            shape=sl.locator_shape,
+                            scale=1,
+                            parent=self.DOUBLE_KNEE_MOD.INPUT_GRP,
+                            matchTransforms=(baseJoint, 1,0),
+                            color = ('index', self.col_layer1)
+                            ).control
+            return doubleKnee_ctrl
+
+        baseJoint = Joint.Joint.create(name='{Side}__{Basename}_baseDoubleKnee'.format(**self.nameStructure)).joints
+        topJoint = Joint.Joint.create(name='{Side}__{Basename}_topDoubleKnee'.format(**self.nameStructure)).joints
+        botJoint = Joint.Joint.create(name='{Side}__{Basename}_botDoubleKnee'.format(**self.nameStructure)).joints
+        [adb.AutoSuffix(jnt) for jnt in [baseJoint, topJoint, botJoint]]
+        [pm.matchTransform(jnt, self.base_leg_joints[1], pos=1, rot=1) for jnt in [baseJoint, topJoint, botJoint]]
+        [pm.parent(jnt, baseJoint[0]) for jnt in [topJoint, botJoint]]
+        pm.move(topJoint[0], 0, -0.5, 0, r=1, os=1, wd=1)
+        pm.move(botJoint[0], 0, 0.5, 0, r=1, os=1, wd=1)
+
+        _multDivid = pm.shadingNode('multiplyDivide', asUtility=1,  n='{}__DoubleKneeRotation__{}'.format(self.side, NC.MULTIPLY_DIVIDE_SUFFIX))
+        _multDivid.input2X.set(0.5)
+        _multDivid.input2Y.set(0.5)
+        _multDivid.input2Z.set(0.5)
+
+        self.base_leg_joints[1].rx >>  _multDivid.input1X
+        self.base_leg_joints[1].ry >>  _multDivid.input1Y
+        self.base_leg_joints[1].rz >>  _multDivid.input1Z
+
+        _multDivid.outputX >> baseJoint[0].rx
+        _multDivid.outputY >> baseJoint[0].ry
+        _multDivid.outputZ >> baseJoint[0].rz
+
+        doubleKnee_CTL = doubleKnee_ctrl()[0]
+        adb.matrixConstraint(str(doubleKnee_CTL), str(baseJoint[0]), channels='ts', mo=True)
+        adb.matrixConstraint(str(self.base_leg_joints[1]), str(doubleKnee_CTL.getParent()), channels='trs', mo=True)
+
+        pm.parent(baseJoint, self.DOUBLE_KNEE_MOD.OUTPUT_GRP)
+        pm.parent(self.DOUBLE_KNEE_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+        
+        if self.SLIDING_KNEE_MOD:
+            pm.pointConstraint(str(doubleKnee_CTL), str(self.SLIDING_KNEE_MOD.getControls[1]), mo=True)
 
 
     def ribbon(self):
-
         self.RIBBON_MOD = moduleBase.ModuleBase()
         self.RIBBON_MOD.hiearchy_setup('{Side}__Ribbon'.format(**self.nameStructure))
 
@@ -614,12 +687,12 @@ class LimbLeg(moduleBase.ModuleBase):
         leg_folli_upper = adbFolli.Folli('{Side}__Upper{Basename}_Folli_Base1'.format(**self.nameStructure), 1, 5, radius = 0.5, subject = upper_proxy_plane)
         leg_folli_upper.start()
         leg_folli_upper.build()
-        leg_folli_upper.addControls()
+        leg_folli_upper.addControls(shape=sl.circleX_shape, scale=1.5, color=('index', self.col_layer1))
 
         leg_folli_lower = adbFolli.Folli('{Side}__Lower{Basename}_Folli_Base1'.format(**self.nameStructure), 1, 5, radius = 0.5, subject = lower_proxy_plane)
         leg_folli_lower.start()
         leg_folli_lower.build()
-        leg_folli_lower.addControls()
+        leg_folli_lower.addControls(shape=sl.circleX_shape, scale=1.5, color=('index', self.col_layer1))
 
         upper_proxy_plane_end = createProxyPlaneUpperPart('{Side}__Upper{Basename}_END__MSH'.format(**self.nameStructure), interval=6)
         lower_proxy_plane_end = createProxyPlaneLowerPart('{Side}__Lower{Basename}_END__MSH'.format(**self.nameStructure), interval=6)
@@ -649,7 +722,6 @@ class LimbLeg(moduleBase.ModuleBase):
 
         pm.parent([leg_folli_upper.MOD_GRP,  leg_folli_upper_end.MOD_GRP, upper_proxy_plane, upper_proxy_plane_end], upperPartGrp)
         pm.parent([leg_folli_lower.MOD_GRP,  leg_folli_lower_end.MOD_GRP, lower_proxy_plane, lower_proxy_plane_end], lowerPartGrp)
-
 
 
     # =========================
@@ -782,14 +854,11 @@ class LimbLeg(moduleBase.ModuleBase):
             multuplyDivide_node.outputY >> all_adbmath_node[0].input2[1]
             multuplyDivide_node.outputZ >> all_adbmath_node[0].input2[2]
 
-
-
             ## Connect the FK in the Color 1
             for oIK, oBlendColor in zip (ik_joints, BlendColorColl_Translate):
                 pm.PyNode(oIK).tx >> pm.PyNode(oBlendColor).color2R
                 pm.PyNode(oIK).ty >> pm.PyNode(oBlendColor).color2G
                 pm.PyNode(oIK).tz >> pm.PyNode(oBlendColor).color2B
-
 
             ## Connect the BlendColor node in the Blend joint chain
             for oBlendColor, oBlendJoint in zip (BlendColorColl_Translate, result_joints):
@@ -819,7 +888,6 @@ class LimbLeg(moduleBase.ModuleBase):
         switch_ctrl.addAttr('{Side}_spaces'.format(**self.nameStructure), 'enum',  eName = "IK:FK:")
 
 
-
 # =========================
 # BUILD
 # =========================
@@ -827,8 +895,8 @@ class LimbLeg(moduleBase.ModuleBase):
 L_leg = LimbLeg(module_name='L__Leg')
 L_leg.build(['L__hip_guide', 'L__knee_guide', 'L__ankle_guide'])
 
-R_leg = LimbLeg(module_name='R__Leg')
-R_leg.build(['R__hip_guide', 'R__knee_guide', 'R__ankle_guide'])
+# R_leg = LimbLeg(module_name='R__Leg')
+# R_leg.build(['R__hip_guide', 'R__knee_guide', 'R__ankle_guide'])
 
 
 
