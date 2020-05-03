@@ -102,34 +102,53 @@ def undo(func):
 
 # ===============================================================================
 
-    def changeColor_func(self, subject, type='rgb', col=(0.8, 0.5, 0.2)):
-        pm.select(subject)
-        ctrls = pm.selected()
-        shapes = [x.getShapes() for x in ctrls] or []
-        all_shapes = [x for i in shapes for x in i] or []
+def changeColor(type='rgb', col=(0.8, 0.5, 0.2)):
+    """
+    Puts the wrapped 'func' into a Nurbs.
+    Sets the override color to a RGB value
 
-        if all_shapes == []:
+    @param col : RGB values,
+    #NOTE: Works on Transforms
+    """
+    def real_decorator(func):
+        def _changeColorfunc(*args, **kwargs):
+            _func = func(*args, **kwargs)
+            pm.select(_func)
+            ctrls = pm.selected()
+            shapes = []
+
             for ctrl in ctrls:
-                pm.PyNode(ctrl).overrideEnabled.set(1)
+                try:
+                    shape = ctrl.getShapes()
+                    shapes.append(shape)
+                except AttributeError:
+                    pass
+            all_shapes = [x for i in shapes for x in i] or []
+            if all_shapes:
+                for ctrl in ctrls:
+                    pm.PyNode(ctrl).overrideEnabled.set(1)
 
-                if type == 'rgb':
-                    pm.PyNode(ctrl).overrideRGBColors.set(1)
-                    pm.PyNode(ctrl).overrideColorRGB.set(col)
+                    if type == 'rgb':
+                        pm.PyNode(ctrl).overrideRGBColors.set(1)
+                        pm.PyNode(ctrl).overrideColorRGB.set(col)
 
-                if type == 'index':
-                    pm.PyNode(ctrl).overrideRGBColors.set(0)
-                    pm.PyNode(ctrl).overrideColor.set(col)
-        else:
-            for ctrl in all_shapes:
-                pm.PyNode(ctrl).overrideEnabled.set(1)
-                if type == 'rgb':
-                    pm.PyNode(ctrl).overrideRGBColors.set(1)
-                    pm.PyNode(ctrl).overrideColorRGB.set(col)
+                    if type == 'index':
+                        pm.PyNode(ctrl).overrideRGBColors.set(0)
+                        pm.PyNode(ctrl).overrideColor.set(col)
+            else:
+                for ctrl in ctrls:
+                    pm.PyNode(ctrl).overrideEnabled.set(1)
+                    if type == 'rgb':
+                        pm.PyNode(ctrl).overrideRGBColors.set(1)
+                        pm.PyNode(ctrl).overrideColorRGB.set(col)
 
-                if type == 'index':
-                    pm.PyNode(ctrl).overrideRGBColors.set(0)
-                    pm.PyNode(ctrl).overrideColor.set(col)
-        return subject
+                    if type == 'index':
+                        pm.PyNode(ctrl).overrideRGBColors.set(0)
+                        pm.PyNode(ctrl).overrideColor.set(col)
+            pm.select(None)
+            return _func
+        return _changeColorfunc
+    return real_decorator
 
 
 # ===============================================================================
