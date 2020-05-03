@@ -14,7 +14,7 @@ class ModuleBaseModel(object):
         self.getControls = []
         self.getResetControls = []
         self.getInputs = []
-        self.getoutputs = []
+        self.getOutputs = []
 
 class ModuleBase(object):
 
@@ -85,8 +85,8 @@ class ModuleBase(object):
         return self._MODEL.getInputs
 
     @property
-    def getoutputs(self):
-        return self._MODEL.getoutputs
+    def getOutputs(self):
+        return self._MODEL.getOutputs
 
 
     def hiearchy_setup(self, module_name, is_module=True):

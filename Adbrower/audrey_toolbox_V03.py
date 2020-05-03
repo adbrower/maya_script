@@ -1635,10 +1635,20 @@ class AudreyToolBox():
         '''
         values = (pm.colorInputWidgetGrp('RGB', q=True, rgbValue=True))
         oControler = pm.selected()
-        for ctrl in oControler:
-            pm.PyNode(ctrl).overrideEnabled.set(1)
-            pm.PyNode(ctrl).overrideRGBColors.set(1)
-            pm.PyNode(ctrl).overrideColorRGB.set(values)
+        shapes = [x.getShapes() for x in oControler]
+
+        all_shapes = [x for i in shapes for x in i]
+
+        if all_shapes == []:
+            for ctrl in oControler:
+                pm.PyNode(ctrl).overrideEnabled.set(1)
+                pm.PyNode(ctrl).overrideRGBColors.set(1)
+                pm.PyNode(ctrl).overrideColorRGB.set(values)
+        else:
+            for ctrl in all_shapes:
+                pm.PyNode(ctrl).overrideEnabled.set(1)
+                pm.PyNode(ctrl).overrideRGBColors.set(1)
+                pm.PyNode(ctrl).overrideColorRGB.set(values)
         self.allgrey()
 
     @undo
@@ -2066,13 +2076,23 @@ class AudreyToolBox():
         Change the color override of the selection
         '''
         ctrls = pm.selected()
-        for each in ctrls:
-            ctrl = pm.PyNode(each)
-            ctrl.overrideEnabled.set(1)
-            ctrl.overrideRGBColors.set(0)
-            ctrl.overrideColor.set(col)
-            pm.select(None)
-        print(col)
+        shapes = [x.getShapes() for x in ctrls]
+        all_shapes = [x for i in shapes for x in i] or []
+
+        if all_shapes != []:
+            for ctrl in all_shapes:
+                pm.PyNode(ctrl).overrideEnabled.set(1)
+                pm.PyNode(ctrl).overrideRGBColors.set(0)
+                pm.PyNode(ctrl).overrideColor.set(col)
+            print(col)
+        else:
+            for each in ctrls:
+                ctrl = pm.PyNode(each)
+                ctrl.overrideEnabled.set(1)
+                ctrl.overrideRGBColors.set(0)
+                ctrl.overrideColor.set(col)
+                pm.select(None)
+            print(col)
 
     @changeColor()
     def shape_replacement(self, shape_name):
