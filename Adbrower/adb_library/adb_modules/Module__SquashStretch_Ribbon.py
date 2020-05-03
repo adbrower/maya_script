@@ -195,9 +195,9 @@ class SquashStrech(moduleBase.ModuleBase):
         self.Stretch_MD = pm.shadingNode('multiplyDivide', asUtility=1, n="StretchMult")
         self.Squash_MD = pm.shadingNode('multiplyDivide', asUtility=1, n="SquashMult")
 
-        self.expA_MD = pm.shadingNode('multiplyDivide', asUtility=1, n="ExpA")
-        self.expB_MD = pm.shadingNode('multiplyDivide', asUtility=1, n="ExpB")
-        self.expC_MD = pm.shadingNode('multiplyDivide', asUtility=1, n="ExpC")
+        self.expA_MD = pm.shadingNode('multiplyDivide', asUtility=1, n="{}_ExpA".format(self.NAME))
+        self.expB_MD = pm.shadingNode('multiplyDivide', asUtility=1, n="{}_ExpB".format(self.NAME))
+        self.expC_MD = pm.shadingNode('multiplyDivide', asUtility=1, n="{}_ExpC".format(self.NAME))
 
         # Settings des nodes Multiply Divide
         self.Stretch_MD.operation.set(2)
@@ -282,22 +282,17 @@ class SquashStrech(moduleBase.ModuleBase):
 
     def JointConnections(self):
         """Connections on joints in Scale Y and Scale Z """
-
-        expA_MD = "ExpA"
-        expB_MD = "ExpB"
-        expC_MD = "ExpC"
-
         for each in self.jointListA:
-            pm.PyNode(expA_MD).outputX >> pm.PyNode(each).scaleY
-            pm.PyNode(expA_MD).outputX >> pm.PyNode(each).scaleZ
+            pm.PyNode(self.expA_MD).outputX >> pm.PyNode(each).scaleY
+            pm.PyNode(self.expA_MD).outputX >> pm.PyNode(each).scaleZ
 
         for each in self.jointListB:
-            pm.PyNode(expB_MD).outputX >> pm.PyNode(each).scaleY
-            pm.PyNode(expB_MD).outputX >> pm.PyNode(each).scaleZ
+            pm.PyNode(self.expB_MD).outputX >> pm.PyNode(each).scaleY
+            pm.PyNode(self.expB_MD).outputX >> pm.PyNode(each).scaleZ
 
         for each in self.jointListC:
-            pm.PyNode(expC_MD).outputX >> pm.PyNode(each).scaleY
-            pm.PyNode(expC_MD).outputX >> pm.PyNode(each).scaleZ
+            pm.PyNode(self.expC_MD).outputX >> pm.PyNode(each).scaleY
+            pm.PyNode(self.expC_MD).outputX >> pm.PyNode(each).scaleZ
 
 
     def setFinal_hiearchy(self):
