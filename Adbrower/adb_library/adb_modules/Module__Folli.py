@@ -286,6 +286,7 @@ class Folli(moduleBase.ModuleBase):
         for foll, ctrls in zip(self._MODEL.getFollicules,  create_ctrls):
             offset = adb.makeroot_func(ctrls.control, 'OFFSET')
             self._MODEL.getInputs.append(offset)
+            self._MODEL.getResetControls.append(offset)
             pm.rename(offset, '{}'.format(offset).replace('__CTRL', ''))
             Transform(foll.getTransform()).matrixConstraint(offset, channels='trh', mo=True)
 
