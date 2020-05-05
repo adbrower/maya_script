@@ -161,6 +161,11 @@ class LimbLeg(moduleBase.ModuleBase):
         self.doubleKnee()
         self.ribbon()
 
+    def connect(self):
+        super(LimbLeg, self)._connect()
+
+        self.scalingUniform()
+
 
     # =========================
     # SOLVERS
@@ -619,6 +624,7 @@ class LimbLeg(moduleBase.ModuleBase):
     def ribbon(self):
         self.RIBBON_MOD = moduleBase.ModuleBase()
         self.RIBBON_MOD.hiearchy_setup('{Side}__Ribbon'.format(**self.nameStructure))
+        self.RIBBON_MOD.RIG_GRP.inheritsTransform.set(0)
 
         def createProxyPlaneUpperPart(name, interval=4):
             locs = locGen.locGenerator(interval, str(self.base_leg_joints[0]), str(self.base_leg_joints[1]))
@@ -651,10 +657,10 @@ class LimbLeg(moduleBase.ModuleBase):
                                                             ExpCtrl=None,
                                                             ribbon_ctrl=self.base_leg_joints[:2],  # Top first, then bottom
 
-                                                            jointList = leg_folli_upper_end.getInputs,
-                                                            jointListA = ([leg_folli_upper_end.getInputs[0]], 0),
-                                                            jointListB = (leg_folli_upper_end.getInputs[1:-1],  1.5),
-                                                            jointListC = ([leg_folli_upper_end.getInputs[-1]], 0),
+                                                            jointList = leg_folli_upper_end.getResetJoints,
+                                                            jointListA = ([leg_folli_upper_end.getResetJoints[0]], 0),
+                                                            jointListB = (leg_folli_upper_end.getResetJoints[1:-1],  1.5),
+                                                            jointListC = ([leg_folli_upper_end.getResetJoints[-1]], 0),
                                                          )
 
             upper_leg_squash_stretch.start()
@@ -662,12 +668,12 @@ class LimbLeg(moduleBase.ModuleBase):
 
             lower_leg_squash_stretch = adbRibbon.SquashStrech('Lower_VolumePreservation',
                                                             ExpCtrl=None,
-                                                            ribbon_ctrl=self.base_leg_joints[:2],  # Top first, then bottom
+                                                            ribbon_ctrl=self.base_leg_joints[1:],  # Top first, then bottom
 
-                                                            jointList = leg_folli_lower_end.getInputs,
-                                                            jointListA = ([leg_folli_lower_end.getInputs[0]], 0),
-                                                            jointListB = (leg_folli_lower_end.getInputs[1:-1],  1.5),
-                                                            jointListC = ([leg_folli_lower_end.getInputs[-1]], 0),
+                                                            jointList = leg_folli_lower_end.getResetJoints,
+                                                            jointListA = ([leg_folli_lower_end.getResetJoints[0]], 0),
+                                                            jointListB = (leg_folli_lower_end.getResetJoints[1:-1],  1.5),
+                                                            jointListC = ([leg_folli_lower_end.getResetJoints[-1]], 0),
                                                          )
 
             lower_leg_squash_stretch.start()
@@ -675,6 +681,12 @@ class LimbLeg(moduleBase.ModuleBase):
 
             pm.parent(upper_leg_squash_stretch.MOD_GRP, upperPartGrp)
             pm.parent(lower_leg_squash_stretch.MOD_GRP, lowerPartGrp)
+
+            ## Scaling Connection
+            for grp in [upper_leg_squash_stretch.MOD_GRP, lower_leg_squash_stretch.MOD_GRP]:
+                pm.PyNode(self.RIBBON_MOD.MOD_GRP).sx >> grp.sx
+                pm.PyNode(self.RIBBON_MOD.MOD_GRP).sy >> grp.sy
+                pm.PyNode(self.RIBBON_MOD.MOD_GRP).sz >> grp.sz
 
             return upper_leg_squash_stretch.MOD_GRP, lower_leg_squash_stretch.MOD_GRP
 
@@ -716,14 +728,17 @@ class LimbLeg(moduleBase.ModuleBase):
         upperPartGrp = pm.group(n='{Side}__Upper{Basename}__GRP'.format(**self.nameStructure), parent=self.RIBBON_MOD.RIG_GRP, em=1)
         lowerPartGrp = pm.group(n='{Side}__Lower{Basename}__GRP'.format(**self.nameStructure), parent=self.RIBBON_MOD.RIG_GRP, em=1)
 
-        addVolumePreservation()
-
-        pm.parent(leg_folli_upper_end.getJoints, self.RIBBON_MOD.OUTPUT_GRP)
-        pm.parent(leg_folli_lower_end.getJoints, self.RIBBON_MOD.OUTPUT_GRP)
-        pm.parent(self.RIBBON_MOD.MOD_GRP, self.RIG.MODULES_GRP)
-
         pm.parent([leg_folli_upper.MOD_GRP,  leg_folli_upper_end.MOD_GRP, upper_proxy_plane, upper_proxy_plane_end], upperPartGrp)
         pm.parent([leg_folli_lower.MOD_GRP,  leg_folli_lower_end.MOD_GRP, lower_proxy_plane, lower_proxy_plane_end], lowerPartGrp)
+
+        addVolumePreservation()
+
+        self.RIBBON_MOD.setFinalHiearchy(
+                        OUTPUT_GRP_LIST = leg_folli_upper_end.getJoints + leg_folli_lower_end.getJoints,
+                        INPUT_GRP_LIST = leg_folli_upper.getInputs + leg_folli_lower.getInputs,
+                        )
+
+        pm.parent(self.RIBBON_MOD.MOD_GRP, self.RIG.MODULES_GRP)
 
 
     # =========================
@@ -834,7 +849,7 @@ class LimbLeg(moduleBase.ModuleBase):
             pm.PyNode(fk_joints[0]).sx >> pm.PyNode(MDColl_Scale[0]).input1X
             pm.PyNode(fk_joints[0]).sy >> pm.PyNode(MDColl_Scale[0]).input1Y
             pm.PyNode(fk_joints[0]).sz >> pm.PyNode(MDColl_Scale[0]).input1Z
-   
+
             pm.PyNode(fk_joints[1]).sx >> pm.PyNode(MDColl_Scale[1]).input1X
             pm.PyNode(fk_joints[1]).sy >> pm.PyNode(MDColl_Scale[1]).input1Y
             pm.PyNode(fk_joints[1]).sz >> pm.PyNode(MDColl_Scale[1]).input1Z
@@ -918,12 +933,35 @@ class LimbLeg(moduleBase.ModuleBase):
                 pm.PyNode('{}.{}'.format(ctrl_name, switch_ctrl.attrName)) >> pm.PyNode(each).inputMax
 
 
-
-
     def addIkFKSpaceAttributes(self, transform):
         switch_ctrl = adbAttr.NodeAttr([transform])
         switch_ctrl.AddSeparator(transform, 'LEGS')
         switch_ctrl.addAttr('{Side}_spaces'.format(**self.nameStructure), 'enum',  eName = "IK:FK:")
+
+
+    def scalingUniform(self):
+        for grp in self.RIG.MODULES_GRP, self.RIG.MAIN_RIG_GRP:
+            [pm.setAttr('{}.s{}'.format(grp, axis), lock=0) for axis in 'xyz']
+
+        for module in self.RIG.MODULES_GRP.getChildren():
+            self.RIG.MAIN_RIG_GRP.sx >> module.sx
+            self.RIG.MAIN_RIG_GRP.sy >> module.sy
+            self.RIG.MAIN_RIG_GRP.sz >> module.sz
+
+        ## negate Module__GRP scaling
+        md_scaling = pm.shadingNode('multiplyDivide', asUtility=1,  n='{}__Scaling__{}'.format(self.side, NC.MULTIPLY_DIVIDE_SUFFIX))
+        md_scaling.input1X.set(1)
+        md_scaling.input1Y.set(1)
+        md_scaling.input1Z.set(1)
+        md_scaling.operation.set(2)
+
+        self.RIG.MAIN_RIG_GRP.sx >> md_scaling.input2X
+        self.RIG.MAIN_RIG_GRP.sy >> md_scaling.input2Y
+        self.RIG.MAIN_RIG_GRP.sz >> md_scaling.input2Z
+
+        md_scaling.outputX >> self.RIG.MODULES_GRP.sx
+        md_scaling.outputY >> self.RIG.MODULES_GRP.sy
+        md_scaling.outputZ >> self.RIG.MODULES_GRP.sz
 
 
 # =========================
@@ -932,10 +970,10 @@ class LimbLeg(moduleBase.ModuleBase):
 
 L_leg = LimbLeg(module_name='L__Leg')
 L_leg.build(['L__hip_guide', 'L__knee_guide', 'L__ankle_guide'])
+L_leg.connect()
 
-# R_leg = LimbLeg(module_name='R__Leg')
-# R_leg.build(['R__hip_guide', 'R__knee_guide', 'R__ankle_guide'])
-
-
+R_leg = LimbLeg(module_name='R__Leg')
+R_leg.build(['R__hip_guide', 'R__knee_guide', 'R__ankle_guide'])
+R_leg.connect()
 
 
