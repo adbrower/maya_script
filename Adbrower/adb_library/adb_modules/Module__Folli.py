@@ -11,7 +11,6 @@
 import sys
 
 import adb_core.ModuleBase as moduleBase
-# reload(moduleBase)
 import adb_core.Class__AddAttr as adbAttr
 from adb_core.Class__Transforms import Transform
 
@@ -51,7 +50,7 @@ class Folli(moduleBase.ModuleBase):
 
     ## EXTERIOR CLASS BUILD
     #------------------------
-    import adb_utils.rig_utils.Module__Folli as adbFolli
+    import adb_library.adb_modules.Module__Folli as adbFolli
     reload (adbFolli)
 
     # example:
@@ -133,6 +132,8 @@ class Folli(moduleBase.ModuleBase):
 
         for joint, joint_grp in zip(self._MODEL.getJoints, self._MODEL.getResetJoints):
             Transform(joint_grp).matrixConstraint(joint, mo=True)
+
+        self.RIG_GRP.inheritsTransform.set(0)
 
 
     # =========================
@@ -266,7 +267,6 @@ class Folli(moduleBase.ModuleBase):
                 pm.parent(oFoll.getParent(), self._MODEL.getFolliGrp)
                 oGrp.rotate.set(0.0, 0.0, 0.0)
 
-                self._MODEL.getInputs.append(oGrp)
                 pm.select(None)
 
         return self._MODEL.getFollicules
@@ -285,6 +285,7 @@ class Folli(moduleBase.ModuleBase):
 
         for foll, ctrls in zip(self._MODEL.getFollicules,  create_ctrls):
             offset = adb.makeroot_func(ctrls.control, 'OFFSET')
+            self._MODEL.getInputs.append(offset)
             pm.rename(offset, '{}'.format(offset).replace('__CTRL', ''))
             Transform(foll.getTransform()).matrixConstraint(offset, channels='trh', mo=True)
 
@@ -351,6 +352,7 @@ class Folli(moduleBase.ModuleBase):
 # arm.build()
 
 # arm.addControls()
+
 
 
 

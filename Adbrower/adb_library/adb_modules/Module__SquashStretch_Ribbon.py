@@ -12,6 +12,9 @@ import adb_core.NameConv_utils as NC
 import adb_core.ModuleBase as moduleBase
 import pymel.core as pm
 from adb_core.Class__Transforms import Transform
+import adbrower
+adb = adbrower.Adbrower()
+
 from adbrower import undo
 
 
@@ -20,6 +23,7 @@ class SquashStrechModel(moduleBase.ModuleBaseModel):
         super(SquashStrechModel, self).__init__()
         self.getFollicules = []
         self.getFolliGrp = []
+        self.getScaleGrp = []
 
 
 class SquashStrech(moduleBase.ModuleBase):
@@ -38,21 +42,17 @@ class SquashStrech(moduleBase.ModuleBase):
         jointListC {Tuple (List, int)} -- Section C of jointList, exposant Value of the squash and strech
 
     example:
-        import adb_utils.Class__SquashStretch_Ribbon as adb_ST_Ribbon
-        reload(adb_utils.Class__SquashStretch_Ribbon)
+        import adb_library.adb_modules.Module__SquashStretch_Ribbon as adb_ST_Ribbon
+        reload(adb_ST_Ribbon)
 
         ribbonStretch = adb_ST_Ribbon.SquashStrech('Test',
                         ExpCtrl="cog_ctrl",
-                        ribbon_ctrl=['L__Leg_Base_Hips__JNT', 'L__Leg_Base_Knee__JNT']
+                        ribbon_ctrl=['L__Leg_Base_Hips__JNT', 'L__Leg_Base_Knee__JNT'],
 
                         jointList=['L__Leg_upper_proxy_plane_end_0{}__GRP'.format(x + 1) for x in xrange(5)],
                         jointListA = ['L__Leg_upper_proxy_plane_end_01__GRP'],
                         jointListB = ['L__Leg_upper_proxy_plane_end_02__GRP', 'L__Leg_upper_proxy_plane_end_03__GRP', 'L__Leg_upper_proxy_plane_end_04__GRP'],
                         jointListC = ['L__Leg_upper_proxy_plane_end_05__GRP'],
-
-                        expA=0,
-                        expB=1.5,
-                        expC=0,
                     )
         ribbonStretch.start()
         ribbonStretch.build()
@@ -104,6 +104,10 @@ class SquashStrech(moduleBase.ModuleBase):
         return self._MODEL.getFolliGrp
 
     @property
+    def getScaleGrp(self):
+        return self._MODEL.getScaleGrp
+
+    @property
     def getFollicules(self):
         """ Returns the follicules """
         return self._MODEL.getFollicules
@@ -128,7 +132,7 @@ class SquashStrech(moduleBase.ModuleBase):
         self.MakeConnections()
         self.JointConnections()
         self.setFinal_hiearchy()
-        self.set_TAGS()
+        # self.set_TAGS()
 
     def remove(self):
         self.removeSetup()
@@ -216,6 +220,12 @@ class SquashStrech(moduleBase.ModuleBase):
 
 
     def create_scale_distance(self):
+        self._MODEL.getScaleGrp = [adb.makeroot_func(grp, suff='scale', forceNameConvention=True) for grp in self.jointList]
+        for grp in self._MODEL.getScaleGrp:
+            self.MOD_GRP.sx >> grp.sx
+            self.MOD_GRP.sy >> grp.sy
+            self.MOD_GRP.sz >> grp.sz
+
         distObjs_LIST_QDT = self.ribbon_ctrl
 
         distanceNode_shape = pm.distanceDimension(sp=(1, 1, 1), ep=(2, 2, 2))

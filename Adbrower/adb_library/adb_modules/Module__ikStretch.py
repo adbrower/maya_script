@@ -41,7 +41,10 @@ class stretchyIK(moduleBase.ModuleBase):
     @scaleAxe: (string) Axis in which the joints will be scaled
 
     # example
-    leg = stretchyIK('legIk',
+    import adb_library.adb_modules.Module__IkStretch as adbIkStretch
+    reload(adbIkStretch)
+
+    leg = adbIkStretch.stretchyIK('legIk',
                     ik_joints = ['joint1', 'joint2', 'joint3'],
                     ik_ctrl = 'ikHandle1__CTRL',
                     stretchAxis = 'Y' )

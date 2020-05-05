@@ -3,6 +3,7 @@ import pymel.core as pm
 from adbrower import lockAttr
 import adb_core.NameConv_utils as NC
 import adb_core.Class__AddAttr as adbAttr
+import adb_core.Class__Locator as Locator
 
 # ====================================
 # CLASS
@@ -21,8 +22,9 @@ class RigBase(object):
         - Creates Rig Group
         """
         self.createRigGroups(self.RIG_NAME)
+        self.createRigLocators(self.RIG_NAME)
 
-    @lockAttr()
+    @lockAttr(['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz','v'])
     def createRigGroups(self, rigName):
         """
         @module_name : string. Name of the module
@@ -41,4 +43,12 @@ class RigBase(object):
         self.SPACES_GRP = pm.group(n='{}_Space__GRP'.format(rigName), em=1, parent=self.MAIN_RIG_GRP)
         self.MODULES_GRP = pm.group(n='{}_Module__GRP'.format(rigName), em=1, parent=self.MAIN_RIG_GRP)
 
-        return self.MAIN_RIG_GRP, self.VISIBILITY_GRP, self.SETTINGS_GRP, self.SPACES_GRP, self.MODULES_GRP, 
+        [grp.v.set(0) for grp in [self.VISIBILITY_GRP, self.SETTINGS_GRP, self.SPACES_GRP]]
+        return self.VISIBILITY_GRP, self.SETTINGS_GRP, self.SPACES_GRP, self.MODULES_GRP, 
+
+    @lockAttr()
+    def createRigLocators(self, rigName):
+        self.WORLD_LOC = Locator.Locator.create(name='{}_WorldTransform__LOC'.format(rigName)).locators[0]
+        pm.parent(self.WORLD_LOC, self.MAIN_RIG_GRP)
+        self.WORLD_LOC.v.set(0)
+        return self.WORLD_LOC
