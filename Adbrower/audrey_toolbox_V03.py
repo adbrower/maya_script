@@ -25,7 +25,7 @@ from adbrower import changeColor, flatList, undo
 from CollDict import colordic, suffixDic
 
 import adb_tools.Tool__adbModule as Tool__adbModule
-import adb_tools.Tool__AutoRig as Tool__AutoRig
+# import adb_tools.Tool__AutoRig as Tool__AutoRig
 import adb_tools.Tool__CFX__PySide as Tool__adbCFX
 import adb_tools.Tool__ConnectionTool
 import adb_tools.Tool__CopyWeight_Skin as Tool__CopyWeight_Skin
