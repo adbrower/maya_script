@@ -35,21 +35,21 @@ import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
 
 import adb_rigModules.RigBase as RigBase
 
-reload(sl)
-reload(Joint)
-reload(RigBase)
-reload(adbAttr)
-reload(adbFKShape)
-reload(NC)
-reload(adbrower)
-reload(moduleBase)
-reload(adbIkStretch)
-reload(Control)
-reload(locGen)
-reload(adbPiston)
-reload(Locator)
-reload(adbFolli)
-reload(adbRibbon)
+# reload(sl)
+# reload(Joint)
+# reload(RigBase)
+# reload(adbAttr)
+# reload(adbFKShape)
+# reload(NC)
+# reload(adbrower)
+# reload(moduleBase)
+# reload(adbIkStretch)
+# reload(Control)
+# reload(locGen)
+# reload(adbPiston)
+# reload(Locator)
+# reload(adbFolli)
+# reload(adbRibbon)
 
 #-----------------------------------
 #  DECORATORS
@@ -151,6 +151,8 @@ class LimbLeg(moduleBase.ModuleBase):
                             'Suffix'  : ''
                             }
 
+        self.SLIDING_KNEE_MOD = None
+
         # =================
         # BUILD
 
@@ -159,7 +161,7 @@ class LimbLeg(moduleBase.ModuleBase):
         self.stretchyLimb()
         self.slidingKnee()
         self.doubleKnee()
-        self.ribbon()
+        self.ribbon(volumePreservation=True)
 
     def connect(self):
         super(LimbLeg, self)._connect()
@@ -294,7 +296,7 @@ class LimbLeg(moduleBase.ModuleBase):
                             )
 
             pm.parent(self.base_leg_joints[0], self.ikFk_MOD.OUTPUT_GRP)
-            Joint.Joint(self.base_leg_joints).radius = 5
+
 
         @changeColor('index', col = self.col_main )
         def CreateFkcontrols(radius = 3,
@@ -400,6 +402,7 @@ class LimbLeg(moduleBase.ModuleBase):
         makeConnections()
 
         pm.parent(self.ikFk_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+        Joint.Joint(self.base_leg_joints).radius = 3
 
 
     def stretchyLimb(self):
@@ -591,9 +594,11 @@ class LimbLeg(moduleBase.ModuleBase):
         self.DOUBLE_KNEE_MOD.getJoints += botJoint
         [adb.AutoSuffix(jnt) for jnt in [baseJoint, topJoint, botJoint]]
         [pm.matchTransform(jnt, self.base_leg_joints[1], pos=1, rot=1) for jnt in [baseJoint, topJoint, botJoint]]
-        [pm.parent(jnt, baseJoint[0]) for jnt in [topJoint, botJoint]]
-        pm.move(topJoint[0], 0, -0.5, 0, r=1, os=1, wd=1)
-        pm.move(botJoint[0], 0, 0.5, 0, r=1, os=1, wd=1)
+        pm.parent(topJoint[0], baseJoint[0])
+        pm.parent(botJoint[0], topJoint[0])
+        adb.makeroot_func(baseJoint[0], 'offset', forceNameConvention = True)
+        pm.move(topJoint[0], 0, 0.6, 0, r=1, os=1, wd=1)
+        pm.move(botJoint[0], 0, -1.2, 0, r=1, os=1, wd=1)
 
         _multDivid = pm.shadingNode('multiplyDivide', asUtility=1,  n='{}__DoubleKneeRotation__{}'.format(self.side, NC.MULTIPLY_DIVIDE_SUFFIX))
         _multDivid.input2X.set(0.5)
@@ -610,18 +615,22 @@ class LimbLeg(moduleBase.ModuleBase):
 
         doubleKnee_CTL = doubleKnee_ctrl()[0]
         adb.matrixConstraint(str(doubleKnee_CTL), str(baseJoint[0]), channels='ts', mo=True)
-        adb.matrixConstraint(str(self.base_leg_joints[1]), str(doubleKnee_CTL.getParent()), channels='trs', mo=True)
+        adb.matrixConstraint(str(self.base_leg_joints[0]), str(doubleKnee_CTL.getParent()), channels='trs', mo=True)
 
-        pm.parent(baseJoint, self.DOUBLE_KNEE_MOD.OUTPUT_GRP)
-        self.DOUBLE_KNEE_MOD.getResetJoints = [adb.makeroot_func(baseJoint)]
-        adb.matrixConstraint(str(self.base_leg_joints[1]), self.DOUBLE_KNEE_MOD.getResetJoints[0], channels='trs', mo=True)
+        pm.parent(baseJoint[0].getParent(), self.DOUBLE_KNEE_MOD.OUTPUT_GRP)
+        self.DOUBLE_KNEE_MOD.getResetJoints = [baseJoint[0].getParent()]
+        adb.matrixConstraint(str(self.base_leg_joints[0]), self.DOUBLE_KNEE_MOD.getResetJoints[0], channels='trs', mo=True)
         pm.parent(self.DOUBLE_KNEE_MOD.MOD_GRP, self.RIG.MODULES_GRP)
 
         if self.SLIDING_KNEE_MOD:
-            pm.pointConstraint(str(doubleKnee_CTL), str(self.SLIDING_KNEE_MOD.getControls[1]), mo=True)
+            pm.matchTransform(self.SLIDING_KNEE_MOD.getControls[1], topJoint, pos=1, rot=0)
+            pm.matchTransform(self.SLIDING_KNEE_MOD.getControls[2], botJoint, pos=1, rot=0)
+
+            pm.parentConstraint(topJoint, self.SLIDING_KNEE_MOD.getControls[1], mo=1)
+            pm.parentConstraint(botJoint, self.SLIDING_KNEE_MOD.getControls[2], mo=1)
 
 
-    def ribbon(self):
+    def ribbon(self, volumePreservation=True):
         self.RIBBON_MOD = moduleBase.ModuleBase()
         self.RIBBON_MOD.hiearchy_setup('{Side}__Ribbon'.format(**self.nameStructure))
         self.RIBBON_MOD.RIG_GRP.inheritsTransform.set(0)
@@ -731,7 +740,8 @@ class LimbLeg(moduleBase.ModuleBase):
         pm.parent([leg_folli_upper.MOD_GRP,  leg_folli_upper_end.MOD_GRP, upper_proxy_plane, upper_proxy_plane_end], upperPartGrp)
         pm.parent([leg_folli_lower.MOD_GRP,  leg_folli_lower_end.MOD_GRP, lower_proxy_plane, lower_proxy_plane_end], lowerPartGrp)
 
-        addVolumePreservation()
+        if volumePreservation:
+            addVolumePreservation()
 
         self.RIBBON_MOD.setFinalHiearchy(
                         OUTPUT_GRP_LIST = leg_folli_upper_end.getJoints + leg_folli_lower_end.getJoints,
@@ -744,6 +754,7 @@ class LimbLeg(moduleBase.ModuleBase):
     # =========================
     # SLOTS
     # =========================
+
 
     def blendSystem(self,
                     ctrl_name = '',
@@ -833,10 +844,6 @@ class LimbLeg(moduleBase.ModuleBase):
 
             ## Calculate Scale
             MDColl_Scale = [pm.shadingNode('multiplyDivide', asUtility=1, n='{}__{}_scale__{}'.format(self.side, NC.getBasename(x), NC.BLENDCOLOR_SUFFIX)) for x in result_joints]
-            pm.PyNode(fk_joints[0]).sx >> pm.PyNode(MDColl_Scale[0]).input1X
-            pm.PyNode(fk_joints[0]).sy >> pm.PyNode(MDColl_Scale[0]).input1Y
-            pm.PyNode(fk_joints[0]).sz >> pm.PyNode(MDColl_Scale[0]).input1Z
-
             pm.PyNode(fk_joints[1]).sx >> pm.PyNode(MDColl_Scale[0]).input2X
             pm.PyNode(fk_joints[1]).sy >> pm.PyNode(MDColl_Scale[0]).input2Y
             pm.PyNode(fk_joints[1]).sz >> pm.PyNode(MDColl_Scale[0]).input2Z
@@ -867,7 +874,6 @@ class LimbLeg(moduleBase.ModuleBase):
             pm.PyNode(MDColl_Scale[0]).outputZ >> pm.PyNode(BlendColorColl_Scale[2]).color1B
 
            ## TRANSLATE
-
             BlendColorColl_Translate = [pm.shadingNode('blendColors', asUtility=1,
             n='{}__{}_translate__{}'.format(self.side, NC.getBasename(x), NC.BLENDCOLOR_SUFFIX))
             for x in result_joints]
@@ -893,9 +899,9 @@ class LimbLeg(moduleBase.ModuleBase):
 
             multuplyDivide_node = pm.shadingNode('multiplyDivide', asUtility=1,  n='{}__reverse__{}'.format(self.side, NC.MULTIPLY_DIVIDE_SUFFIX))
             multuplyDivide_node.operation.set(1)
-            multuplyDivide_node.input2X.set(-1)
+            multuplyDivide_node.input2X.set(1)
             multuplyDivide_node.input2Y.set(-1)
-            multuplyDivide_node.input2Z.set(1)
+            multuplyDivide_node.input2Z.set(-1)
 
             fk_joints[0].tx >> multuplyDivide_node.input1X
             fk_joints[0].ty >> multuplyDivide_node.input1Y
@@ -968,12 +974,12 @@ class LimbLeg(moduleBase.ModuleBase):
 # BUILD
 # =========================
 
-L_leg = LimbLeg(module_name='L__Leg')
-L_leg.build(['L__hip_guide', 'L__knee_guide', 'L__ankle_guide'])
-L_leg.connect()
+# L_leg = LimbLeg(module_name='L__Leg')
+# L_leg.build(['L__hip_guide', 'L__knee_guide', 'L__ankle_guide'])
+# L_leg.connect()
 
-R_leg = LimbLeg(module_name='R__Leg')
-R_leg.build(['R__hip_guide', 'R__knee_guide', 'R__ankle_guide'])
-R_leg.connect()
+# R_leg = LimbLeg(module_name='R__Leg')
+# R_leg.build(['R__hip_guide', 'R__knee_guide', 'R__ankle_guide'])
+# R_leg.connect()
 
 
