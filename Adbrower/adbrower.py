@@ -115,16 +115,10 @@ def changeColor(type='rgb', col=(0.8, 0.5, 0.2)):
             _func = func(*args, **kwargs)
             pm.select(_func)
             ctrls = pm.selected()
-            shapes = []
-
-            for ctrl in ctrls:
-                try:
-                    shape = ctrl.getShapes()
-                    shapes.append(shape)
-                except AttributeError:
-                    pass
+            shapes = [x.getShapes() for x in ctrls] or []
             all_shapes = [x for i in shapes for x in i] or []
-            if all_shapes:
+
+            if all_shapes == []:
                 for ctrl in ctrls:
                     pm.PyNode(ctrl).overrideEnabled.set(1)
 
@@ -136,7 +130,7 @@ def changeColor(type='rgb', col=(0.8, 0.5, 0.2)):
                         pm.PyNode(ctrl).overrideRGBColors.set(0)
                         pm.PyNode(ctrl).overrideColor.set(col)
             else:
-                for ctrl in ctrls:
+                for ctrl in all_shapes:
                     pm.PyNode(ctrl).overrideEnabled.set(1)
                     if type == 'rgb':
                         pm.PyNode(ctrl).overrideRGBColors.set(1)
@@ -145,7 +139,6 @@ def changeColor(type='rgb', col=(0.8, 0.5, 0.2)):
                     if type == 'index':
                         pm.PyNode(ctrl).overrideRGBColors.set(0)
                         pm.PyNode(ctrl).overrideColor.set(col)
-            pm.select(None)
             return _func
         return _changeColorfunc
     return real_decorator
