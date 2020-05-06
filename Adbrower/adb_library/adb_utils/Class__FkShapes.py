@@ -102,6 +102,7 @@ class FkShape(object):
                 myname = '{}'.format(joint)
                 new_name = '{}{}__{}'.format(NC.getSideFromName(myname), NC.getBasename(myname), NC.CTRL)
                 self._curve = pm.circle(nr=self.normalsCtrl, r=self._radius)
+                pm.matchTransform(self._curve, joint, pos=1, rot=1)
 
                 curveShape = pm.PyNode(self._curve[0]).getShape()
                 CurveColl.extend(self._curve)
