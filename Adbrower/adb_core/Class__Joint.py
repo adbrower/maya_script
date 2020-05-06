@@ -200,17 +200,7 @@ class Joint(adbTransform.Transform):
 
 
     def orient_joint(self):
-        if self._orient_axis == 'Y':
-            pm.select(self.joints)
-            pm.joint(zso=1, ch=1, e=1, oj='yxz', secondaryAxisOrient='xdown')
-            pm.select(cl=True)
-
-            # Orient the last joint to the world#
-            pm.select(self.joints[-1])
-            pm.joint(e=1, oj='none')
-            pm.select(None)
-
-        elif self._orient_axis == 'y':
+        if self._orient_axis == 'Y': # Leg and Spine orientation
             pm.select(self.joints)
             pm.joint(zso=1, ch=1, e=1, oj='yxz', secondaryAxisOrient='xup')
             pm.select(cl=True)
@@ -220,9 +210,34 @@ class Joint(adbTransform.Transform):
             pm.joint(e=1, oj='none')
             pm.select(None)
 
+        elif self._orient_axis == '-Y': # Arm orientation
+            pm.select(self.joints)
+            pm.joint(zso=1, ch=1, e=1, oj='yxz', secondaryAxisOrient='ydown')
+            pm.select(cl=True)
+
+            # Orient the last joint to the world#
+            pm.select(self.joints[-1])
+            pm.joint(e=1, oj='none')
+            pm.select(None)
+
+        elif self._orient_axis == 'y':
+            pm.select(self.joints)
+            pm.joint(zso=1, ch=1, e=1, oj='yxz', secondaryAxisOrient='xdown')
+            pm.select(cl=True)
+
+        elif self._orient_axis == '-y':
+            pm.select(self.joints)
+            pm.joint(zso=1, ch=1, e=1, oj='yxz', secondaryAxisOrient='yup')
+            pm.select(cl=True)
+
+            # Orient the last joint to the world#
+            pm.select(self.joints[-1])
+            pm.joint(e=1, oj='none')
+            pm.select(None)
+
         elif self._orient_axis == 'X':
             pm.select(self.joints)
-            pm.joint(zso=1, ch=1, e=1, oj='xyz', secondaryAxisOrient='xup')
+            pm.joint(zso=1, ch=1, e=1, oj='xzy', secondaryAxisOrient='zup')
             pm.select(cl=True)
 
             # Orient the last joint to the world#
@@ -232,7 +247,7 @@ class Joint(adbTransform.Transform):
 
         elif self._orient_axis == 'x':
             pm.select(self.joints)
-            pm.joint(zso=1, ch=1, e=1, oj='xyz', secondaryAxisOrient='xdown')
+            pm.joint(zso=1, ch=1, e=1, oj='xzy', secondaryAxisOrient='xdown')
             pm.select(cl=True)
 
             # Orient the last joint to the world#
