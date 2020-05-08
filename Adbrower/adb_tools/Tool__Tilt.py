@@ -361,21 +361,21 @@ class TiltTool():
 
         """ -------------------- Z AXIS -------------------- """
 
-        if mc.pm.checkBox("myChBxZ", q=True, v=True,) == 1 and mc.pm.checkBox("myChBxX", q=True, v=True,) == 0:
+        if pm.checkBox("myChBxZ", q=True, v=True,) == 1 and pm.checkBox("myChBxX", q=True, v=True,) == 0:
             self.axe = 'z'
             self.tiltZ = adb_tilt.Tilt(self.geo, self.tiltctrl, self.mesh_ctrl_parent, self.mesh_ctrl_offset, self.axe)
             self.tiltZ.buildGuide()
 
         """ -------------------- X AXIS -------------------- """
 
-        if mc.pm.checkBox("myChBxX", q=True, v=True,) == 1 and mc.pm.checkBox("myChBxZ", q=True, v=True,) == 0:
+        if pm.checkBox("myChBxX", q=True, v=True,) == 1 and pm.checkBox("myChBxZ", q=True, v=True,) == 0:
             self.axe = 'x'
             self.tiltX = adb_tilt.Tilt(self.geo, self.tiltctrl, self.mesh_ctrl_parent, self.mesh_ctrl_offset, self.axe)
             self.tiltX.buildGuide()
 
         """ -------------------- Z AND X AXIS -------------------- """
 
-        if mc.pm.checkBox("myChBxZ", q=True, v=True,) == 1 and mc.pm.checkBox("myChBxX", q=True, v=True,) == 1:
+        if pm.checkBox("myChBxZ", q=True, v=True,) == 1 and pm.checkBox("myChBxX", q=True, v=True,) == 1:
             self.axe = 'both'
             self.tiltBoth = adb_tilt.Tilt(self.geo, self.tiltctrl, self.mesh_ctrl_parent, self.mesh_ctrl_offset, self.axe)
             self.tiltBoth.buildGuide()
@@ -392,21 +392,21 @@ class TiltTool():
 
         """ -------------------- Z AXIS -------------------- """
 
-        if mc.pm.checkBox("myChBxZ", q=True, v=True,) == 1 and mc.pm.checkBox("myChBxX", q=True, v=True,) == 0:
+        if pm.checkBox("myChBxZ", q=True, v=True,) == 1 and pm.checkBox("myChBxX", q=True, v=True,) == 0:
 
             self.tiltZ.buildRig()
 
         """ -------------------- X AXIS -------------------- """
 
-        if mc.pm.checkBox("myChBxX", q=True, v=True,) == 1 and mc.pm.checkBox("myChBxZ", q=True, v=True,) == 0:
+        if pm.checkBox("myChBxX", q=True, v=True,) == 1 and pm.checkBox("myChBxZ", q=True, v=True,) == 0:
 
             self.tiltX.buildRig()
 
         """ -------------------- Z AND X AXIS -------------------- """
 
-        if mc.pm.checkBox("myChBxZ", q=True, v=True,) == 1 and mc.pm.checkBox("myChBxX", q=True, v=True,) == 1:
+        if pm.checkBox("myChBxZ", q=True, v=True,) == 1 and pm.checkBox("myChBxX", q=True, v=True,) == 1:
 
             self.tiltBoth.buildRig()
 
 
-# myTool = TiltTool()
+myTool = TiltTool()
