@@ -13,7 +13,7 @@ import pymel.core as pm
 import ShapesLibrary as sl
 from CollDict import indexColor
 import adbrower
-reload (adbrower)
+
 adb = adbrower.Adbrower()
 
 import adb_core.ModuleBase as moduleBase
@@ -36,22 +36,22 @@ import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
 
 import adb_rigModules.RigBase as RigBase
 
-reload(sl)
-reload(Joint)
-reload(RigBase)
-reload(adbAttr)
-reload(adbFKShape)
-reload(NC)
-reload(adbrower)
-reload(moduleBase)
-reload(adbIkStretch)
-reload(Control)
-reload(locGen)
-reload(adbPiston)
-reload(Locator)
-reload(adbFolli)
-reload(adbRibbon)
-reload(SpaceSwitch)
+# reload(adbrower)
+# reload(sl)
+# reload(Joint)
+# reload(RigBase)
+# reload(adbAttr)
+# reload(adbFKShape)
+# reload(NC)
+# reload(moduleBase)
+# reload(adbIkStretch)
+# reload(Control)
+# reload(locGen)
+# reload(adbPiston)
+# reload(Locator)
+# reload(adbFolli)
+# reload(adbRibbon)
+# reload(SpaceSwitch)
 
 #-----------------------------------
 #  DECORATORS
