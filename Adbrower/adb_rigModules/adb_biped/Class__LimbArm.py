@@ -13,6 +13,7 @@ import pymel.core as pm
 import ShapesLibrary as sl
 from CollDict import indexColor
 import adbrower
+reload (adbrower)
 adb = adbrower.Adbrower()
 
 import adb_core.ModuleBase as moduleBase
@@ -50,6 +51,7 @@ reload(adbPiston)
 reload(Locator)
 reload(adbFolli)
 reload(adbRibbon)
+reload(SpaceSwitch)
 
 #-----------------------------------
 #  DECORATORS
@@ -158,14 +160,15 @@ class LimbArm(moduleBase.ModuleBase):
 
         self.createBaseArmJoints()
         self.ik_fk_system()
-        self.stretchyLimb()
-        self.slidingElbow()
-        # self.doubleElbow()
-        self.ribbon(volumePreservation=True)
+        # self.stretchyLimb()
+        # self.slidingElbow()
+        # # self.doubleElbow()
+        # self.ribbon(volumePreservation=True)
 
     def connect(self):
         super(LimbArm, self)._connect()
 
+        self.setup_VisibilityGRP()
         self.scalingUniform()
 
 
@@ -243,7 +246,12 @@ class LimbArm(moduleBase.ModuleBase):
             adb.AutoSuffix(self.ik_arm_joints)
 
             pm.parent(self.ik_arm_joints[0], self.ikFk_MOD.RIG_GRP)
+
+            self.nameStructure['Suffix'] = NC.VISRULE
+            self.setupVisRule(self.ik_arm_joints, self.ikFk_MOD.VISRULE_GRP, '{Side}__{Basename}_Ik_JNT__{Suffix}'.format(**self.nameStructure), False)
+
             return self.ik_arm_joints
+
 
         @changeColor('index', 14)
         def FkJointChain():
@@ -256,6 +264,18 @@ class LimbArm(moduleBase.ModuleBase):
             pm.PyNode(self.fk_arm_joints[1]).rename('{Side}__{Basename}_Fk_{Parts[1]}'.format(**self.nameStructure))
             pm.PyNode(self.fk_arm_joints[2]).rename('{Side}__{Basename}_Fk_{Parts[2]}'.format(**self.nameStructure))
             adb.AutoSuffix(self.fk_arm_joints)
+
+            self.nameStructure['Suffix'] = NC.VISRULE
+            visRuleGrp, attribute = self.setupVisRule([self.fk_arm_joints[0]], self.ikFk_MOD.VISRULE_GRP, name='{Side}__{Basename}_Fk_JNT__{Suffix}'.format(**self.nameStructure), defaultValue = False)
+            adbAttr.NodeAttr.breakConnection(self.fk_arm_joints[0], attributes=['v'])
+            self.fk_arm_joints[0].v.set(1)
+            self.nameStructure['Suffix'] = NC.REMAP_VALUE_SUFFIX
+            _remapValue = pm.shadingNode('remapValue', asUtility=1, n='{Side}__{Basename}_Fk_visRule__{Suffix}'.format(**self.nameStructure))
+            _remapValue.outputMin.set(2)
+            _remapValue.outputMax.set(0)
+            pm.connectAttr('{}.{}'.format(visRuleGrp, attribute), '{}.inputValue'.format(_remapValue))
+            for bone in self.fk_arm_joints:
+                pm.connectAttr('{}.outValue'.format(_remapValue), '{}.drawStyle'.format(bone))
 
             pm.parent(self.fk_arm_joints[0], self.ikFk_MOD.RIG_GRP)
             return self.fk_arm_joints
@@ -285,17 +305,6 @@ class LimbArm(moduleBase.ModuleBase):
             adb.AutoSuffix([self.ikfk_ctrl])
             self.ikfk_ctrl.addAttr('IK_FK_Switch', keyable=True, attributeType='enum', en="IK:FK")
 
-        def makeConnections():
-            self.addIkFKSpaceAttributes(self.RIG.SPACES_GRP)
-            self.blendSystem(ctrl_name = self.RIG.SPACES_GRP,
-                            blend_attribute = '{Side}_spaces'.format(**self.nameStructure),
-                            result_joints = self.base_arm_joints,
-                            ik_joints = self.ik_arm_joints,
-                            fk_joints = self.fk_arm_joints,
-                            lenght_blend = 1,
-                            )
-
-            pm.parent(self.base_arm_joints[0], self.ikFk_MOD.OUTPUT_GRP)
 
         @changeColor('index', col = self.col_main )
         def CreateFkcontrols(radius = 3,
@@ -303,7 +312,12 @@ class LimbArm(moduleBase.ModuleBase):
             """Creates the FK controls on the Fk joint chain """
             FkShapeSetup = adbFKShape.FkShape(self.fk_arm_joints)
             FkShapeSetup.shapeSetup(radius, normalsCtrl)
+
+            shapes = [ctl.getShape() for ctl in FkShapeSetup.controls]
+            self.nameStructure['Suffix'] = NC.VISRULE
+            visRuleGrp, attribute = self.setupVisRule(shapes, self.ikFk_MOD.VISRULE_GRP, name='{Side}__{Basename}_Fk_CTRL__{Suffix}'.format(**self.nameStructure))
             return FkShapeSetup.controls
+
 
         def CreateIKcontrols(Ikshape = sl.cube_shape, exposant=1, pvShape = sl.ball_shape):
             """
@@ -326,12 +340,15 @@ class LimbArm(moduleBase.ModuleBase):
             @changeColor('index', self.col_main)
             def Ik_ctrl():
                 self.nameStructure['Suffix'] = NC.CTRL
-                arm_IkHandle_ctrl = Control.Control(name='{Side}__{Basename}_IK__{Suffix}'.format(**self.nameStructure),
+                _arm_IkHandle_ctrl = Control.Control(name='{Side}__{Basename}_IK__{Suffix}'.format(**self.nameStructure),
                                                  shape = Ikshape,
                                                  scale=0.8,
                                                  matchTransforms = (self.ik_arm_joints[-1], 1,0),
                                                  ).control
-                return arm_IkHandle_ctrl
+
+                self.setupVisRule([_arm_IkHandle_ctrl], self.ikFk_MOD.VISRULE_GRP)
+
+                return _arm_IkHandle_ctrl
             self.arm_IkHandle_ctrl = Ik_ctrl()[0]
 
             @makeroot('')
@@ -343,6 +360,7 @@ class LimbArm(moduleBase.ModuleBase):
                                  parent = self.arm_IkHandle_ctrl,
                                  matchTransforms = (self.ik_arm_joints[-1], 1, 0),
                                  ).control
+                self.setupVisRule([_arm_IkHandle_ctrl_offset], self.ikFk_MOD.VISRULE_GRP)
                 return _arm_IkHandle_ctrl_offset
             self.arm_IkHandle_ctrl_offset = Ik_ctrl_offset()[0]
 
@@ -385,8 +403,11 @@ class LimbArm(moduleBase.ModuleBase):
 
             pole_vector_ctrl()
 
-            povSpaceSwitch = SpaceSwitch.SpaceSwitch('PV',
-                                                    spacesInputs =[self.arm_IkHandle_ctrl_offset, self.RIG.WORLD_LOC],
+            ikSpaceSwitchWorldGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.WORLD_LOC)
+            ikSpaceSwitchWorldGrp.v.set(0)
+            pm.matchTransform(ikSpaceSwitchWorldGrp, self.arm_IkHandle_ctrl_offset, pos=1, rot=1)
+            self.povSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__PoleVector'.format(**self.nameStructure),
+                                                    spacesInputs =[self.arm_IkHandle_ctrl_offset, ikSpaceSwitchWorldGrp],
                                                     spaceOutput = self.poleVectorCtrl.getParent(),
                                                     maintainOffset = True,
                                                     attrNames = ['wrist', 'world'],)
@@ -394,11 +415,27 @@ class LimbArm(moduleBase.ModuleBase):
             pm.parent(arm_IkHandle[0], self.arm_IkHandle_ctrl_offset)
             pm.parent(self.arm_IkHandle_ctrl.getParent(), self.ikFk_MOD.INPUT_GRP)
 
+
+        def makeConnections():
+            Ik_FK_attributeName = self.setup_SpaceGRP(self.RIG.SPACES_GRP, Ik_FK_attributeName ='{Side}_IK_{Basename}'.format(**self.nameStructure))
+
+            self.blendSystem(ctrl_name = self.RIG.SPACES_GRP,
+                            blend_attribute = Ik_FK_attributeName,
+                            result_joints = self.base_arm_joints,
+                            ik_joints = self.ik_arm_joints,
+                            fk_joints = self.fk_arm_joints,
+                            lenght_blend = 1,
+                            )
+
+            pm.parent(self.base_arm_joints[0], self.ikFk_MOD.OUTPUT_GRP)
+
         IkJointChain()
         FkJointChain()
         CreateFkcontrols()
         CreateIKcontrols()
         makeConnections()
+
+        visRuleGrp = self.setupVisRule(self.base_arm_joints, self.ikFk_MOD.VISRULE_GRP, '{Side}__{Basename}_Base_JNT__{Suffix}'.format(**self.nameStructure), False)[0]
 
         pm.parent(self.ikFk_MOD.MOD_GRP, self.RIG.MODULES_GRP)
         Joint.Joint(self.base_arm_joints).radius = 3
@@ -943,15 +980,57 @@ class LimbArm(moduleBase.ModuleBase):
                 pm.PyNode('{}.{}'.format(ctrl_name, switch_ctrl.attrName)) >> pm.PyNode(each).inputMax
 
 
-    def addIkFKSpaceAttributes(self, transform):
+    def setup_SpaceGRP(self, transform, Ik_FK_attributeName):
         switch_ctrl = adbAttr.NodeAttr([transform])
         switch_ctrl.AddSeparator(transform, 'ARMS')
-        switch_ctrl.addAttr('{Side}_spaces'.format(**self.nameStructure), 'enum',  eName = "IK:FK:")
+        switch_ctrl.addAttr(Ik_FK_attributeName, 'enum',  eName = "IK:FK:")
+        adbAttr.NodeAttr.copyAttr(self.povSpaceSwitch.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
+        return Ik_FK_attributeName
+
+
+    def setup_VisibilityGRP(self):
+        visGrp = adbAttr.NodeAttr([self.RIG.VISIBILITY_GRP])
+        visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Joints')
+        visGrp.addAttr('IK_JNT', False)
+        visGrp.addAttr('FK_JNT', False)
+        visGrp.addAttr('Base_JNT', False)
+        visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Controls')
+        visGrp.addAttr('IK_CTRL', True)
+        visGrp.addAttr('IK_Offset_CTRL', True)
+        visGrp.addAttr('FK_CTRL', True)
+
+        for attr in visGrp.allAttrs.keys():
+            for grp in self.ikFk_MOD.VISRULE_GRP.getChildren():
+                shortName = NC.getBasename(grp).split('{Basename}_'.format(**self.nameStructure))[-1]
+
+                if shortName.lower() == attr.lower():
+                    pm.connectAttr('{}.{}'.format(visGrp.subject, attr), '{}.vis'.format(grp))
+
+
+    def setupVisRule(self, tansformList, parent, name=False, defaultValue=True):
+        """setup VisRule group for a tansform. Connect the tansform visibility to the visRule group
+
+        Arguments:
+            tansform {List} -- Control to connect
+            parent {transform} -- parent of the VisRule group
+        """
+        if name:
+            visRuleGrp = pm.group(n=name, em=1, parent=parent)
+        else:
+            visRuleGrp = pm.group(n='{}_{}__{}'.format( NC.getNameNoSuffix(tansformList[0]), NC.getSuffix(tansformList[0]), NC.VISRULE),  em=1, parent=parent)
+        visRuleGrp.v.set(0)
+        visRuleAttr = adbAttr.NodeAttr([visRuleGrp])
+        visRuleAttr.addAttr('vis', defaultValue)
+
+        for transform in tansformList:
+            pm.connectAttr('{}.{}'.format(visRuleGrp, visRuleAttr.name), '{}.v'.format(transform))
+        adb.lockAttr_func(visRuleGrp, ['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz','v'])
+        return visRuleGrp, visRuleAttr.name
 
 
     def scalingUniform(self):
-        for grp in self.RIG.MODULES_GRP, self.RIG.MAIN_RIG_GRP:
-            [pm.setAttr('{}.s{}'.format(grp, axis), lock=0) for axis in 'xyz']
+        for grp in self.RIG.MODULES_GRP, self.RIG.MAIN_RIG_GRP, self.RIG.MODULES_GRP.getChildren()[0]:
+            adb.unlockAttr_func(grp, ['sx', 'sy', 'sz'])
 
         for module in self.RIG.MODULES_GRP.getChildren():
             self.RIG.MAIN_RIG_GRP.sx >> module.sx
