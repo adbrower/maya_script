@@ -2,6 +2,7 @@ import pymel.core as pm
 
 import adb_core.NameConv_utils as NC
 import adb_core.Class__AddAttr as adbAttr
+from adbrower import lockAttr
 
 # ====================================
 # CLASS
@@ -88,7 +89,7 @@ class ModuleBase(object):
     def getOutputs(self):
         return self._MODEL.getOutputs
 
-
+    @lockAttr()
     def hiearchy_setup(self, module_name, is_module=True):
         """
         @module_name : string. Name of the module
@@ -116,7 +117,7 @@ class ModuleBase(object):
         [pm.parent(grp, self.MOD_GRP) for grp in [self.RIG_GRP, self.INPUT_GRP, self.OUTPUT_GRP]]
         pm.parent(self.VISRULE_GRP, self.MOD_GRP)
 
-        return self.MOD_GRP, self.RIG_GRP, self.INPUT_GRP, self.OUTPUT_GRP
+        return self.MOD_GRP, self.RIG_GRP, self.INPUT_GRP, self.OUTPUT_GRP, self.VISRULE_GRP
 
 
     def setFinalHiearchy(self,

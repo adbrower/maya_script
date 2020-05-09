@@ -271,6 +271,27 @@ def lockAttr(att_to_lock=['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 
         return _lockAttr
     return real_decorator
 
+
+def unlockAttr(att_to_lock=['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz']):
+    """
+    Lock all the attribute except visibility
+    """
+    def real_decorator(func):
+        def _lockAttr(*args, **kwargs):
+            _func = func(*args, **kwargs)
+            pm.select(_func)
+            selection = pm.selected()
+            try:
+                for sel in selection:
+                    for att in att_to_lock:
+                        pm.PyNode(sel).setAttr(att, lock=False,
+                                               channelBox=True, keyable=True)
+            except:
+                pass
+            return _func
+        return _lockAttr
+    return real_decorator
+
     # ===============================
     # 2.2 FUNCTIONS IMPORT RAPIDE
     # ===============================
@@ -1641,16 +1662,22 @@ class Adbrower(object):
 
                 ## mel.eval("source channelBoxCommand; CBdeleteConnection \"{}\"".format(attr))
 
+    @staticmethod
     @undo
-    def lockAttr_func(self, subject, att_to_lock=['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz']):
+    def lockAttr_func(subject, attributes=['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz']):
         """ Lock all the attribute except visibility  """
-        pm.select(subject)
-        selection = pm.selected()
+        for att in attributes:
+            pm.PyNode(subject).setAttr(att, lock=True,
+                                    channelBox=False, keyable=False)
+        return subject
 
-        for sel in selection:
-            for att in att_to_lock:
-                pm.PyNode(sel).setAttr(att, lock=True,
-                                       channelBox=False, keyable=False)
+    @staticmethod
+    @undo
+    def unlockAttr_func(subject, attributes=['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz']):
+        """ unlock all the attribute except visibility  """
+        
+        for att in attributes:
+            pm.PyNode(subject).setAttr(att, lock=False, channelBox=True, keyable=True)
         return subject
 
     @undo
