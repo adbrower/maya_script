@@ -137,6 +137,17 @@ def getNameNoSuffix(_transform):
         return shortName
 
 
+def getSuffix(_transform):
+    if isinstance(_transform, list):
+            transform = str(_transform[0])
+    else:
+        transform = str(_transform)
+
+    suffix = transform.split('__')[-1]
+    return suffix
+
+
+
 def getNameSpace(_name):
     """
     @param _name: (string)
@@ -190,6 +201,7 @@ TAG_SPINE                     = 'tag_SPINE'
 
 SYSTEM                        = 'SYS'
 NO_TOUCH                      = 'DO_NOT_TOUCH'
+VISRULE                       = 'VISRULE'
 
 PARENT_CONSTRAINT_SUFFIX      = 'parentconstraint'
 POINT_CONSTRAINT_SUFFIX       = 'pointconstraint'
