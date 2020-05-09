@@ -59,9 +59,9 @@ class SpaceSwitch(object):
 
 
     def createNetworkNode(self):
-        spaceAttrNode = pm.shadingNode('network', asUtility=1, n='{}_attribute___network'.format(self.NAME))
+        spaceAttrNode = pm.shadingNode('network', asUtility=1, n='{}_attribute___METADATA'.format(self.NAME))
         spaceAttr = adbAttr.NodeAttr(spaceAttrNode)
-        spaceAttr.addAttr('Spaces',  'enum',  eName = str(':'.join(self.attrNames)))
+        spaceAttr.addAttr(self.NAME,  'enum',  eName = str(':'.join(self.attrNames)))
 
         pm.PyNode('{}.{}'.format(spaceAttrNode , spaceAttr.attrName)) >> self.choiceNode.selector
 

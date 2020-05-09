@@ -409,4 +409,4 @@ class TiltTool():
             self.tiltBoth.buildRig()
 
 
-myTool = TiltTool()
+# myTool = TiltTool()
