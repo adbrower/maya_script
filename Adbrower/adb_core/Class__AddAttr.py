@@ -70,7 +70,6 @@ class NodeAttr(object):
         else:
             self.node = [pm.PyNode(_node)]
 
-
         self.name = None
         self.attr = None
         self.list_methods = {}
@@ -111,7 +110,7 @@ class NodeAttr(object):
         return self.name
 
     @property
-    def listMethods(self):
+    def allAttrs(self):
         """ Returns the list of all the new methods / attributes added"""
         return self.list_methods
 

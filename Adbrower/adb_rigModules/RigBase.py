@@ -49,6 +49,6 @@ class RigBase(object):
     @lockAttr()
     def createRigLocators(self, rigName):
         self.WORLD_LOC = Locator.Locator.create(name='{}_WorldTransform__LOC'.format(rigName)).locators[0]
-        pm.parent(self.WORLD_LOC, self.MAIN_RIG_GRP)
+        pm.parent(self.WORLD_LOC, self.SPACES_GRP)
         self.WORLD_LOC.v.set(0)
         return self.WORLD_LOC

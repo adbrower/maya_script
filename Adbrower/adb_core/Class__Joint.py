@@ -54,7 +54,8 @@ class Joint(adbTransform.Transform):
         return cls([(jnt) for jnt in pm.selected()])
 
     @classmethod
-    def create(cls, numb=1, name='joint1', rad=1, padding=False):
+    def create(cls, numb=1, name='joint1', rad=1.0, padding=False):
+        pm.select(None)
         jnt_created = []
         for number in range(numb):
             if padding:
