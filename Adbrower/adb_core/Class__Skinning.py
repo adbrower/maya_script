@@ -6,7 +6,9 @@
 #     audreydb23@gmail.com
 # -------------------------------------------------------------------
 
+import os
 import sys
+
 import pymel.core as pm
 import maya.cmds as mc
 from functools import wraps
@@ -17,6 +19,15 @@ import math
 
 from adbrower import flatList
 from adbrower import undo
+
+def loadPlugin(plugin):
+    if not mc.pluginInfo(plugin, query=True, loaded=True):
+        try:
+            mc.loadPlugin(plugin)
+        except RuntimeError:
+            pm.warning('could not load plugin {}'.format(plugin))
+
+loadPlugin('adbSkinCluster__Command')
 
 
 # -----------------------------------
@@ -108,7 +119,40 @@ class Skinning(object):
                  _tranformToCheck=pm.selected(),
                  ):
 
-        self._tranformToCheck = _tranformToCheck
+        self.transform = _tranformToCheck
+        self.getSkinCluster = self.getSkinCluster()
+
+    def exportWeights(self, path, fileName):
+        pm.select(self.getSkinCluster, r=1)
+        full_path = path + fileName
+        mc.manageSkinCluster(mode=0, f=full_path)
+
+
+    @classmethod
+    def importWeights(cls, path, fileName):
+        full_path = path + fileName
+        # open the file for reading
+        try:
+            weightFile = open(full_path, 'rb')
+        except:
+            om.MGlobal.displayError('A file error has occured for file \'' + full_path + '\'.')
+            return(-1)
+
+        weightData = weightFile.read()
+        weightLines = weightData.split('\n')
+        weightFile.close()
+
+        # --------------------------------------------------------------------------------
+        # the first line contains the joints and skin shape
+        # --------------------------------------------------------------------------------
+        objects = weightLines[0]
+        items = objects.split(' ')
+        shape = items[len(items) - 1]
+        transform = pm.PyNode(shape).getParent()
+
+        mc.manageSkinCluster(mode=1, f=full_path)
+        return cls(transform)
+
 
     def getSkinCluster(self):
         """
@@ -116,9 +160,9 @@ class Skinning(object):
         Returns the skinCluster node
         """
         result = []
-        if not (pm.objExists(self._tranformToCheck)):
+        if not (pm.objExists(self.transform)):
             return result
-        validList = mel.eval('findRelatedDeformer("' + str(self._tranformToCheck) + '")')
+        validList = mel.eval('findRelatedDeformer("' + str(self.transform) + '")')
         if validList is None:
             return result
         for elem in validList:
@@ -130,7 +174,10 @@ class Skinning(object):
         if len(result_node) > 1:
             return result_node
         else:
-            return result_node[0]
+            try:
+                return result_node[0]
+            except IndexError:
+                return False
 
     def getBindJoints(self, skinCluster_index=0):
         """
@@ -516,7 +563,7 @@ class Skinning(object):
         mc.SmoothBindSkin()
 
         # Copy Weight Skin
-        pm.select(self._tranformToCheck, r=True)
+        pm.select(self.transform, r=True)
         pm.select(target_mesh, add=True)
         pm.copySkinWeights(surfaceAssociation=_surfaceAssociation, influenceAssociation=_influenceAssociation, noMirror=1)
 
@@ -537,7 +584,7 @@ class Skinning(object):
         destination_skin = str(getSkinCluster(target_mesh))
 
         # Copy Weight Skin
-        pm.select(self._tranformToCheck, r=True)
+        pm.select(self.transform, r=True)
         pm.select(target_mesh, add=True)
 
         pm.copySkinWeights(ss=str(skincluster), ds=destination_skin, surfaceAssociation=_surfaceAssociation, influenceAssociation=_influenceAssociation, noMirror=1)
@@ -572,7 +619,7 @@ class Skinning(object):
         @param target_joints: list  new list of joints receving the skin weights
 
         """
-        target_mesh = self._tranformToCheck
+        target_mesh = self.transform
         for source_jnt, target_jnt in zip(source_joints, target_joints):
             self.lockAll_Weight()
             self.unlock_weights([source_jnt])
@@ -608,7 +655,7 @@ class Skinning(object):
         mc.SmoothBindSkin()
 
         pm.select(None)
-        pm.select(self._tranformToCheck, add=True)
+        pm.select(self.transform, add=True)
         pm.select(target_mesh, add=True)
 
         if _mirrorMode == 'YZ':
@@ -622,6 +669,7 @@ class Skinning(object):
         if _mirrorMode == 'XZ':
             arguments = [" -mirrorMode XZ -surfaceAssociation " + _surfaceAssociation + "-influenceAssociation " + _influenceAssociation[0] + " -influenceAssociation " + _influenceAssociation[1]]
             pm.mel.doMirrorSkinWeightsArgList(2, arguments)
+
 
 
 # -----------------------------------

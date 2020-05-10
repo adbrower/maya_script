@@ -15,7 +15,7 @@ from PySide2 import QtCore, QtGui, QtWidgets
 
 try:
     from skinWrangler_master import skinWrangler
-except importError as error:
+except ImportError as error:
     print(error)
 
 adb = adbrower.Adbrower()
@@ -35,15 +35,15 @@ FILE_NAME = 'Copy_WEIGHTS_Tool_config2.ini'
 
 class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     __dialog = None
-    
+
     @classmethod
     def show_dialog(cls):
         if cls.__dialog is None:
             cls.__dialog = cls()
         else:
-            cls.__dialog.raise_() 
+            cls.__dialog.raise_()
         cls.__dialog.show()
-        
+
     def __init__(self, parent=None):
         super(SkinCopyWEIGHTS, self).__init__(parent=parent)
         self.setObjectName('test')
@@ -100,7 +100,6 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         pm.select(None)
 
     def closeEvent(self, eventQCloseEvent):
-        # return
         self.saveData()
 
 
@@ -919,7 +918,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                     skn.copyWeight(target, _surfaceAssociation=data_surfaceAssociation, _influenceAssociation=data_influenceAssociation)
 
                 if original_skinCls is not False:
-                    pm.rename(skin.getSkinCluster(target),  str(original_skinCls)) 
+                    pm.rename(skin.getSkinCluster(target),  str(original_skinCls))
 
             sys.stdout.write('// Result: Zip skin is done!  //')
 
@@ -932,9 +931,9 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                     pass
                 skn = skin.Skinning(self.sources[0])
                 skn.copyWeight(target)
-                
+
                 if original_skinCls is not False:
-                    pm.rename(skin.getSkinCluster(target),  str(original_skinCls)) 
+                    pm.rename(skin.getSkinCluster(target),  str(original_skinCls))
             sys.stdout.write('// Result: Loop skin is done!  //')
 
     def verifyJointSideAB(self):
@@ -1056,7 +1055,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                                  replace=replace_for
                                  )
             if original_skinCls is not False:
-                pm.rename(skin.getSkinCluster(target),  str(original_skinCls)) 
+                pm.rename(skin.getSkinCluster(target),  str(original_skinCls))
 
     def selectSknJntsAB(self):
         skn = skin.Skinning(pm.selected()[0])
@@ -1079,7 +1078,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 def showUI(dialog = True):
     if dialog:
         SkinCopyWEIGHTS.show_dialog()
-    else:    
+    else:
         # Make sure the UI is deleted before recreating
         global tools_cw_ui
         try:
