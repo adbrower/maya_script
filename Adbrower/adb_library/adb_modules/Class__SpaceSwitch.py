@@ -11,6 +11,7 @@ import pymel.core as pm
 import maya.OpenMaya as om
 
 import adb_core.Class__AddAttr as adbAttr
+import adb_core.ModuleBase as moduleBase
 
 
 class SpaceSwitch(object):
@@ -29,7 +30,8 @@ class SpaceSwitch(object):
                 spaceOutput = None,
                 maintainOffset = False,
                 worldSpace = True,
-                attrNames = []
+                attrNames = [],
+                metaDataNode = 'transform'
                 ):
 
         self.NAME = spaceSwtichName
@@ -38,9 +40,10 @@ class SpaceSwitch(object):
         self.maintainOffset = maintainOffset
         self.worldSpace = worldSpace
         self.attrNames = attrNames
+        self.metaDataNode = metaDataNode
 
         self.create()
-        self.metaData_GRP = self.createNetworkNode()
+        self.metaData_GRP = self.createNetworkNode(self.metaDataNode)
 
 
     def create(self):
@@ -58,8 +61,8 @@ class SpaceSwitch(object):
         return self.choiceNode
 
 
-    def createNetworkNode(self):
-        spaceAttrNode = pm.shadingNode('network', asUtility=1, n='{}_attribute___METADATA'.format(self.NAME))
+    def createNetworkNode(self, _metaDataNode):
+        spaceAttrNode = moduleBase.ModuleBase.createMetaDataGrp('{}_attribute'.format(self.NAME), type ='transform')
         spaceAttr = adbAttr.NodeAttr(spaceAttrNode)
         spaceAttr.addAttr(self.NAME,  'enum',  eName = str(':'.join(self.attrNames)))
 

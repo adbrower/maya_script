@@ -98,8 +98,9 @@ class Folli(moduleBase.ModuleBase):
 
     @getFollicules.setter
     def getFollicules(self, value):
-        """ Returns the follicules """
-        self._MODEL.getFollicules = value
+        """ set the follicules visibility"""
+        for oFoll in self._MODEL.getFollicules:
+            pm.PyNode(oFoll).v.set(value)
 
     # =========================
     # METHOD
@@ -271,13 +272,13 @@ class Folli(moduleBase.ModuleBase):
 
         return self._MODEL.getFollicules
 
-    
+
     def addControls(self, shape=sl.ball_shape, scale=1, color=('index', 13)):
         """ add Controls to the follicules """
 
-        create_ctrls =  [Control.Control(str(joint), 
-                            shape = shape, 
-                            scale=scale, 
+        create_ctrls =  [Control.Control(str(joint),
+                            shape = shape,
+                            scale=scale,
                             parent = self.INPUT_GRP,
                             matchTransforms=(joint, 0, 0),
                             color=color,

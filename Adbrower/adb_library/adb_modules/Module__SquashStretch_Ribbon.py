@@ -33,7 +33,7 @@ class SquashStrech(moduleBase.ModuleBase):
     Arguments:
         module_name {String} -- Name of the module
         ExpCtrl {String or None} -- Transform on which we add attributes settings. 
-                                    Default: None, So it will be on the SETTINGS_GRP module group
+                                    Default: None, So it will be on the METADATA_GRP module group
         ribbon_ctrl {List} -- start and end for the distance calculation. Top first, then bottom
         jointList {List} -- List of the joints that will be squash and strech
         

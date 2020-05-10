@@ -21,14 +21,20 @@ class ModuleBase(object):
 
     def __init__(self, *args, **kwargs):
         self._MODEL = ModuleBaseModel()
+        self.metaDataGRPS = []
+        self.NAME = None
+
 
     def _start(self, _metaDataNode = 'transform'):
         """
         - Creates Rig Group hiearchy
         - Create Meta Data Node
         """
-        self.metaData_GRP = self.createMetaDataGrp(type=_metaDataNode)
+        self.metaData_GRP = self.createMetaDataGrp(self.NAME, type=_metaDataNode)
         self.hiearchy_setup(self.NAME, is_module=True)
+
+        self.metaDataGRPS.append(self.metaData_GRP)
+
 
 
     def _guides(self):
@@ -48,6 +54,7 @@ class ModuleBase(object):
         - Connect to other Module
         """
         pass
+
 
     @property
     def getJoints(self):
@@ -107,6 +114,7 @@ class ModuleBase(object):
         else:
             module_grp_name = '{}_SYS__GRP'.format(module_name)
 
+        self.NAME = module_name
         self.MOD_GRP = pm.group(n=module_grp_name, em=1)
         self.RIG_GRP = pm.group(n='{}_RIG__GRP'.format(module_name), em=1)
         self.INPUT_GRP = pm.group(n='{}_INPUT__GRP'.format(module_name), em=1)
@@ -132,22 +140,24 @@ class ModuleBase(object):
         [pm.parent(child, self.INPUT_GRP) for child in INPUT_GRP_LIST]
         [pm.parent(child, self.OUTPUT_GRP) for child in OUTPUT_GRP_LIST]
 
-
-    def createMetaDataGrp(self, type ='transform'):
+    @staticmethod
+    @lockAttr()
+    def createMetaDataGrp(module_name, type ='transform'):
         """
         Create a Meta Data Node
         @param type: string.
                 'transform': empty node
                 'network' : network node
-
         """
-        METADATA_grp_name = self.NAME + '__METADATA'
+        METADATA_grp_name = module_name + '__METADATA'
 
         if pm.objExists(METADATA_grp_name):
             pm.delete(METADATA_grp_name)
 
         if type == 'transform':
             metaData_GRP = pm.group(n=METADATA_grp_name, em=True)
+            metaData_GRP.v.set(0)
+
         elif type == 'network':
             metaData_GRP = pm.shadingNode('network', au=1, n=METADATA_grp_name)
 
