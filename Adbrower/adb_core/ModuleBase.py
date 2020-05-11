@@ -4,6 +4,10 @@ import adb_core.NameConv_utils as NC
 import adb_core.Class__AddAttr as adbAttr
 from adbrower import lockAttr
 
+import adbrower
+
+adb = adbrower.Adbrower()
+
 # ====================================
 # CLASS
 # ===================================
@@ -163,3 +167,24 @@ class ModuleBase(object):
 
         return metaData_GRP
 
+    @staticmethod
+    def setupVisRule(tansformList, parent, name=False, defaultValue=True):
+        """
+        setup VisRule group for a tansform. Connect the tansform visibility to the visRule group
+
+        Arguments:
+            tansform {List} -- Control to connect
+            parent {transform} -- parent of the VisRule group
+        """
+        if name:
+            visRuleGrp = pm.group(n=name, em=1, parent=parent)
+        else:
+            visRuleGrp = pm.group(n='{}_{}__{}'.format(NC.getNameNoSuffix(tansformList[0]), NC.getSuffix(tansformList[0]), NC.VISRULE),  em=1, parent=parent)
+        visRuleGrp.v.set(0)
+        visRuleAttr = adbAttr.NodeAttr([visRuleGrp])
+        visRuleAttr.addAttr('vis', defaultValue)
+
+        for transform in tansformList:
+            pm.connectAttr('{}.{}'.format(visRuleGrp, visRuleAttr.name), '{}.v'.format(transform))
+        adb.lockAttr_func(visRuleGrp, ['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz','v'])
+        return visRuleGrp, visRuleAttr.name
