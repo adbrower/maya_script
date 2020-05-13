@@ -107,7 +107,7 @@ class Folli(moduleBase.ModuleBase):
     # =========================
 
     def start(self, metaDataNode = 'network'):
-        super(Folli, self)._start(_metaDataNode = metaDataNode)
+        super(Folli, self)._start(self.NAME, _metaDataNode = metaDataNode)
 
         # add attribute on METADATA node
 

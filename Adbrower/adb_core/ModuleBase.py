@@ -29,11 +29,12 @@ class ModuleBase(object):
         self.NAME = None
 
 
-    def _start(self, _metaDataNode = 'transform'):
+    def _start(self, NAME, _metaDataNode = 'transform'):
         """
         - Creates Rig Group hiearchy
         - Create Meta Data Node
         """
+        self.NAME = NAME
         self.metaData_GRP = self.createMetaDataGrp(self.NAME, type=_metaDataNode)
         self.hiearchy_setup(self.NAME, is_module=True)
 

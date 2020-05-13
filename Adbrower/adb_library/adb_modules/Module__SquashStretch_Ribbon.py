@@ -122,7 +122,7 @@ class SquashStrech(moduleBase.ModuleBase):
     # =========================
 
     def start(self, metaDataNode = 'network'):
-        super(SquashStrech, self)._start(_metaDataNode = metaDataNode)
+        super(SquashStrech, self)._start(self.NAME, _metaDataNode = metaDataNode)
 
     def build(self):
         super(SquashStrech, self)._build()
