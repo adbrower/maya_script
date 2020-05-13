@@ -139,13 +139,18 @@ class LimbFoot(moduleBase.ModuleBase):
         self.footGroupSetup()
 
 
-    def connect(self):
+    def connect(self,
+                legSpaceGroup = None,
+                leg_ikHandle = 'L__Leg__IKHDL',
+                leg_offset_ik_ctrl = 'L__Leg_IK_offset__CTRL',
+                leg_ankle_fk_ctrl = 'L__Leg_Fk_Ankle__CTRL'):
+
         super(LimbFoot, self)._connect()
 
-        self.connectFootToLeg(legSpaceGroup = None,
-                              leg_ikHandle = 'L__Leg__IKHDL',
-                              leg_offset_ik_ctrl = 'L__Leg_IK_offset__CTRL',
-                              leg_ankle_fk_ctrl = 'L__Leg_Fk_Ankle__CTRL',
+        self.connectFootToLeg(legSpaceGroup = legSpaceGroup,
+                              leg_ikHandle = leg_ikHandle,
+                              leg_offset_ik_ctrl = leg_offset_ik_ctrl,
+                              leg_ankle_fk_ctrl = leg_ankle_fk_ctrl,
                               )
 
         self.setup_VisibilityGRP()
@@ -266,7 +271,7 @@ class LimbFoot(moduleBase.ModuleBase):
         Transform(ikBlendGrp).pivotPoint = Transform(self.footAnkle_joint).worldTrans
         adbAttr.NodeAttr.copyAttr(self.Foot_MOD.metaData_GRP, [self.foot_ctrl], forceConnection=True)
 
-        all_attributes = self.setup_SpaceGRP(self.RIG.SPACES_GRP,
+        self.all_IKFK_attributes = self.setup_SpaceGRP(self.RIG.SPACES_GRP,
                             Ik_FK_attributeName =['{Side}_rotation_{Basename}'.format(**self.nameStructure),
                                                   '{Side}_translation_{Basename}'.format(**self.nameStructure)]
                                                 )
@@ -283,7 +288,7 @@ class LimbFoot(moduleBase.ModuleBase):
         [pm.PyNode(loc[0]).v.set(0) for loc in [ik_loc, fk_loc]]
 
         self.footBlendSystem(ctrl_name = self.RIG.SPACES_GRP,
-                blend_attribute = all_attributes[0],
+                blend_attribute = self.all_IKFK_attributes[0],
                 result_joints = [foot_ctrlBlendGrp],
                 ik_joints = ik_loc,
                 fk_joints = fk_loc,
@@ -294,9 +299,9 @@ class LimbFoot(moduleBase.ModuleBase):
         pm.parentConstraint(self.foot_ctrl, self.footOffsetGrp, mo=1)
         const = pm.pointConstraint([fk_loc, ik_loc, foot_ctrlBlendGrp], mo=1)
         fkWeight, ikWeight = pm.pointConstraint(const, q=1, weightAliasList  =1)
-        pm.PyNode('{}.{}'.format(self.RIG.SPACES_GRP, all_attributes[1])) >> pm.PyNode('{}.{}'.format(const, fkWeight))
+        pm.PyNode('{}.{}'.format(self.RIG.SPACES_GRP, self.all_IKFK_attributes[1])) >> pm.PyNode('{}.{}'.format(const, fkWeight))
         reverse=pm.shadingNode('reverse', asUtility=1)
-        pm.PyNode('{}.{}'.format(self.RIG.SPACES_GRP, all_attributes[1])) >> reverse.inputX
+        pm.PyNode('{}.{}'.format(self.RIG.SPACES_GRP, self.all_IKFK_attributes[1])) >> reverse.inputX
         reverse.outputX >> pm.PyNode('{}.{}'.format(const, ikWeight))
 
 
@@ -450,8 +455,8 @@ class LimbFoot(moduleBase.ModuleBase):
 # BUILD
 # =========================
 
-L_foot = LimbFoot(module_name='L__Foot')
-L_foot.build(['L__ankle_guide', 'L__ball_guide', 'L__toe_guide', 'L__heel_guide'])
-L_foot.connect()
+# L_foot = LimbFoot(module_name='L__Foot')
+# L_foot.build(['L__ankle_guide', 'L__ball_guide', 'L__toe_guide', 'L__heel_guide'])
+# L_foot.connect()
 
 
