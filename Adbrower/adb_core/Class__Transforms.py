@@ -22,6 +22,9 @@ from adbrower import undo
 class Transform(adbAttr.NodeAttr):
     """
 
+    import adb_core.Class__Transforms as Transform
+    reload(Transform)
+
     """
 
     def __init__(self,
@@ -56,7 +59,7 @@ class Transform(adbAttr.NodeAttr):
         """
         Change de pivot Point of a subject base values
         """
-        pivot_point = [pm.PyNode(x).getRotatePivot() for x in self.transform]
+        pivot_point = [pm.PyNode(x).getRotatePivot(space='world') for x in self.transform]
         return pivot_point
 
     @pivotPoint.setter
@@ -64,7 +67,7 @@ class Transform(adbAttr.NodeAttr):
         """
         Change de pivot Point of a subject base values
         """
-        pivot_point = [pm.PyNode(x).setRotatePivot(val) for x in self.transform]
+        pivot_point = [pm.PyNode(x).setRotatePivot(val, space='world') for x in self.transform]
         return
 
     @property
@@ -96,6 +99,7 @@ class Transform(adbAttr.NodeAttr):
         """
         [pm.PyNode(x).setRotatePivot(value) for x in self.transform]
         [pm.PyNode(x).setScalePivot(value) for x in self.transform]
+
 
     def getAllConns(self):
         """ Print all connections for selected subject """
