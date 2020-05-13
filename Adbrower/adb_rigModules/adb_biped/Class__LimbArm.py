@@ -167,7 +167,7 @@ class LimbArm(moduleBase.ModuleBase):
         # =================
         # BUILD
 
-        self.createBaseArmJoints()
+        self.createResultArmJoints()
         self.ik_fk_system()
         self.stretchyLimb()
         self.slidingElbow()
@@ -202,7 +202,7 @@ class LimbArm(moduleBase.ModuleBase):
     # BUILD SLOVERS
     # -------------------
 
-    def createBaseArmJoints(self):
+    def createResultArmJoints(self):
         """
         Create basic 3 joints base arm chain
         """
@@ -219,9 +219,9 @@ class LimbArm(moduleBase.ModuleBase):
             pm.parent(oChild, None)
             pm.parent(oChild, oParent)
 
-        pm.PyNode(self.base_arm_joints[0]).rename('{Side}__{Basename}_Base_{Parts[0]}'.format(**self.nameStructure))
-        pm.PyNode(self.base_arm_joints[1]).rename('{Side}__{Basename}_Base_{Parts[1]}'.format(**self.nameStructure))
-        pm.PyNode(self.base_arm_joints[2]).rename('{Side}__{Basename}_Base_{Parts[2]}'.format(**self.nameStructure))
+        pm.PyNode(self.base_arm_joints[0]).rename('{Side}__{Basename}_Result_{Parts[0]}'.format(**self.nameStructure))
+        pm.PyNode(self.base_arm_joints[1]).rename('{Side}__{Basename}_Result_{Parts[1]}'.format(**self.nameStructure))
+        pm.PyNode(self.base_arm_joints[2]).rename('{Side}__{Basename}_Result_{Parts[2]}'.format(**self.nameStructure))
 
         adb.AutoSuffix(self.base_arm_joints)
 
@@ -234,20 +234,13 @@ class LimbArm(moduleBase.ModuleBase):
             pm.delete(mirror_chain_1,mirror_chain_1,self.base_arm_joints)
             self.base_arm_joints = [pm.PyNode(x) for x in mirror_chain_3]
 
-            pm.PyNode(self.base_arm_joints[0]).rename('{Side}__{Basename}_Base_{Parts[0]}'.format(**self.nameStructure))
-            pm.PyNode(self.base_arm_joints[1]).rename('{Side}__{Basename}_Base_{Parts[1]}'.format(**self.nameStructure))
-            pm.PyNode(self.base_arm_joints[2]).rename('{Side}__{Basename}_Base_{Parts[2]}'.format(**self.nameStructure))
+            pm.PyNode(self.base_arm_joints[0]).rename('{Side}__{Basename}_Result_{Parts[0]}'.format(**self.nameStructure))
+            pm.PyNode(self.base_arm_joints[1]).rename('{Side}__{Basename}_Result_{Parts[1]}'.format(**self.nameStructure))
+            pm.PyNode(self.base_arm_joints[2]).rename('{Side}__{Basename}_Result_{Parts[2]}'.format(**self.nameStructure))
             adb.AutoSuffix(self.base_arm_joints)
         else:
             Joint.Joint(self.base_arm_joints).orientAxis = '-Y'
 
-
-        def createBaseArmJointsHiearchy():
-            baseJnst_grp = pm.group(em=True, name='{Side}__{Basename}_BaseJnts'.format(**self.nameStructure))
-            adb.AutoSuffix([baseJnst_grp])
-            pm.parent(self.base_arm_joints[0], baseJnst_grp)
-
-        #createBaseArmJointsHiearchy()
 
 
     def ik_fk_system(self):
@@ -259,7 +252,7 @@ class LimbArm(moduleBase.ModuleBase):
         self.ikFk_MOD.hiearchy_setup('{Side}__Ik_FK'.format(**self.nameStructure))
         self.BUILD_MODULES += [self.ikFk_MOD]
 
-        @changeColor()
+        @changeColor('index', 3)
         def IkJointChain():
             self.ik_arm_joints = pm.duplicate(self.base_arm_joints)
             ## Setter le radius de mes joints ##
@@ -352,6 +345,7 @@ class LimbArm(moduleBase.ModuleBase):
             self.nameStructure['Suffix'] = NC.IKHANDLE_SUFFIX
             arm_IkHandle = pm.ikHandle(n='{Side}__{Basename}__{Suffix}'.format(**self.nameStructure), sj=self.ik_arm_joints[0], ee=self.ik_arm_joints[-1])
             arm_IkHandle[0].v.set(0)
+            self.arm_IkHandle = arm_IkHandle[0]
 
             vec1 = self.base_arm_joints[0].getTranslation(space='world') # "hips"
             vec2 = self.base_arm_joints[1].getTranslation(space='world') # "knee"
@@ -447,10 +441,10 @@ class LimbArm(moduleBase.ModuleBase):
 
 
         def makeConnections():
-            Ik_FK_attributeName = self.setup_SpaceGRP(self.RIG.SPACES_GRP, Ik_FK_attributeName ='{Side}_IK_{Basename}'.format(**self.nameStructure))
+            self.Ik_FK_attributeName = self.setup_SpaceGRP(self.RIG.SPACES_GRP, Ik_FK_attributeName ='{Side}_IK_{Basename}'.format(**self.nameStructure))
 
             self.blendSystem(ctrl_name = self.RIG.SPACES_GRP,
-                            blend_attribute = Ik_FK_attributeName,
+                            blend_attribute = self.Ik_FK_attributeName,
                             result_joints = self.base_arm_joints,
                             ik_joints = self.ik_arm_joints,
                             fk_joints = self.fk_arm_joints,
@@ -461,14 +455,17 @@ class LimbArm(moduleBase.ModuleBase):
 
         IkJointChain()
         FkJointChain()
-        CreateFkcontrols()
+        self.fkControls = CreateFkcontrols()
         CreateIKcontrols()
         makeConnections()
 
-        visRuleGrp = moduleBase.ModuleBase.setupVisRule(self.base_arm_joints, self.ikFk_MOD.VISRULE_GRP, '{Side}__{Basename}_Base_JNT__{Suffix}'.format(**self.nameStructure), False)[0]
+        visRuleGrp = moduleBase.ModuleBase.setupVisRule(self.base_arm_joints, self.ikFk_MOD.VISRULE_GRP, '{Side}__{Basename}_Result_JNT__{Suffix}'.format(**self.nameStructure), False)[0]
 
         pm.parent(self.ikFk_MOD.MOD_GRP, self.RIG.MODULES_GRP)
-        Joint.Joint(self.base_arm_joints).radius = 3
+        Joint.Joint(self.base_arm_joints).radius = 6
+        Joint.Joint(self.fk_arm_joints).radius = Joint.Joint(self.base_arm_joints).radius - 3
+        Joint.Joint(self.ik_arm_joints).radius = Joint.Joint(self.base_arm_joints).radius - 4 
+
 
 
     def stretchyLimb(self):
@@ -900,7 +897,7 @@ class LimbArm(moduleBase.ModuleBase):
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Joints')
         visGrp.addAttr('IK_JNT', False)
         visGrp.addAttr('FK_JNT', False)
-        visGrp.addAttr('Base_JNT', False)
+        visGrp.addAttr('Result_JNT', False)
         visGrp.addAttr('Ribbon_JNT', True)
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Controls')
         visGrp.addAttr('IK_CTRL', True)
