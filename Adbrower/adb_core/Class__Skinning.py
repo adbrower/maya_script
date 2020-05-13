@@ -184,11 +184,11 @@ class Skinning(object):
         Find all bind joints from a mesh with a skin cluster
         Returns: List of joints
         """
-        _skinCls = self.getSkinCluster()
+        _skinCls = self.getSkinCluster
         if isinstance(_skinCls, list):
-            _skinCls = self.getSkinCluster()[skinCluster_index]
+            _skinCls = self.getSkinCluster([skinCluster_index])
         else:
-            _skinCls = self.getSkinCluster()
+            _skinCls = self.getSkinCluster
         all_binds_jnts = [x for x in pm.listConnections(str(_skinCls) + '.matrix[*]', s=1)]
         return all_binds_jnts
 
