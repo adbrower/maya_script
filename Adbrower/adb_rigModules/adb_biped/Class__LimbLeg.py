@@ -35,6 +35,7 @@ import adb_library.adb_modules.Module__SquashStretch_Ribbon as adbRibbon
 import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
 
 import adb_rigModules.RigBase as RigBase
+import adb_rigModules.adb_biped.Class__LimbFoot as LimbFoot
 
 reload(adbrower)
 reload(sl)
@@ -52,6 +53,7 @@ reload(Locator)
 reload(adbFolli)
 reload(adbRibbon)
 reload(SpaceSwitch)
+reload(LimbFoot)
 
 #-----------------------------------
 #  DECORATORS
@@ -81,18 +83,12 @@ class LimbLeg(moduleBase.ModuleBase):
     """
     def __init__(self,
                 module_name=None,
-                pole_vector_shape=None,
-                plane_proxy_axis=None,
-                output_joint_radius=1,
                 ):
         super(LimbLeg, self).__init__('')
 
         self.nameStructure = None
-
         self._MODEL = LimbLegModel()
-
         self.NAME = module_name
-        self.output_joint_radius = output_joint_radius
 
     def __repr__(self):
         return str('{} : {} \n {}'.format(self.__class__.__name__, self.subject, self.__class__))
@@ -166,14 +162,14 @@ class LimbLeg(moduleBase.ModuleBase):
         # =================
         # BUILD
 
-        self.createBaseLegJoints()
+        self.createResultLegJoints()
         self.ik_fk_system()
         self.stretchyLimb()
         self.slidingKnee()
         self.doubleKnee()
         self.ribbon(volumePreservation=True)
 
-    def connect(self):
+    def connect(self, buildFoot=(False, ['L__ankle_guide', 'L__ball_guide', 'L__toe_guide', 'L__heel_guide'])):
         super(LimbLeg, self)._connect()
 
         self.setup_VisibilityGRP()
@@ -191,6 +187,18 @@ class LimbLeg(moduleBase.ModuleBase):
             for grp in module.metaDataGRPS:
                 pm.parent(grp, self.RIG.SETTINGS_GRP)
                 grp.v.set(0)
+        
+        buildFootStatus, buildFootStarter = buildFoot
+        if buildFootStatus:
+            L_foot = LimbFoot.LimbFoot(module_name='L__Foot')
+            L_foot.build(buildFootStarter)
+
+            L_foot.connect(leg_ikHandle = self.leg_IkHandle,
+                           leg_offset_ik_ctrl = self.leg_IkHandle_ctrl_offset,
+                           leg_ankle_fk_ctrl = self.fkControls[-1],
+                            )
+            pm.PyNode('{}.{}'.format(self.RIG.SPACES_GRP, self.Ik_FK_attributeName)) >> pm.PyNode('{}.{}'.format(L_foot.RIG.SPACES_GRP, L_foot.all_IKFK_attributes[1]))
+
 
     # =========================
     # SOLVERS
@@ -200,12 +208,12 @@ class LimbLeg(moduleBase.ModuleBase):
     # BUILD SLOVERS
     # -------------------
 
-    def createBaseLegJoints(self):
+    def createResultLegJoints(self):
         """
         Create basic 3 joints base leg chain
         """
         pm.select(None)
-        self.base_leg_joints = [pm.joint(rad = self.output_joint_radius) for x in range(len(self.starter_Leg))]
+        self.base_leg_joints = [pm.joint() for x in range(len(self.starter_Leg))]
         for joint in self.base_leg_joints:
             pm.parent(joint, w=True)
 
@@ -217,9 +225,9 @@ class LimbLeg(moduleBase.ModuleBase):
             pm.parent(oChild, None)
             pm.parent(oChild, oParent)
 
-        pm.PyNode(self.base_leg_joints[0]).rename('{Side}__{Basename}_Base_{Parts[0]}'.format(**self.nameStructure))
-        pm.PyNode(self.base_leg_joints[1]).rename('{Side}__{Basename}_Base_{Parts[1]}'.format(**self.nameStructure))
-        pm.PyNode(self.base_leg_joints[2]).rename('{Side}__{Basename}_Base_{Parts[2]}'.format(**self.nameStructure))
+        pm.PyNode(self.base_leg_joints[0]).rename('{Side}__{Basename}_Result_{Parts[0]}'.format(**self.nameStructure))
+        pm.PyNode(self.base_leg_joints[1]).rename('{Side}__{Basename}_Result_{Parts[1]}'.format(**self.nameStructure))
+        pm.PyNode(self.base_leg_joints[2]).rename('{Side}__{Basename}_Result_{Parts[2]}'.format(**self.nameStructure))
 
         adb.AutoSuffix(self.base_leg_joints)
 
@@ -232,20 +240,12 @@ class LimbLeg(moduleBase.ModuleBase):
             pm.delete(mirror_chain_1,mirror_chain_1,self.base_leg_joints)
             self.base_leg_joints = [pm.PyNode(x) for x in mirror_chain_3]
 
-            pm.PyNode(self.base_leg_joints[0]).rename('{Side}__{Basename}_Base_{Parts[0]}'.format(**self.nameStructure))
-            pm.PyNode(self.base_leg_joints[1]).rename('{Side}__{Basename}_Base_{Parts[1]}'.format(**self.nameStructure))
-            pm.PyNode(self.base_leg_joints[2]).rename('{Side}__{Basename}_Base_{Parts[2]}'.format(**self.nameStructure))
+            pm.PyNode(self.base_leg_joints[0]).rename('{Side}__{Basename}_Result_{Parts[0]}'.format(**self.nameStructure))
+            pm.PyNode(self.base_leg_joints[1]).rename('{Side}__{Basename}_Result_{Parts[1]}'.format(**self.nameStructure))
+            pm.PyNode(self.base_leg_joints[2]).rename('{Side}__{Basename}_Result_{Parts[2]}'.format(**self.nameStructure))
             adb.AutoSuffix(self.base_leg_joints)
         else:
             Joint.Joint(self.base_leg_joints).orientAxis = 'Y'
-
-
-        def createBaseLegJointsHiearchy():
-            baseJnst_grp = pm.group(em=True, name='{Side}__{Basename}_BaseJnts'.format(**self.nameStructure))
-            adb.AutoSuffix([baseJnst_grp])
-            pm.parent(self.base_leg_joints[0], baseJnst_grp)
-
-        #createBaseLegJointsHiearchy()
 
 
     def ik_fk_system(self):
@@ -257,7 +257,7 @@ class LimbLeg(moduleBase.ModuleBase):
         self.ikFk_MOD.hiearchy_setup('{Side}__Ik_FK'.format(**self.nameStructure))
         self.BUILD_MODULES += [self.ikFk_MOD]
 
-        @changeColor()
+        @changeColor('index', 3)
         def IkJointChain():
             self.ik_leg_joints = pm.duplicate(self.base_leg_joints)
             ## Setter le radius de mes joints ##
@@ -302,6 +302,8 @@ class LimbLeg(moduleBase.ModuleBase):
                 pm.connectAttr('{}.outValue'.format(_remapValue), '{}.drawStyle'.format(bone))
 
             pm.parent(self.fk_leg_joints[0], self.ikFk_MOD.RIG_GRP)
+            
+
             return self.fk_leg_joints
 
 
@@ -349,6 +351,7 @@ class LimbLeg(moduleBase.ModuleBase):
             self.nameStructure['Suffix'] = NC.IKHANDLE_SUFFIX
             leg_IkHandle = pm.ikHandle(n='{Side}__{Basename}__{Suffix}'.format(**self.nameStructure), sj=self.ik_leg_joints[0], ee=self.ik_leg_joints[-1])
             leg_IkHandle[0].v.set(0)
+            self.leg_IkHandle = leg_IkHandle[0]
 
             vec1 = self.base_leg_joints[0].getTranslation(space='world') # "hips"
             vec2 = self.base_leg_joints[1].getTranslation(space='world') # "knee"
@@ -442,10 +445,10 @@ class LimbLeg(moduleBase.ModuleBase):
 
 
         def makeConnections():
-            Ik_FK_attributeName = self.setup_SpaceGRP(self.RIG.SPACES_GRP, Ik_FK_attributeName ='{Side}_IK_{Basename}'.format(**self.nameStructure))
+            self.Ik_FK_attributeName = self.setup_SpaceGRP(self.RIG.SPACES_GRP, Ik_FK_attributeName ='{Side}_{Basename}'.format(**self.nameStructure))
 
             self.blendSystem(ctrl_name = self.RIG.SPACES_GRP,
-                            blend_attribute = Ik_FK_attributeName,
+                            blend_attribute = self.Ik_FK_attributeName,
                             result_joints = self.base_leg_joints,
                             ik_joints = self.ik_leg_joints,
                             fk_joints = self.fk_leg_joints,
@@ -456,14 +459,16 @@ class LimbLeg(moduleBase.ModuleBase):
 
         IkJointChain()
         FkJointChain()
-        CreateFkcontrols()
+        self.fkControls = CreateFkcontrols()
         CreateIKcontrols()
         makeConnections()
 
-        visRuleGrp = moduleBase.ModuleBase.setupVisRule(self.base_leg_joints, self.ikFk_MOD.VISRULE_GRP, '{Side}__{Basename}_Base_JNT__{Suffix}'.format(**self.nameStructure), False)[0]
+        visRuleGrp = moduleBase.ModuleBase.setupVisRule(self.base_leg_joints, self.ikFk_MOD.VISRULE_GRP, '{Side}__{Basename}_Result_JNT__{Suffix}'.format(**self.nameStructure), False)[0]
 
         pm.parent(self.ikFk_MOD.MOD_GRP, self.RIG.MODULES_GRP)
-        Joint.Joint(self.base_leg_joints).radius = 3
+        Joint.Joint(self.base_leg_joints).radius = 6
+        Joint.Joint(self.fk_leg_joints).radius = Joint.Joint(self.base_leg_joints).radius - 3
+        Joint.Joint(self.ik_leg_joints).radius = Joint.Joint(self.base_leg_joints).radius - 4 
 
 
     def stretchyLimb(self):
@@ -890,7 +895,7 @@ class LimbLeg(moduleBase.ModuleBase):
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Joints')
         visGrp.addAttr('IK_JNT', False)
         visGrp.addAttr('FK_JNT', False)
-        visGrp.addAttr('Base_JNT', False)
+        visGrp.addAttr('Result_JNT', False)
         visGrp.addAttr('Ribbon_JNT', True)
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Controls')
         visGrp.addAttr('IK_CTRL', True)
@@ -916,6 +921,7 @@ class LimbLeg(moduleBase.ModuleBase):
                 Skinning.Skinning.importWeights(DATA_WEIGHT_PATH, _file)
             except:
                 pass
+
 
     # =========================
     # SLOTS
@@ -1107,7 +1113,6 @@ class LimbLeg(moduleBase.ModuleBase):
 
     def setup_SpaceGRP(self, transform, Ik_FK_attributeName):
         switch_ctrl = adbAttr.NodeAttr([transform])
-        switch_ctrl.AddSeparator(transform, 'ARMS')
         switch_ctrl.addAttr(Ik_FK_attributeName, 'enum',  eName = "IK:FK:")
         adbAttr.NodeAttr.copyAttr(self.povSpaceSwitch.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
         return Ik_FK_attributeName
@@ -1119,7 +1124,8 @@ class LimbLeg(moduleBase.ModuleBase):
 
 L_leg = LimbLeg(module_name='L__Leg')
 L_leg.build(['L__hip_guide', 'L__knee_guide', 'L__ankle_guide'])
-L_leg.connect()
+L_leg.connect(buildFoot=(True, ['L__ankle_guide', 'L__ball_guide', 'L__toe_guide', 'L__heel_guide']))
+
 
 # R_leg = LimbLeg(module_name='R__Leg')
 # R_leg.build(['R__hip_guide', 'R__knee_guide', 'R__ankle_guide'])
