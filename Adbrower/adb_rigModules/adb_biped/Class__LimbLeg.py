@@ -33,6 +33,7 @@ import adb_library.adb_modules.Module__Folli as adbFolli
 import adb_library.adb_modules.Module__IkStretch as adbIkStretch
 import adb_library.adb_modules.Module__SquashStretch_Ribbon as adbRibbon
 import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
+import adb_core.Class__Skinning as Skinning
 
 import adb_rigModules.RigBase as RigBase
 import adb_rigModules.adb_biped.Class__LimbFoot as LimbFoot
@@ -54,6 +55,7 @@ reload(adbFolli)
 reload(adbRibbon)
 reload(SpaceSwitch)
 reload(LimbFoot)
+reload(Skinning)
 
 #-----------------------------------
 #  DECORATORS
@@ -176,7 +178,6 @@ class LimbLeg(moduleBase.ModuleBase):
         self.scalingUniform()
         self.cleanUpEmptyGrps()
 
-        self.loadSkinClustersWeights()
 
         # Hiearchy
         for module in self.BUILD_MODULES:
@@ -200,6 +201,7 @@ class LimbLeg(moduleBase.ModuleBase):
             pm.PyNode('{}.{}'.format(self.RIG.SPACES_GRP, self.Ik_FK_attributeName)) >> pm.PyNode('{}.{}'.format(L_foot.RIG.SPACES_GRP, L_foot.all_IKFK_attributes[1]))
 
 
+        self.loadSkinClustersWeights()
     # =========================
     # SOLVERS
     # =========================
