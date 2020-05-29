@@ -33,9 +33,9 @@ import maya.OpenMaya as om
 import adb_core.NameConv_utils as NC
 import ShapesLibrary as sl
 from CollDict import suffixDic
-reload(NC)
+# reload(NC)
 
-#TO DO: put @staticmethod
+#TODO: put @staticmethod
 
 # -----------------------------------
 # 2.1 DECORATORS
@@ -840,7 +840,7 @@ class Adbrower(object):
             # unparent the joints
             pm.select(cl=True)
             # create joints and position them on top of locators
-            oJoints = pm.joint(p=pos, n='{}'.format(sel))
+            oJoints = pm.joint(p=pos, n='{}'.format(NC.getNameNoSuffix(sel)))
             all_jnts.append(oJoints)
         self.AutoSuffix(all_jnts)
         return all_jnts
@@ -1070,7 +1070,8 @@ class Adbrower(object):
             selectedVert = selectedVerts[0]
 
             geoNode = selectedVert.node().getParent()
-            ctrlName = geoNode.name()[1]
+            
+            ctrlName = geoNode.name()
 
             connectedVerts = list(selectedVert.connectedVertices())
 
@@ -1108,14 +1109,14 @@ class Adbrower(object):
                 upDir = [0, 1, 0]
                 aimDir = [1, 0, 0]
 
-            ctrlLoc = pm.spaceLocator(n='m__{}__ctrl__'.format(ctrlName))
+            ctrlLoc = pm.spaceLocator(n='{}_'.format(ctrlName))
             pm.PyNode(ctrlLoc).overrideEnabled.set(1)
             pm.PyNode(ctrlLoc).overrideRGBColors.set(0)
             pm.PyNode(ctrlLoc).overrideColor.set(22)
 
-            upLoc = pm.spaceLocator(n='m__{}_TEMP_UP__ctrl__'.format(ctrlName))
+            upLoc = pm.spaceLocator(n='{}_upLOC'.format(ctrlName))
             aimLoc = pm.spaceLocator(
-                n='m__{}_TEMP_AIM__ctrl__'.format(ctrlName))
+                n='{}_TEMP_AIM'.format(ctrlName))
 
             finalPos = sum([vert.getPosition(space='world')
                             for vert in selectedVerts]) / float(len(selectedVerts))
@@ -1128,7 +1129,7 @@ class Adbrower(object):
             aimLoc.setTranslation(aimPos, space='world')
 
             oCons = pm.aimConstraint(aimLoc, ctrlLoc, mo=False, aim=aimDir, u=upDir,
-                                     n='m__{}_TEMP__aimconstraint__'.format(
+                                     n='{}_TEMP__aimconstraint__'.format(
                                          ctrlName),
                                      worldUpObject=upLoc,
                                      worldUpType='object',
@@ -1139,6 +1140,7 @@ class Adbrower(object):
             ctrlLoc.setTranslation(finalPos, space='world')
 
             pm.select(None)
+            self.AutoSuffix([ctrlLoc])
             pm.select(ctrlLoc, add=True)
             return ctrlLoc
 
@@ -1583,7 +1585,7 @@ class Adbrower(object):
         _makeCtrl(sl_shape_name)
 
         for oSel, oCtrls in zip(oColl, Ctrls):
-            pm.rename(oCtrls, '{}__ctrl__'.format(oSel))
+            pm.rename(oCtrls, '{}__{}'.format(oSel, NC.CTRL))
 
         for oCtrl in Ctrls:
             mc.FreezeTransformations(oCtrl)
