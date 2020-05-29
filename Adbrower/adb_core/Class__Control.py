@@ -10,7 +10,7 @@ import pymel.core as pm
 import maya.cmds as mc
 
 import ShapesLibrary as sl
-import adb_core.Class__Transforms as adbTransform
+import adb_core.Class__AddAttr as adbAttr
 import adbrower
 
 adb = adbrower.Adbrower()
@@ -19,7 +19,7 @@ from adbrower import changeColor, propScale
 from CollDict import indexColor
 
 
-class Control(object):
+class Control(adbAttr.NodeAttr):
     """
     Creating Control
 
@@ -29,6 +29,7 @@ class Control(object):
 
         control = CTL.Control('test', sl.cube_shape, 5)
 
+        # TODO:  add movable Pivot setup
     """
     def __init__(self, name, shape, scale=1, parent=None, matchTransforms=(False, 0, 0), color=('index', 21)):
         self.name = name
@@ -38,7 +39,9 @@ class Control(object):
         self.matchTransforms = matchTransforms
         self._color = color
 
-        self.create()
+        self.control = self.create()
+
+        super(Control, self).__init__(self.control)
 
     #===================
     # PROPERTIES
@@ -83,7 +86,8 @@ class Control(object):
         self.control.scale.set(self._scale, self._scale, self._scale)
         pm.makeIdentity(self.control, n=0, s=1, r=1, t=1, apply=True, pn=1)
         if self.matchTransforms[0] is not False:
-            pm.matchTransform(self.control, self.matchTransforms[0], pos =self.matchTransforms[1], rot=self.matchTransforms[2] )
+            pm.matchTransform(self.control, self.matchTransforms[0], pos =self.matchTransforms[1], rot=self.matchTransforms[2])
+            pm.makeIdentity(self.control, n=0, t=1, s=1, apply=True, pn=1)
 
         if self.parent:
             pm.parent(self.control, self.parent)
@@ -134,6 +138,14 @@ class Control(object):
             pm.scale(valueNeg, valueNeg, valueNeg, r=True)
         pm.select(self.control, r=True)
 
+
+    def addRotationOrderAttr(self):
+        pm.addAttr(self.control, ln="rotationOrder",
+                    en="xyz:yzx:zxy:xzy:yxz:zyx:", at="enum")
+        pm.setAttr((str(self.control) + ".rotationOrder"),
+                    e=1, keyable=True)
+        pm.connectAttr((str(self.control) + ".rotationOrder"),
+                        (str(self.control) + ".rotateOrder"))
 
 # -----------------------------------
 # CLASS
