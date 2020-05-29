@@ -14,7 +14,7 @@ from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 from PySide2 import QtCore, QtGui, QtWidgets
 
 try:
-    from skinWrangler_master import skinWrangler
+    from Exterior_scripts.skinWrangler_master import skinWrangler
 except ImportError as error:
     print(error)
 
