@@ -137,6 +137,7 @@ class stretchyIK(moduleBase.ModuleBase):
     def start(self, metaDataNode = 'transform'):
         super(stretchyIK, self)._start(self.NAME, _metaDataNode = metaDataNode)  
 
+        self.metaData_GRP.addAttr('Toggle', at='bool', keyable=True, dv=True)
         self.metaData_GRP.addAttr('Ik_Handle', at='message', keyable=False)
         self.metaData_GRP.addAttr('Ik_Distance', at='double', dv=0, keyable=False)
         self.metaData_GRP.addAttr('Original_joint_distance', at='double', dv=0, keyable=False)
@@ -216,6 +217,10 @@ class stretchyIK(moduleBase.ModuleBase):
         self.cond_node.colorIfFalseR.set(1)
         self.cond_node.secondTerm.set(1)
 
+        # blendColor node Toggle
+        self.toggle_node = pm.shadingNode('blendColors', asUtility=1, n='{}_Toggle__{}'.format(self.NAME, NC.BLENDCOLOR_SUFFIX))
+        self.toggle_node.blender.set(1)
+
         # multiply Divide strech
         self.md_strech_node = pm.shadingNode('multiplyDivide', asUtility=1, n='{}_strech__MD'.format(self.NAME, NC.MULTIPLY_DIVIDE_SUFFIX))
         self.md_strech_node.operation.set(1)
@@ -235,7 +240,8 @@ class stretchyIK(moduleBase.ModuleBase):
         pm.parent(self.posLoc[1], self.ik_ctrl)
 
         # connections
-        self.distanceLoc.distance >> self.md_prp_node.input1X
+        self.distanceLoc.distance >> self.toggle_node.color1R
+        self.toggle_node.outputR >> self.md_prp_node.input1X
 
         self.md_prp_node.outputX >> self.cond_node.firstTerm
         self.md_prp_node.outputX >> self.cond_node.colorIfTrueR
@@ -258,6 +264,7 @@ class stretchyIK(moduleBase.ModuleBase):
         pm.PyNode(self.ikHandle).translate >> self.metaData_GRP.Ik_Handle
         pm.PyNode(self.distanceNode).distance >> self.metaData_GRP.Ik_Distance
         pm.PyNode(self.distanceNode).distance >> self.metaData_GRP.Distance_Node
+        self.metaData_GRP.Toggle >> self.toggle_node.blender
 
         pm.PyNode(self.startJnt).translate >> self.metaData_GRP.Connecting_Start_Joint
         pm.PyNode(self.endJnt).translate >> self.metaData_GRP.Connecting_End_Joint
