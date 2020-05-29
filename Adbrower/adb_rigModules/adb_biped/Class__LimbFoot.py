@@ -104,6 +104,9 @@ class LimbFoot(moduleBase.ModuleBase):
 
     def build(self, GUIDES):
         """
+        # TODO : Add Bank System
+        # TODO : Automate walking cycle
+
         """
         super(LimbFoot, self)._build()
 
@@ -114,11 +117,13 @@ class LimbFoot(moduleBase.ModuleBase):
         if self.side == 'R':
             self.col_main = indexColor['fluoRed']
             self.col_layer1 = indexColor['darkRed']
+            self.col_layer2 = indexColor['red']
             self.pol_vector_col = (0.5, 0.000, 0.000)
             self.sliding_knee_col = indexColor['darkRed']
         else:
             self.col_main = indexColor['fluoBlue']
             self.col_layer1 = indexColor['blue']
+            self.col_layer2 = indexColor['lightBlue']
             self.sliding_knee_col = indexColor['blue']
             self.pol_vector_col = (0, 0.145, 0.588)
 
@@ -153,6 +158,7 @@ class LimbFoot(moduleBase.ModuleBase):
                               leg_ankle_fk_ctrl = leg_ankle_fk_ctrl,
                               )
 
+        self.addControls()
         self.setup_VisibilityGRP()
         self.cleanUpEmptyGrps()
 
@@ -208,8 +214,8 @@ class LimbFoot(moduleBase.ModuleBase):
         footAttr = adbAttr.NodeAttr([self.Foot_MOD.metaData_GRP])
         footAttr.addAttr('heelRoll', 0)
         footAttr.addAttr('heelSide', 0)
+        footAttr.addAttr('heelTwist', 0)
         footAttr.addAttr('ballRoll', 0)
-        footAttr.addAttr('ballSide', 0)
         footAttr.addAttr('toeRoll', 0)
         footAttr.addAttr('toeSide', 0)
         footAttr.addAttr('toeBend', 0)
@@ -256,6 +262,10 @@ class LimbFoot(moduleBase.ModuleBase):
             return self.foot_chain.joints
 
 
+
+        # ============
+        # Build
+        # ============
         createJoints()
 
 
@@ -270,6 +280,7 @@ class LimbFoot(moduleBase.ModuleBase):
         ikBlendGrp = self.createPivotGrps(leg_ikHandle, name='{Basename}_Pivots'.format(**self.nameStructure))
         Transform(ikBlendGrp).pivotPoint = Transform(self.footAnkle_joint).worldTrans
         adbAttr.NodeAttr.copyAttr(self.Foot_MOD.metaData_GRP, [self.foot_ctrl], forceConnection=True)
+        [pm.setAttr('{}.{}'.format(self.foot_ctrl, attr), keyable=False) for attr in pm.listAttr(self.foot_ctrl, k=1, v=1, ud=1)]
 
         self.all_IKFK_attributes = self.setup_SpaceGRP(self.RIG.SPACES_GRP,
                             Ik_FK_attributeName =['{Side}_rotation_{Basename}'.format(**self.nameStructure),
@@ -295,7 +306,6 @@ class LimbFoot(moduleBase.ModuleBase):
                 lenght_blend = 1,
                 )
 
-
         pm.parentConstraint(self.foot_ctrl, self.footOffsetGrp, mo=1)
         const = pm.pointConstraint([fk_loc, ik_loc, foot_ctrlBlendGrp], mo=1)
         fkWeight, ikWeight = pm.pointConstraint(const, q=1, weightAliasList  =1)
@@ -308,6 +318,63 @@ class LimbFoot(moduleBase.ModuleBase):
     # -------------------
     # CONNECT SLOVERS
     # -------------------
+
+    @lockAttr(['sx', 'sy', 'sz'])
+    def addControls(self):
+        self.nameStructure['Suffix'] = NC.CTRL
+        ball_CTRL = Control.Control(name='{Side}__{Basename}_Ball__{Suffix}'.format(**self.nameStructure),
+                                shape = sl.pin_shape,
+                                scale=1,
+                                matchTransforms = (self.footBall_joint, 1, 0),
+                                parent=self.Foot_MOD.INPUT_GRP,
+                                color=('index', self.col_layer2)
+                                ).control
+        adb.makeroot_func(ball_CTRL, suff='Offset', forceNameConvention=1)
+        adb.matrixConstraint(self.footBall_joint, ball_CTRL.getParent(), mo=1)
+        ball_CTRL.rx >> pm.PyNode(self.foot_ctrl.ballRoll)
+
+
+        heel_CTRL = Control.Control(name='{Side}__{Basename}_Heel__{Suffix}'.format(**self.nameStructure),
+                                shape = sl.ball2_shape,
+                                scale=0.6,
+                                matchTransforms = (self.footHeel_joint, 1, 0),
+                                parent=self.Foot_MOD.INPUT_GRP,
+                                color=('index', self.col_layer2)
+                                ).control
+        adb.makeroot_func(heel_CTRL, suff='Offset', forceNameConvention=1)
+        adb.matrixConstraint(self.footHeel_joint, heel_CTRL.getParent(), mo=1)
+        heel_CTRL.rx >> pm.PyNode(self.foot_ctrl.heelRoll)
+        heel_CTRL.ry >> pm.PyNode(self.foot_ctrl.heelSide)
+        heel_CTRL.rz >> pm.PyNode(self.foot_ctrl.heelTwist)
+
+
+        toe_CTRL = Control.Control(name='{Side}__{Basename}_Toe__{Suffix}'.format(**self.nameStructure),
+                                shape = sl.ball2_shape,
+                                scale=0.4,
+                                matchTransforms = (self.footToes_joint, 1, 0),
+                                parent=self.Foot_MOD.INPUT_GRP,
+                                color=('index', self.col_layer2)
+                                ).control
+        adb.makeroot_func(toe_CTRL, suff='Offset', forceNameConvention=1)
+        adb.matrixConstraint(self.footToes_joint, toe_CTRL.getParent(), mo=1)
+        toe_CTRL.rx >> pm.PyNode(self.foot_ctrl.toeRoll)
+        toe_CTRL.ry >> pm.PyNode(self.foot_ctrl.toeSide)
+
+
+        toeBend_CTRL = Control.Control(name='{Side}__{Basename}_ToeBend__{Suffix}'.format(**self.nameStructure),
+                                shape = sl.cube_shape,
+                                scale=0.6,
+                                matchTransforms = (self.footBall_joint, 1, 0),
+                                parent=self.Foot_MOD.INPUT_GRP,
+                                color=('index', self.col_layer2)
+                                ).control
+        adb.makeroot_func(toeBend_CTRL, suff='Offset', forceNameConvention=1)
+        adb.matrixConstraint(self.footBall_joint, toeBend_CTRL.getParent(), mo=1)
+        toeBend_CTRL.rx >> pm.PyNode(self.foot_ctrl.toeBend)
+        toeBend_CTRL.ry >> pm.PyNode(self.footBall_joint).ry
+
+
+        return ball_CTRL, heel_CTRL, toe_CTRL, toeBend_CTRL
 
     def setup_VisibilityGRP(self):
         visGrp = adbAttr.NodeAttr([self.RIG.VISIBILITY_GRP])
@@ -324,6 +391,7 @@ class LimbFoot(moduleBase.ModuleBase):
                     # print shortName.lower(), '-------------',  attr.lower()
                     if shortName.lower() in attr.lower():
                         pm.connectAttr('{}.{}'.format(visGrp.subject, attr), '{}.vis'.format(grp))
+
 
     def cleanUpEmptyGrps(self):
         for ModGrp in self.RIG.MODULES_GRP.getChildren():
@@ -425,8 +493,9 @@ class LimbFoot(moduleBase.ModuleBase):
             pm.PyNode(self.Foot_MOD.metaData_GRP.toeRoll) >> toeRoll.rx
 
             pm.PyNode(self.Foot_MOD.metaData_GRP.heelSide) >> heelRoll.ry
-            # pm.PyNode(self.Foot_MOD.metaData_GRP.ballSide) >> ballRoll.ry
+            pm.PyNode(self.Foot_MOD.metaData_GRP.heelTwist) >> heelRoll.rz
             pm.PyNode(self.Foot_MOD.metaData_GRP.toeSide) >> toeRoll.ry
+
 
             self.nameStructure['Suffix'] = NC.MULTIPLY_DIVIDE_SUFFIX
             mult_node = pm.shadingNode('multiplyDivide', asUtility=1, n='{Side}__{Basename}_toeNegate__{Suffix}'.format(**self.nameStructure))
