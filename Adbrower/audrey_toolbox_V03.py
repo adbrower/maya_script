@@ -329,6 +329,7 @@ class AudreyToolBox():
         pm.separator(vis=0, w=10)
         pm.iconTextButton(l="Make Root",  style='iconAndTextVertical', i='selectByHierarchy.png', command=pm.Callback(self.makeroot), ann='popup meunu available')
         pm.popupMenu()
+        pm.menuItem(l=' Make Root - With nameConvention', c=pm.Callback(self.makeroot, True))
         pm.menuItem(l=' Delete grp', c=lambda * args: [pm.ungroup(x) for x in pm.selected()])
         pm.menuItem(l=' Group Null', i="group.png",  command=lambda * args: [pm.group(x, em=True, n="{}__grp__".format(x)) for x in pm.selected()])
 
@@ -336,7 +337,7 @@ class AudreyToolBox():
 
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=2)
         pm.text('Offset Group Name:')
-        self.mroot = pm.textField(w=99, tx='root')
+        self.mroot = pm.textField(w=99, tx='Offset')
         pm.setParent('..')
 
         pm.setParent('..')
@@ -1298,9 +1299,9 @@ class AudreyToolBox():
 
         elif tool == "Shake Tool":
             try:
-                import arShake_v012
-                arShake_v012.GUI()
-            except importError as error:
+                import Exterior_scripts.arShake_v012
+                Exterior_scripts.arShake_v012.GUI()
+            except ImportError as error:
                 print(error)        
 
         elif tool == "CFX ToolBox":
@@ -1308,22 +1309,22 @@ class AudreyToolBox():
 
         elif tool == "Space Switch Tool":
             try:
-                from spaceSwitchTool import spaceSwitchSetup as switchSetup
+                from Exterior_scripts.spaceSwitchTool import spaceSwitchSetup as switchSetup
                 switchSetup.show()
-            except importError as error:
+            except ImportError as error:
                 print(error)
             
         elif tool == "Skin Wrangler Tool":
             try:
-                from skinWrangler_master import skinWrangler
+                from Exterior_scripts.skinWrangler_master import skinWrangler
                 skinWrangler.show()
-            except importError as error:
+            except ImportError as error:
                 print(error)
 
         elif tool == "Topology Tool":
             try:
                 adbTopoTool.TopoTool()
-            except importError as error:
+            except ImportError as error:
                 print(error)
 
     def jointGenToolAB(self):
@@ -1580,9 +1581,9 @@ class AudreyToolBox():
         return locs
 
     @undo
-    def makeroot(self):
+    def makeroot(self, forceNameConvention = False):
         _suff = pm.textField(self.mroot, q=True, tx=True)
-        adb.makeroot_func(subject=pm.selected(), suff=_suff)
+        adb.makeroot_func(subject=pm.selected(), suff=_suff, forceNameConvention=forceNameConvention)
 
     @undo
     def selectchildparent(self):
@@ -1590,6 +1591,7 @@ class AudreyToolBox():
         shapes = pm.listRelatives(type='transform', allDescendents=1)
         pm.select(shapes, r=1)
         pm.select(select, tgl=1)
+
 
     @undo
     def chparent(self):
