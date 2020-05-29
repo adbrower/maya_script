@@ -534,7 +534,7 @@ def makeCtrls(shape_name):
         for oSel, oCtrls in zip(sel, Ctrls):
             # print (oSel, oCtrls)
             pm.matchTransform(oCtrls, oSel,  rot=True, pos=True)
-            pm.rename(oCtrls, '{}__{}'.format(oSel, NC.CTRL))
+            pm.rename(oCtrls, '{}__{}'.format(NC.getNameNoSuffix(oSel), NC.CTRL))
 
     NumCtrls(shape_name())
     pm.select(Ctrls)
