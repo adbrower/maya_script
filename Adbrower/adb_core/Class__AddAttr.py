@@ -648,14 +648,13 @@ class NodeAttr(object):
 
     @staticmethod
     @undo
-    def addRotationOrderAttr(nurbs_ctrl=pm.selected()):
-        for ctrl in nurbs_ctrl:
-            pm.addAttr(ctrl, ln="rotationOrder",
-                       en="xyz:yzx:zxy:xzy:yxz:zyx:", at="enum")
-            pm.setAttr((str(ctrl) + ".rotationOrder"),
-                       e=1, keyable=True)
-            pm.connectAttr((str(ctrl) + ".rotationOrder"),
-                           (str(ctrl) + ".rotateOrder"))
+    def addRotationOrderAttr(_transform):
+        pm.addAttr(_transform, ln="rotationOrder",
+                    en="xyz:yzx:zxy:xzy:yxz:zyx:", at="enum")
+        pm.setAttr((str(_transform) + ".rotationOrder"),
+                    e=1, keyable=True)
+        pm.connectAttr((str(_transform) + ".rotationOrder"),
+                        (str(_transform) + ".rotateOrder"))
 
 
 # -----------------------------------
