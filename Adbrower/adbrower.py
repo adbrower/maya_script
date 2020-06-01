@@ -1639,28 +1639,28 @@ class Adbrower(object):
         def __init__():
             pass
 
+    @staticmethod
     @undo
-    def breakConnection(self, attributes=['v']):
+    def breakConnection(_transform, attributes=['v']):
         """
         Break Connection
-        @param attributes : list of different attribute:  ['tx','ty','yz','rx','ry','rz','sx','sy','sz', 'v']
+        @param attributes : list of different attribute:  ['tx','ty','tz','rx','ry','rz','sx','sy','sz', 'v']
 
         The default value is : ['v']
         """
-        att_to_brk = attributes
-        for sel in pm.selected():
-            for att in att_to_brk:
-                attr = sel + '.' + att
 
-                destinationAttrs = pm.listConnections(
-                    attr, plugs=True, source=False) or []
-                sourceAttrs = pm.listConnections(
-                    attr, plugs=True, destination=False) or []
+        for att in attributes:
+            attr = _transform + '.' + att
 
-                for destAttr in destinationAttrs:
-                    pm.disconnectAttr(attr, destAttr)
-                for srcAttr in sourceAttrs:
-                    pm.disconnectAttr(srcAttr, attr)
+            destinationAttrs = pm.listConnections(
+                attr, plugs=True, source=False) or []
+            sourceAttrs = pm.listConnections(
+                attr, plugs=True, destination=False) or []
+
+            for destAttr in destinationAttrs:
+                pm.disconnectAttr(attr, destAttr)
+            for srcAttr in sourceAttrs:
+                pm.disconnectAttr(srcAttr, attr)
 
                 ## mel.eval("source channelBoxCommand; CBdeleteConnection \"{}\"".format(attr))
 
@@ -1669,9 +1669,9 @@ class Adbrower(object):
     def lockAttr_func(subject, attributes=['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz']):
         """ Lock all the attribute except visibility  """
         for att in attributes:
-            pm.PyNode(subject).setAttr(att, lock=True,
-                                    channelBox=False, keyable=False)
+            pm.PyNode(subject).setAttr(att, lock=True, channelBox=False, keyable=False)
         return subject
+
 
     @staticmethod
     @undo
@@ -1694,6 +1694,7 @@ class Adbrower(object):
         else:
             return False
 
+
     def AttDefault(self, defaultValue):
         """
         Change default value of an attribute
@@ -1708,12 +1709,24 @@ class Adbrower(object):
         except TypeError:
             pm.warning('Select the attribute')
 
+
     def deleteAttr(self, attribute):
         """
         Delete Attribute from selection
         """
         for each in pm.selected():
             pm.deleteAttr(each, attribute=attribute)
+
+
+    @staticmethod
+    @undo
+    def addRotationOrderAttr(_transform):
+        pm.addAttr(_transform, ln="rotationOrder",
+                    en="xyz:yzx:zxy:xzy:yxz:zyx:", at="enum")
+        pm.setAttr((str(_transform) + ".rotationOrder"),
+                    e=1, keyable=True)
+        pm.connectAttr((str(_transform) + ".rotationOrder"),
+                        (str(_transform) + ".rotateOrder"))
 
     # ===============================
     # 10. NAMING
@@ -1764,6 +1777,7 @@ class Adbrower(object):
                 except:
                     pm.PyNode(name).rename((str(name) + suffixDic[_type]).replace('____', '__').replace(
                         '___', '__').replace('hi_msh__', '').replace('proxy_msh__', ''))
+
 
     def renameOutputs(self, _type='', suffix=''):
         """

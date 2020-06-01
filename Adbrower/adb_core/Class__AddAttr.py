@@ -346,6 +346,39 @@ class NodeAttr(object):
             for att in att_to_lock:
                 pm.PyNode(sub).setAttr(att, lock=False, keyable=True)
 
+
+    @undo
+    def addRotationOrderAttr(self):
+        pm.addAttr(self.subject, ln="rotationOrder",
+                    en="xyz:yzx:zxy:xzy:yxz:zyx:", at="enum")
+        pm.setAttr((str(self.subject) + ".rotationOrder"),
+                    e=1, keyable=True)
+        pm.connectAttr((str(self.subject) + ".rotationOrder"),
+                        (str(self.subject) + ".rotateOrder"))
+
+    @undo
+    def breakConnection(self, attributes=['v']):
+        """
+        Break Connection
+        @param attributes : list of different attribute:  ['tx','ty','tz','rx','ry','rz','sx','sy','sz', 'v']
+
+        The default value is : ['v']
+        """
+
+        for att in attributes:
+            attr = self.subject + '.' + att
+
+            destinationAttrs = pm.listConnections(
+                attr, plugs=True, source=False) or []
+            sourceAttrs = pm.listConnections(
+                attr, plugs=True, destination=False) or []
+
+            for destAttr in destinationAttrs:
+                pm.disconnectAttr(attr, destAttr)
+            for srcAttr in sourceAttrs:
+                pm.disconnectAttr(srcAttr, attr)
+
+
     @staticmethod
     def addPaintAttribute(shape, attrName, subName = 'mesh'):
         """Create a attribute with is paintable
@@ -374,13 +407,13 @@ class NodeAttr(object):
     def rmvPaintAttribute(subName, attrName):
         mc.makePaintable(subName, attrName, rm=1)
 
-    @staticmethod
-    def getLock_attr(subject):
+
+    def getLock_attr(self):
         """
         Get Current list of channel box attributes which are unlock
         returns: List
         """
-        attrLock = pm.listAttr(subject, l=True)
+        attrLock = pm.listAttr(self.subject, l=True)
         # print attrLock
         return attrLock
 
@@ -574,29 +607,6 @@ class NodeAttr(object):
                 pm.connectAttr('{}.{}'.format(target, att), '{}.{}'.format(source, att))
 
 
-    @staticmethod
-    @undo
-    def breakConnection(_transform, attributes=['v']):
-        """
-        Break Connection
-        @param attributes : list of different attribute:  ['tx','ty','tz','rx','ry','rz','sx','sy','sz', 'v']
-
-        The default value is : ['v']
-        """
-
-        for att in attributes:
-            attr = _transform + '.' + att
-
-            destinationAttrs = pm.listConnections(
-                attr, plugs=True, source=False) or []
-            sourceAttrs = pm.listConnections(
-                attr, plugs=True, destination=False) or []
-
-            for destAttr in destinationAttrs:
-                pm.disconnectAttr(attr, destAttr)
-            for srcAttr in sourceAttrs:
-                pm.disconnectAttr(srcAttr, attr)
-
 
     @staticmethod
     @undo
@@ -645,16 +655,6 @@ class NodeAttr(object):
                                   'pivotPosition', 'spaceSwitch'])
 
         resetPuppetControl()
-
-    @staticmethod
-    @undo
-    def addRotationOrderAttr(_transform):
-        pm.addAttr(_transform, ln="rotationOrder",
-                    en="xyz:yzx:zxy:xzy:yxz:zyx:", at="enum")
-        pm.setAttr((str(_transform) + ".rotationOrder"),
-                    e=1, keyable=True)
-        pm.connectAttr((str(_transform) + ".rotationOrder"),
-                        (str(_transform) + ".rotateOrder"))
 
 
 # -----------------------------------
