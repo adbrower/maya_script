@@ -71,6 +71,8 @@ from adbrower import lockAttr
 # CLASS
 #-----------------------------------
 
+#TODO : Add rotationOrder attribute
+
 class LimbLegModel(moduleBase.ModuleBaseModel):
     def __init__(self):
         super(LimbLegModel, self).__init__()
@@ -191,7 +193,7 @@ class LimbLeg(moduleBase.ModuleBase):
         
         buildFootStatus, buildFootStarter = buildFoot
         if buildFootStatus:
-            L_foot = LimbFoot.LimbFoot(module_name='L__Foot')
+            L_foot = LimbFoot.LimbFoot(module_name='{Side}__Foot'.format(**self.nameStructure))
             L_foot.build(buildFootStarter)
 
             L_foot.connect(leg_ikHandle = self.leg_IkHandle,
@@ -293,7 +295,7 @@ class LimbLeg(moduleBase.ModuleBase):
 
             self.nameStructure['Suffix'] = NC.VISRULE
             visRuleGrp, attribute = moduleBase.ModuleBase.setupVisRule([self.fk_leg_joints[0]], self.ikFk_MOD.VISRULE_GRP, name='{Side}__{Basename}_Fk_JNT__{Suffix}'.format(**self.nameStructure), defaultValue = False)
-            adbAttr.NodeAttr.breakConnection(self.fk_leg_joints[0], attributes=['v'])
+            adb.breakConnection(self.fk_leg_joints[0], attributes=['v'])
             self.fk_leg_joints[0].v.set(1)
             self.nameStructure['Suffix'] = NC.REMAP_VALUE_SUFFIX
             _remapValue = pm.shadingNode('remapValue', asUtility=1, n='{Side}__{Basename}_Fk_visRule__{Suffix}'.format(**self.nameStructure))
@@ -687,6 +689,7 @@ class LimbLeg(moduleBase.ModuleBase):
         _multDivid.outputZ >> baseJoint[0].rz
 
         doubleKnee_CTL = doubleKnee_ctrl()[0]
+        adb.lockAttr_func(doubleKnee_CTL, attributes=['ry', 'rx', 'rz', 'sx', 'sy', 'sz'])
         adb.matrixConstraint(str(doubleKnee_CTL), str(baseJoint[0]), channels='ts', mo=True)
         adb.matrixConstraint(str(self.base_leg_joints[0]), str(doubleKnee_CTL.getParent()), channels='trs', mo=True)
 
@@ -702,8 +705,8 @@ class LimbLeg(moduleBase.ModuleBase):
             pm.parentConstraint(topJoint, self.SLIDING_KNEE_MOD.getControls[1], mo=1)
             pm.parentConstraint(botJoint, self.SLIDING_KNEE_MOD.getControls[2], mo=1)
 
-        moduleBase.ModuleBase.setupVisRule([self.DOUBLE_KNEE_MOD.OUTPUT_GRP], self.DOUBLE_KNEE_MOD.VISRULE_GRP, '{Side}__{Basename}_DoubleElbow_JNT__{Suffix}'.format(**self.nameStructure), False)
-        moduleBase.ModuleBase.setupVisRule([self.DOUBLE_KNEE_MOD.INPUT_GRP], self.DOUBLE_KNEE_MOD.VISRULE_GRP, '{Side}__{Basename}_DoubleElbow_CTRL__{Suffix}'.format(**self.nameStructure), False)
+        moduleBase.ModuleBase.setupVisRule([self.DOUBLE_KNEE_MOD.OUTPUT_GRP], self.DOUBLE_KNEE_MOD.VISRULE_GRP, '{Side}__{Basename}_DoubleKnee_JNT__{Suffix}'.format(**self.nameStructure), False)
+        moduleBase.ModuleBase.setupVisRule([self.DOUBLE_KNEE_MOD.INPUT_GRP], self.DOUBLE_KNEE_MOD.VISRULE_GRP, '{Side}__{Basename}_DoubleKnee_CTRL__{Suffix}'.format(**self.nameStructure), False)
         self.DOUBLE_KNEE_MOD.RIG_GRP.v.set(0)
 
 
@@ -898,13 +901,14 @@ class LimbLeg(moduleBase.ModuleBase):
         visGrp.addAttr('IK_JNT', False)
         visGrp.addAttr('FK_JNT', False)
         visGrp.addAttr('Result_JNT', False)
+        visGrp.addAttr('DoubleKnee_JNT', True)
         visGrp.addAttr('Ribbon_JNT', True)
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Controls')
         visGrp.addAttr('IK_CTRL', True)
         visGrp.addAttr('IK_Offset_CTRL', True)
         visGrp.addAttr('IK_PoleVector_CTRL', True)
         visGrp.addAttr('FK_CTRL', True)
-        visGrp.addAttr('DoubleElbow_CTRL', True)
+        visGrp.addAttr('DoubleKnee_CTRL', True)
         visGrp.addAttr('Ribbon_CTRL', False)
 
         for attr in visGrp.allAttrs.keys():
@@ -940,7 +944,6 @@ class LimbLeg(moduleBase.ModuleBase):
                     ):
             """
             # CBB: Add Blend Options for Rotate And Translate
-            # CBB:  Axis Optimization
             Function to create an Ik - Fk rotation based script
 
             @param ctrl_name            : (str) Name of the control having the switch attribute
