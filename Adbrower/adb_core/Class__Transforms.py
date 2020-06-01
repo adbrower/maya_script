@@ -267,7 +267,7 @@ class Transform(adbAttr.NodeAttr):
             _name = None
 
         # temp unlock all user defined attributes
-        locks_attr_list = adbAttr.NodeAttr.getLock_attr(subject)
+        locks_attr_list = adbAttr.NodeAttr(self.transform).getLock_attr()
         # Unlock all
         att_to_unlock = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz', 'v']
         for att in att_to_unlock:
