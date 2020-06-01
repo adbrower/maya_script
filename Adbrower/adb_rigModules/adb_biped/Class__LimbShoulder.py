@@ -27,6 +27,7 @@ from adb_core.Class__Transforms import Transform
 
 import adb_library.adb_utils.Func__Piston as adbPiston
 import adb_library.adb_utils.Script__LocGenerator as locGen
+import adb_library.adb_utils.Script__PoseReader as PoseReader
 import adb_library.adb_utils.Script__ProxyPlane as adbProxy
 import adb_library.adb_utils.Class__FkShapes as adbFKShape
 
@@ -53,6 +54,7 @@ reload(Locator)
 reload(adbFolli)
 reload(adbRibbon)
 reload(SpaceSwitch)
+reload(PoseReader)
 
 #-----------------------------------
 #  DECORATORS
@@ -74,14 +76,13 @@ AUTO_CLAVICULE_CONFIG = {
             0 : (0.0 , 0.5),
             1 : (0.5 , 0.5),
             2 : (1.0 , 0.5),
-
             },
 
     'green' : {
-            0 : (0 , 0.0),
+            0 : (0.0 , 0.3),
             1 : (0.5 , 0.5),
-            2 : (0.75 , 0.6),
-            3 : (1.0 , 0.52),
+            2 : (0.75 , 0.8),
+            3 : (1.0 , 0.82),
             },
 
     'blue' : {
@@ -128,9 +129,6 @@ class LimbShoudler(moduleBase.ModuleBase):
 
     def build(self, GUIDES):
         """
-        # TODO : Add Bank System
-        # TODO : Automate walking cycle
-
         """
         super(LimbShoudler, self)._build()
 
@@ -160,6 +158,9 @@ class LimbShoudler(moduleBase.ModuleBase):
 
         self.BUILD_MODULES = []
 
+        self.shoulder_MOD = None
+        self.AUTO_CLAVICULE_MOD = None
+
 
         # =================
         # BUILD
@@ -177,13 +178,13 @@ class LimbShoudler(moduleBase.ModuleBase):
 
         super(LimbShoudler, self)._connect()
 
-        self.connectShoulderToArm( arm_result_joint = arm_result_joint,
-                                   arm_ik_joint = arm_ik_joint,
-                                   arm_fk_joint_parent = arm_fk_joint_parent)
+        self.connectShoulderToArm(arm_result_joint = arm_result_joint,
+                                arm_ik_joint = arm_ik_joint,
+                                arm_fk_joint_parent = arm_fk_joint_parent)
 
 
         self.setup_VisibilityGRP()
-        # self.cleanUpEmptyGrps()
+        self.cleanUpEmptyGrps()
 
         # Hiearchy
         for module in self.BUILD_MODULES:
@@ -293,7 +294,7 @@ class LimbShoudler(moduleBase.ModuleBase):
         pm.parent(shoulder_IkHandle, self.shoulder_ik_ctrl)
 
         pm.parentConstraint(self.clavicule_ctrl, self.shoulder_ik_ctrl.getParent(), mo=1)
-        self.shoulder_ik_ctrl_class.breakConnection(self.shoulder_ik_ctrl.getParent(), ['rx', 'ry', 'rz'])
+        adb.breakConnection(self.shoulder_ik_ctrl.getParent(), ['rx', 'ry', 'rz'])
 
 
     def autoClavicule(self,
@@ -301,6 +302,8 @@ class LimbShoudler(moduleBase.ModuleBase):
                       poleVector_ctl = 'L__Arm_PoleVector__CTRL',
                       arm_ik_offset_ctrl = 'L__Arm_IK_offset__CTRL',
                         ):
+
+        
         self.AUTO_CLAVICULE_MOD = moduleBase.ModuleBase()
         self.AUTO_CLAVICULE_MOD._start('{Side}__AutoClavicule'.format(**self.nameStructure) ,_metaDataNode = 'transform')
         self.BUILD_MODULES += [self.AUTO_CLAVICULE_MOD]
@@ -357,9 +360,16 @@ class LimbShoudler(moduleBase.ModuleBase):
                     pm.PyNode('{}.{}[{}].{}_FloatValue'.format(autoShoulder_remapNode, color, str(points), color)).set(AUTO_CLAVICULE_CONFIG[color][points][1])
 
             ## Connection
-            self.ik_AutoShoulder_joint[0].rx >> autoShoulder_toggle.input1X
-            self.ik_AutoShoulder_joint[0].ry >> autoShoulder_toggle.input1Y
-            self.ik_AutoShoulder_joint[0].rz >> autoShoulder_toggle.input1Z
+            claviculePoseReader = PoseReader.poseReader(name='{Side}__Clavicule'.format(**self.nameStructure), 
+                                  driver=self.AUTO_CLAVICULE_MOD.OUTPUT_GRP, 
+                                  target=self.ik_AutoShoulder_joint[0], 
+                                  upPostion=(0,10,0), 
+                                  targetPosition=(10,0,0),
+                                  )[0]
+
+            claviculePoseReader[0].rx >> autoShoulder_toggle.input1X
+            claviculePoseReader[0].ry >> autoShoulder_toggle.input1Y
+            claviculePoseReader[0].rz >> autoShoulder_toggle.input1Z
 
             autoShoulder_toggle.outputX >> autoShoulder_remapNode.colorR
             autoShoulder_toggle.outputY >> autoShoulder_remapNode.colorG
@@ -372,7 +382,6 @@ class LimbShoudler(moduleBase.ModuleBase):
             self.AUTO_CLAVICULE_MOD.metaData_GRP.Toggle >> autoShoulder_toggle.input2X
             self.AUTO_CLAVICULE_MOD.metaData_GRP.Toggle >> autoShoulder_toggle.input2Y
             self.AUTO_CLAVICULE_MOD.metaData_GRP.Toggle >> autoShoulder_toggle.input2Z
-
 
 
         # ============================
