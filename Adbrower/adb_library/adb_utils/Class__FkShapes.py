@@ -88,7 +88,6 @@ class FkShape(object):
 
         @param _radius: Interger. Radius of the circle controller
         @param normalsCtrl: Tuple. Normals value of the circle controller
-
         """
 
         self._radius = _radius
@@ -113,6 +112,7 @@ class FkShape(object):
                 pm.parent(curveShape, joint, r=True, s=True)
                 pm.delete(self._curve)
                 pm.rename(joint, new_name)
+                pm.setAttr('{}.radius'.format(joint), keyable=False, channelBox=False)
             return(subject)
 
         controls = CreateCircles()
