@@ -20,18 +20,24 @@ from CollDict import pysideColorDic
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 from PySide2 import QtCore, QtGui, QtWidgets
 
+import adb_core.deformers.Class__Blendshape as adbBLS
+
 adb = adbrower.Adbrower()
+
+reload(adbFrameLayout)
+reload(CollDict)
+
 
 # -----------------------------------
 #  CLASS
 # -----------------------------------
 
-VERSION = '1.00'
+VERSION = '2.00'
 DEFAULT_PATH = Adbrower.PATH_WINDOW_INIT + 'Documents/maya'
 
 
-
 class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
+    UI_NAME = 'CFX_TOOLS_UI'
     def __init__(self, parent=None):
         super(cfxToolbox, self).__init__(parent=parent)
 
@@ -41,7 +47,7 @@ class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.Original_endTime = self.getCurrentTimeSlider()
         self.playbast_path = None
 
-        self.setObjectName('CFX_TOOLS_UI')
+        self.setObjectName(self.UI_NAME)
         self.setWindowTitle('CFX Toolbox  v{}'.format(VERSION))
         self.setWindowFlags(QtCore.Qt.Tool)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -83,23 +89,6 @@ class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
         self.scroll_widget.setLayout(self.main_layout)
 
-    def dock_ui(self):
-        """Create and dock GUI."""
-        # DEFINE ALLOWED DOCKING AREAS
-        allowedAreas = ['right', 'left']
-
-        # DELETE EXISTING PANEL LAYOUT IF IT EXISTS, THEN CREATE A NEW ONE
-        if pm.paneLayout('CFX_Toolbox', q=True, ex=True):
-            pm.deleteUI('CFX_Toolbox')
-        pm.paneLayout('CFX_Toolbox', configuration='single', w=50)
-
-        # DELETE DOCK CONTROL IF IT EXISTS, THEN CREATE A NEW ONE
-        if pm.dockControl('cfx_ToolBox', q=1, ex=1):
-            pm.deleteUI('cfx_ToolBox')
-        pm.dockControl('cfx_ToolBox', area='right', allowedArea=allowedAreas, content='CFX_Toolbox', l='CFX Toolbox  v{}'.format(version))
-
-        # PARENT WIDGIT TO PANEL LAYOUT
-        pm.control('CFX_TOOLS_UI', e=True, p='CFX_Toolbox')
 
     def getOsDatas(self):
         """ Get the files inside the path """
@@ -252,15 +241,18 @@ class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
         self.playblastFrame=adbFrameLayout.frameLayout()
         self.playblastFrame.title='Playblast Functions'
+        self.playblastFrame.isCollapsed = True
 
         self.cameraFrame=adbFrameLayout.frameLayout()
         self.cameraFrame.title='Camera Functions'
 
         self.utilsFrame=adbFrameLayout.frameLayout()
         self.utilsFrame.title='CFX Utils'
+        self.utilsFrame.isCollapsed = True
 
         self.blendshapeFrame=adbFrameLayout.frameLayout()
         self.blendshapeFrame.title='Blendshapes Functions'
+        self.blendshapeFrame.isCollapsed = True
 
         self.clothsFrame=adbFrameLayout.frameLayout()
         self.clothsFrame.title='Cloth Functions'
@@ -274,7 +266,6 @@ class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
                         ]:
             flayout.colorText='#E5C651'
-
     # ------------------------------
     # --------- BUILD LAYOUTS
 
@@ -342,11 +333,11 @@ class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                 ['Reset',                       self.presetListRight.clear,  3,    pysideColorDic['colorLightGrey'],
                     pysideColorDic['colorDarkGrey3'],   self.cameraFunctions_Hlayout,        ''],
                 ['Add Custom Cam',              self.AddCams,                3,    pysideColorDic['colorLightGrey'],
-                    pysideColorDic['colorBlue4'],       self.cameraFunctions_layout,         ''],
+                    pysideColorDic['colorDarkGrey3'],       self.cameraFunctions_layout,         ''],
                 ['Remove Custom Cam',           self.removeCam,              3,    pysideColorDic['colorLightGrey'],
-                    pysideColorDic['colorBlue4'],       self.cameraFunctions_layout,         ''],
-                ['Toggle',                      self.toggleCam,              3,    pysideColorDic['colorBlack'],
-                    pysideColorDic['colorBlue'],        self.cameraFunctions_layout,         ''],
+                    pysideColorDic['colorDarkGrey3'],       self.cameraFunctions_layout,         ''],
+                ['Toggle',                      self.toggleCam,              3,    pysideColorDic['colorLightGrey'],
+                    pysideColorDic['colorGreen3'],        self.cameraFunctions_layout,         ''],
 
                 ['Apply',                       self.ActiveBLS_BA,           4,    pysideColorDic['colorLightGrey'],
                     pysideColorDic['colorDarkGrey3'],   self.blendshapeButton_layout,        ''],
@@ -354,7 +345,7 @@ class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                     pysideColorDic['colorDarkGrey3'],   self.blendshapeButton_layout,        ''],
                 ['Blendshape',                  self.createBls,              4,    pysideColorDic['colorLightGrey'],
                     pysideColorDic['colorDarkGrey3'],   self.utilsFrame,                     ''],
-                ['Add Target',                  adb.addBlsTarget,           4,    pysideColorDic['colorLightGrey'],
+                ['Add Target',                  self.addBlsTarget,           4,    pysideColorDic['colorLightGrey'],
                     pysideColorDic['colorDarkGrey3'],   self.utilsFrame,                     ''],
                 ['Blend 2 Group',               self.blend2GrpBls,           4,    pysideColorDic['colorLightGrey'],
                     pysideColorDic['colorDarkGrey3'],   self.utilsFrame,                     ''],
@@ -497,9 +488,9 @@ class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.expandAll()
 
 
-# =====================================
-#  SLOTS
-# =====================================
+    # =====================================
+    #  SLOTS
+    # =====================================
 
     # ------------------------------
     # --------- TIMESLIDER FUNCTIONS
@@ -764,6 +755,8 @@ class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         else:
             adb.blendshape(pm.selected(), "world")
 
+    def addBlsTarget(self):
+        pass
 
     def blend2GrpBls(self):
         if self.bls_checkbx.checkState() == QtCore.Qt.Unchecked:
@@ -861,14 +854,13 @@ class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
 
     def clothManagerAB(self):
-        global win
+        global tools_cw_ui
         try:
-            win.deleteLater()
+            tools_cw_ui.deleteLater()
         except:
             pass
-
-        win=clothManager()
-        win.show()
+        tools_cw_ui = clothManager()
+        tools_cw_ui.show()
         sys.stdout.write('Cloth Manager UI is open!')
 
 
@@ -876,9 +868,9 @@ class cfxToolbox(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 #####################################################################################
 
 
-class clothManager(QtWidgets.QDialog):
+class clothManager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def __init__(self, parent=None):
-        super(clothManager, self).__init__(parent=maya_main_window())
+        super(clothManager, self).__init__(parent=parent)
 
 
         self.setObjectName('Cloth_Manager')
@@ -924,12 +916,12 @@ class clothManager(QtWidgets.QDialog):
 
 
     def qTreeSetup(self):
-        self.treeLayout=QVBoxLayout()
+        self.treeLayout=QtWidgets.QVBoxLayout()
 
         # ------------------------------
         # --------- TREE LIST WIDGET
 
-        self.clothTree=QTreeWidget()
+        self.clothTree=QtWidgets.QTreeWidget()
         self.clothTree.setSelectionMode(self.clothTree.ExtendedSelection)
         self.clothTree.setHeaderLabel('Cloth Tree View')
         self.treeLayout.addWidget(self.clothTree)
@@ -966,8 +958,6 @@ class clothManager(QtWidgets.QDialog):
                 child=QtWidgets.QtWidgets.QTreeWidgetItem(parent, [treeItem])
                 child.setExpanded(expand)
                 child.setForeground(0, QtGui.QBrush(QtGui.QColor(labColor)))
-
-
 
 
     def populate(self):
@@ -1072,9 +1062,9 @@ class clothManager(QtWidgets.QDialog):
         self.main_layout.addLayout(self.treeLayout)
 
 
-# ==================================
-#  SLOTS
-# ==================================
+    # ==================================
+    #  SLOTS
+    # ==================================
 
 
     def test(self):
@@ -1127,20 +1117,60 @@ class clothManager(QtWidgets.QDialog):
 # ==================================
 
 
-def showUI():
-    # Make sure the UI is deleted before recreating
-    global cfx_tool_ui
-    try:
-        cfx_tool_ui.deleteLater()
-    except:
-        pass
-    cfx_tool_ui=cfxToolbox()
-    cfx_tool_ui.show()
+ui = None
+ui_name = '{}WorkspaceControl'.format(cfxToolbox.UI_NAME)
+
+def getTraceback(last=False):
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    tb = traceback.format_exception(exc_type, exc_value, exc_traceback)
+    if last:
+        lasttb = []
+        lasttb.append(tb[0]);
+        for trace in tb[2:]:
+            lasttb.append(trace)
+        tb = lasttb
+    return ''.join(tb)
+
+def printError(error):
+    if not isinstance(error, str):
+        return
+
+    error = error.lstrip('\n').rstrip('\n')
+    error = error.replace('\n','\n# ')
+    error = '\n# {}\n'.format(error)
+    print error
+
+def printTraceback():
+    printError(getTraceback())
 
 
-def dockUI():
-    cfx_tool_ui2=cfxToolbox()
-    cfx_tool_ui2.dock_ui()
+def deleteDockControl():
+    if mc.about(apiVersion=True) < 201700:
+        if mc.dockControl(ui_name, exists=True):
+            mc.deleteUI(ui_name)
+    else:
+        if mc.workspaceControl(ui_name, exists=True):
+            mc.deleteUI(ui_name)
 
-# dockUI()
-# showUI()
+
+def showUI(build=None, force=False):
+    global ui
+    if ui and force:
+        delete()
+
+    if not ui:
+        try:
+            deleteDockControl()
+            ui = cfxToolbox()
+        except Exception:
+            ui = None
+            printTraceback()
+            return
+        else:
+            try:
+                ui.loadModel(build)
+            except Exception:
+                pass
+
+    ui.show(dockable=True)
+    return ui
