@@ -9,7 +9,7 @@ except:
 	import PySide.QtGui as QtWidgets
 	import PySide.QtGui as QtGui
 
-class frameLayout(QtWidgets.QFrame):
+class frameLayout(QtWidgets.QFrame,):
     def __init__(self,parent = None):
         QtWidgets.QFrame.__init__(self,parent = parent)
 
@@ -23,7 +23,7 @@ class frameLayout(QtWidgets.QFrame):
 
         # init frame layout
         self.initFrameLayout()
-        
+
     def initFrameLayout(self):
         # main layout
         self.mainLayout = QtWidgets.QVBoxLayout()
@@ -52,10 +52,11 @@ class frameLayout(QtWidgets.QFrame):
         self.contentLayout.setSpacing(2)
         self.contentFrame.setLayout(self.contentLayout)
 
+
     def expandCollapseRect(self):
         """ area where the toggle happen"""
         return QtCore.QRect(0,0,self.titleFrame.rect().width(),self.titleFrame.rect().height())
-      
+
     def mousePressEvent(self,event):
         if event.button() == QtCore.Qt.MouseButton.LeftButton and self.expandCollapseRect().contains(event.pos()):
             if self.isCollapsed == False:
@@ -77,16 +78,24 @@ class frameLayout(QtWidgets.QFrame):
     def addWidget(self,widget):
         self.contentLayout.addWidget(widget)
 
-                
+
     def addLayout(self,layout):
-        self.contentLayout.addLayout(layout)        
-        
+        self.contentLayout.addLayout(layout)
+
+
+    def changeEvent(self, event):
+        if self.isCollapsed == True:
+            self.contentFrame.setVisible(False)
+        else:
+            self.isCollapsed = False
+            self.contentFrame.setVisible(True)
+
 
     def paintEvent(self,event):
         painter = QtGui.QPainter()
         painter.setRenderHint(painter.Antialiasing)
         painter.begin(self)
-        
+
         self.drawText(painter)
         self.drawTriangle(painter)
 
