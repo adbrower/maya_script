@@ -699,11 +699,11 @@ class LimbLeg(moduleBase.ModuleBase):
         pm.parent(self.DOUBLE_KNEE_MOD.MOD_GRP, self.RIG.MODULES_GRP)
 
         if self.SLIDING_KNEE_MOD:
-            pm.matchTransform(self.SLIDING_KNEE_MOD.getControls[1], topJoint, pos=1, rot=0)
-            pm.matchTransform(self.SLIDING_KNEE_MOD.getControls[2], botJoint, pos=1, rot=0)
+            pm.matchTransform(self.SLIDING_KNEE_MOD.getControls[1], botJoint, pos=1, rot=0)
+            pm.matchTransform(self.SLIDING_KNEE_MOD.getControls[2], topJoint, pos=1, rot=0)
 
-            pm.parentConstraint(topJoint, self.SLIDING_KNEE_MOD.getControls[1], mo=1)
-            pm.parentConstraint(botJoint, self.SLIDING_KNEE_MOD.getControls[2], mo=1)
+            pm.parentConstraint(topJoint, self.SLIDING_KNEE_MOD.getControls[2], mo=1)
+            pm.parentConstraint(botJoint, self.SLIDING_KNEE_MOD.getControls[1], mo=1)
 
         moduleBase.ModuleBase.setupVisRule([self.DOUBLE_KNEE_MOD.OUTPUT_GRP], self.DOUBLE_KNEE_MOD.VISRULE_GRP, '{Side}__{Basename}_DoubleKnee_JNT__{Suffix}'.format(**self.nameStructure), False)
         moduleBase.ModuleBase.setupVisRule([self.DOUBLE_KNEE_MOD.INPUT_GRP], self.DOUBLE_KNEE_MOD.VISRULE_GRP, '{Side}__{Basename}_DoubleKnee_CTRL__{Suffix}'.format(**self.nameStructure), False)
