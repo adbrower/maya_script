@@ -1,6 +1,7 @@
 import pymel.core as pm
 import maya.OpenMaya as om
 
+from adb_core.Class__Transforms import Transform
 import adb_core.Class__Joint as Joint
 
 def getAimMatrix(aimVector, upVector=(0,1,0), pos=(0, 0, 0), aimAxis='x', upAxis='y'):
@@ -60,10 +61,24 @@ def getAimMatrix(aimVector, upVector=(0,1,0), pos=(0, 0, 0), aimAxis='x', upAxis
 def autoPoleVectorSystem(prefix='',
                          ikCTL = 'L__Arm_IK__CTRL',
                          ikJointChain = ['L__Arm_Ik_Shoulder__JNT', 'L__Arm_Ik_Elbow__JNT', 'L__Arm_Ik_Wrist__JNT'],
+                         poleVectorCTL = None,
                          ):
+    """[summary]
+
+    Args:
+        prefix (str): Prefix for the groups name
+        ikCTL (str, optional): The Ik Control
+        ikJointChain (list): The Ik joint chain
+    """
 
     prefix = '{}AutoPole'.format([prefix])
-    ikjnt = Joint.Joint(ikJointChain)
+
+    if isinstance(ikJointChain[0], str):
+        ikjnt = Joint.Joint(ikJointChain)
+    else:
+        ikJointChain =  [str(x) for x in ikJointChain]
+        ikjnt = Joint.Joint(ikJointChain)
+
     grp = pm.createNode('transform', name=prefix + "__GRP")
     aimGrp = pm.createNode('transform', name=prefix + "_Aim__GRP")
     outGrp = pm.createNode('transform', name=prefix + "_Out__GRP")
@@ -86,8 +101,17 @@ def autoPoleVectorSystem(prefix='',
     pm.setAttr(angle + ".vector1", *localAim, type='double3')
 
     for axis in 'XYZ':
-        cmds.connectAttr("{}.translate{}".format(aimGrp, axis), "{}.vector2{}".format(angle, axis))
-        cmds.connectAttr("{}.euler{}".format(angle, axis), "{}.rotate{}".format(outGrp, axis))
+        pm.connectAttr("{}.translate{}".format(aimGrp, axis), "{}.vector2{}".format(angle, axis))
+        pm.connectAttr("{}.euler{}".format(angle, axis), "{}.rotate{}".format(outGrp, axis))
+
+    if poleVectorCTL:
+        outSpaceLoc = pm.spaceLocator(name=prefix + "_OutSpace__LOC")
+        pm.parent(outSpaceLoc, outGrp)
+        pm.matchTransform(outSpaceLoc, poleVectorCTL)
+        Transform(outSpaceLoc).pivotPoint = Transform(ikJointChain[0]).worldTrans
+        pm.hide(outSpaceLoc)
+
+    return grp, outGrp 
 
 
 
