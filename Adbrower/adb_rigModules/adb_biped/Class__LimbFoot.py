@@ -413,8 +413,6 @@ class LimbFoot(moduleBase.ModuleBase):
                     lenght_blend = 1,
                     ):
             """
-            # CBB: Add Blend Options for Rotate And Translate
-            # CBB:  Axis Optimization
             Function to create an Ik - Fk rotation based script
 
             @param ctrl_name            : (str) Name of the control having the switch attribute
