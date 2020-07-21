@@ -25,6 +25,7 @@ import adb_core.Class__Locator as Locator
 from adb_core.Class__Transforms import Transform
 
 import adb_library.adb_utils.Func__Piston as adbPiston
+import adb_library.adb_utils.Functions_AutoPoleVectorSystem as AutoPoleVector
 import adb_library.adb_utils.Script__LocGenerator as locGen
 import adb_library.adb_utils.Script__ProxyPlane as adbProxy
 import adb_library.adb_utils.Class__FkShapes as adbFKShape
@@ -56,6 +57,7 @@ reload(adbRibbon)
 reload(SpaceSwitch)
 reload(LimbFoot)
 reload(Skinning)
+reload(AutoPoleVector)
 
 #-----------------------------------
 #  DECORATORS
@@ -190,7 +192,7 @@ class LimbLeg(moduleBase.ModuleBase):
             for grp in module.metaDataGRPS:
                 pm.parent(grp, self.RIG.SETTINGS_GRP)
                 grp.v.set(0)
-        
+
         buildFootStatus, buildFootStarter = buildFoot
         if buildFootStatus:
             L_foot = LimbFoot.LimbFoot(module_name='{Side}__Foot'.format(**self.nameStructure))
@@ -306,7 +308,7 @@ class LimbLeg(moduleBase.ModuleBase):
                 pm.connectAttr('{}.outValue'.format(_remapValue), '{}.drawStyle'.format(bone))
 
             pm.parent(self.fk_leg_joints[0], self.ikFk_MOD.RIG_GRP)
-            
+
 
             return self.fk_leg_joints
 
@@ -348,7 +350,7 @@ class LimbLeg(moduleBase.ModuleBase):
             return FkShapeSetup.controls
 
 
-        def CreateIKcontrols(Ikshape = sl.cube_shape, exposant=1, pvShape = sl.ball_shape):
+        def CreateIKcontrols(Ikshape = sl.cube_shape, exposant=0.5, pvShape = sl.ball_shape):
             """
             Create the IK handle setup on the IK joint chain
             """
@@ -392,7 +394,6 @@ class LimbLeg(moduleBase.ModuleBase):
                 return _leg_IkHandle_ctrl_offset
             self.leg_IkHandle_ctrl_offset = Ik_ctrl_offset()[0]
 
-
             @lockAttr(att_to_lock = ['rx','ry','rz','sx','sy','sz'])
             @changeColor('rgb', col = self.pol_vector_col)
             @makeroot()
@@ -434,14 +435,37 @@ class LimbLeg(moduleBase.ModuleBase):
 
             pole_vector_ctrl()
 
+            # ==================================================
+            # CREATE SPACE SWITCH
+
+            # AUTO SPACE
+            autPoleVectorGrp, autPoleVectorSpaceLoc = AutoPoleVector.autoPoleVectorSystem(prefix=self.NAME,
+                                 ikCTL = self.leg_IkHandle_ctrl_offset,
+                                 ikJointChain = self.ik_leg_joints,
+                                 poleVectorCTL = self.poleVectorCtrl,
+                                 )
+            pm.parent(autPoleVectorGrp, self.ikFk_MOD.INPUT_GRP)
+
+            autPoleVectorGrpEnd = pm.createNode('transform', n='{Side}__{Basename}_IK_SPACES_SWITCH_AUTO__GRP'.format(**self.nameStructure))
+            pm.matchTransform(autPoleVectorGrpEnd, self.poleVectorCtrl)
+            pm.parent(autPoleVectorGrpEnd, self.RIG.SPACES_GRP)
+            pm.parentConstraint(autPoleVectorSpaceLoc.getChildren()[0], autPoleVectorGrpEnd, mo=True)
+
+            # wORLD SPACE
             ikSpaceSwitchWorldGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.WORLD_LOC)
+            pm.matchTransform(ikSpaceSwitchWorldGrp, self.poleVectorCtrl, pos=1, rot=1)
             ikSpaceSwitchWorldGrp.v.set(0)
-            pm.matchTransform(ikSpaceSwitchWorldGrp, self.leg_IkHandle_ctrl_offset, pos=1, rot=1)
+
+            # ANKLE SPACE
+            ikSpaceSwitcAnkleGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_ANKLE__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.SPACES_GRP)
+            pm.matchTransform(ikSpaceSwitcAnkleGrp, self.poleVectorCtrl, pos=1, rot=1)
+            pm.parentConstraint(self.leg_IkHandle_ctrl_offset, ikSpaceSwitcAnkleGrp, mo=True)
+
             self.povSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__PoleVector'.format(**self.nameStructure),
-                                                    spacesInputs =[self.leg_IkHandle_ctrl_offset, ikSpaceSwitchWorldGrp],
+                                                    spacesInputs =[autPoleVectorGrpEnd, ikSpaceSwitcAnkleGrp, ikSpaceSwitchWorldGrp],
                                                     spaceOutput = self.poleVectorCtrl.getParent(),
-                                                    maintainOffset = True,
-                                                    attrNames = ['ankle', 'world'],)
+                                                    maintainOffset = False,
+                                                    attrNames = ['auto', 'ankle', 'world'],)
             self.ikFk_MOD.metaDataGRPS += [self.povSpaceSwitch.metaData_GRP]
 
             pm.parent(leg_IkHandle[0], self.leg_IkHandle_ctrl_offset)
@@ -472,7 +496,7 @@ class LimbLeg(moduleBase.ModuleBase):
         pm.parent(self.ikFk_MOD.MOD_GRP, self.RIG.MODULES_GRP)
         Joint.Joint(self.base_leg_joints).radius = 6
         Joint.Joint(self.fk_leg_joints).radius = Joint.Joint(self.base_leg_joints).radius - 3
-        Joint.Joint(self.ik_leg_joints).radius = Joint.Joint(self.base_leg_joints).radius - 4 
+        Joint.Joint(self.ik_leg_joints).radius = Joint.Joint(self.base_leg_joints).radius - 4
 
 
     def stretchyLimb(self):
