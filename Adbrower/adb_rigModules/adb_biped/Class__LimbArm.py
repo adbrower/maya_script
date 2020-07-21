@@ -265,7 +265,6 @@ class LimbArm(moduleBase.ModuleBase):
         """
         Create an IK-FK blend system
         """
-
         self.ikFk_MOD = moduleBase.ModuleBase()
         self.ikFk_MOD.hiearchy_setup('{Side}__Ik_FK'.format(**self.nameStructure))
         self.BUILD_MODULES += [self.ikFk_MOD]
@@ -385,7 +384,7 @@ class LimbArm(moduleBase.ModuleBase):
                                                  scale=0.8,
                                                  matchTransforms = (self.ik_arm_joints[-1], 1,0),
                                                  ).control
-
+                adb.addRotationOrderAttr(_arm_IkHandle_ctrl)
                 moduleBase.ModuleBase.setupVisRule([_arm_IkHandle_ctrl], self.ikFk_MOD.VISRULE_GRP)
 
                 return _arm_IkHandle_ctrl
@@ -449,8 +448,11 @@ class LimbArm(moduleBase.ModuleBase):
             ikSpaceSwitchWorldGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.WORLD_LOC)
             ikSpaceSwitchWorldGrp.v.set(0)
             pm.matchTransform(ikSpaceSwitchWorldGrp, self.arm_IkHandle_ctrl_offset, pos=1, rot=1)
+            
+            ikSpaceSwitchWristdGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_WRIST__GRP'.format(**self.nameStructure), em=1, parent=self.arm_IkHandle_ctrl_offset)
+            pm.matchTransform(ikSpaceSwitchWristdGrp, self.poleVectorCtrl, pos=1, rot=1)
             self.povSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__PoleVector'.format(**self.nameStructure),
-                                                    spacesInputs =[self.arm_IkHandle_ctrl_offset, ikSpaceSwitchWorldGrp],
+                                                    spacesInputs =[ikSpaceSwitchWristdGrp, ikSpaceSwitchWorldGrp],
                                                     spaceOutput = self.poleVectorCtrl.getParent(),
                                                     maintainOffset = True,
                                                     attrNames = ['wrist', 'world'],)
@@ -1151,7 +1153,7 @@ class LimbArm(moduleBase.ModuleBase):
 
 L_arm = LimbArm(module_name='L__Arm')
 L_arm.build(['L__arm_guide', 'L__elbow_guide', 'L__wrist_guide'])
-L_arm.connect(builderShoulder = (True, ['L__clavicule_guide', 'L__shoulder_guide']))
+L_arm.connect(builderShoulder = (False, ['L__clavicule_guide', 'L__shoulder_guide']))
 
 # R_arm = LimbArm(module_name='R__Arm')
 # R_arm.build(['R__shoulder_guide', 'R__elbow_guide', 'R__wrist_guide'])
