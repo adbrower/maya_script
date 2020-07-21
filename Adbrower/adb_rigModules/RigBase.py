@@ -52,3 +52,6 @@ class RigBase(object):
         pm.parent(self.WORLD_LOC, self.SPACES_GRP)
         self.WORLD_LOC.v.set(0)
         return self.WORLD_LOC
+
+    def createMainRigCtrl():
+        pass
