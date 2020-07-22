@@ -26,6 +26,7 @@ import adb_core.Class__Locator as Locator
 from adb_core.Class__Transforms import Transform
 
 import adb_library.adb_utils.Func__Piston as adbPiston
+import adb_library.adb_utils.Functions_AutoPoleVectorSystem as AutoPoleVector
 import adb_library.adb_utils.Script__LocGenerator as locGen
 import adb_library.adb_utils.Script__ProxyPlane as adbProxy
 import adb_library.adb_utils.Class__FkShapes as adbFKShape
@@ -57,6 +58,7 @@ reload(adbRibbon)
 reload(SpaceSwitch)
 reload(Skinning)
 reload(LimbShoulder)
+reload(AutoPoleVector)
 
 #-----------------------------------
 #  DECORATORS
@@ -445,17 +447,37 @@ class LimbArm(moduleBase.ModuleBase):
 
             pole_vector_ctrl()
 
+            # ==================================================
+            # CREATE SPACE SWITCH
+
+            # AUTO SPACE
+            autPoleVectorGrp, autPoleVectorSpaceLoc = AutoPoleVector.autoPoleVectorSystem(prefix=self.NAME,
+                                 ikCTL = self.arm_IkHandle_ctrl_offset,
+                                 ikJointChain = self.ik_arm_joints,
+                                 poleVectorCTL = self.poleVectorCtrl,
+                                 )
+            pm.parent(autPoleVectorGrp, self.ikFk_MOD.INPUT_GRP)
+            
+            autPoleVectorGrpEnd = pm.createNode('transform', n='{Side}__{Basename}_IK_SPACES_SWITCH_AUTO__GRP'.format(**self.nameStructure))
+            pm.matchTransform(autPoleVectorGrpEnd, self.poleVectorCtrl)
+            pm.parent(autPoleVectorGrpEnd, self.RIG.SPACES_GRP)
+            pm.parentConstraint(autPoleVectorSpaceLoc.getChildren()[0], autPoleVectorGrpEnd, mo=True)
+
+            # wORLD SPACE
             ikSpaceSwitchWorldGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.WORLD_LOC)
             ikSpaceSwitchWorldGrp.v.set(0)
-            pm.matchTransform(ikSpaceSwitchWorldGrp, self.arm_IkHandle_ctrl_offset, pos=1, rot=1)
+            pm.matchTransform(ikSpaceSwitchWorldGrp, self.poleVectorCtrl, pos=1, rot=1)
             
+            # WRIST SPACE
             ikSpaceSwitchWristdGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_WRIST__GRP'.format(**self.nameStructure), em=1, parent=self.arm_IkHandle_ctrl_offset)
             pm.matchTransform(ikSpaceSwitchWristdGrp, self.poleVectorCtrl, pos=1, rot=1)
+            pm.parentConstraint(self.arm_IkHandle_ctrl_offset, ikSpaceSwitchWristdGrp, mo=True)
+
             self.povSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__PoleVector'.format(**self.nameStructure),
-                                                    spacesInputs =[ikSpaceSwitchWristdGrp, ikSpaceSwitchWorldGrp],
+                                                    spacesInputs =[autPoleVectorGrpEnd, ikSpaceSwitchWristdGrp, ikSpaceSwitchWorldGrp],
                                                     spaceOutput = self.poleVectorCtrl.getParent(),
                                                     maintainOffset = True,
-                                                    attrNames = ['wrist', 'world'],)
+                                                    attrNames = ['auto', 'wrist', 'world'],)
             self.ikFk_MOD.metaDataGRPS += [self.povSpaceSwitch.metaData_GRP]
 
             pm.parent(arm_IkHandle[0], self.arm_IkHandle_ctrl_offset)
