@@ -31,13 +31,14 @@ class Control(adbAttr.NodeAttr):
 
         # TODO:  add movable Pivot setup
     """
-    def __init__(self, name, shape, scale=1, parent=None, matchTransforms=(False, 0, 0), color=('index', 21)):
+    def __init__(self, name, shape, scale=1, parent=None, matchTransforms=(False, 0, 0), color=('index', 21), rotateAxis = None):
         self.name = name
         self._shape = shape
         self._scale = scale
         self.parent = parent
         self.matchTransforms = matchTransforms
         self._color = color
+        self.rotateAxis = rotateAxis
 
         self.control = self.create()
 
@@ -91,6 +92,10 @@ class Control(adbAttr.NodeAttr):
 
         if self.parent:
             pm.parent(self.control, self.parent)
+
+        if self.rotateAxis:
+            self.rotateVertex(self.rotateAxis)
+
         return self.control
 
 
@@ -137,6 +142,45 @@ class Control(adbAttr.NodeAttr):
         elif scale == '-':
             pm.scale(valueNeg, valueNeg, valueNeg, r=True)
         pm.select(self.control, r=True)
+
+
+    def rotateVertex(self, axis):
+        dup = pm.duplicate(self.control, st=1)[0]
+        pm.parent(dup, world=1)
+        _shapes = pm.PyNode(self.control).getShapes()
+
+        if axis == 'x' or 'X':
+            pm.rotate(dup, 90,0,0, r=1, os=1)
+            pm.makeIdentity(dup, n=0, s=1, r=1, t=1, apply=True, pn=1)
+
+        elif axis == 'y' or 'Y':
+            pm.rotate(dup, 0,90,0, r=1, os=1)
+            pm.makeIdentity(dup, n=0, s=1, r=1, t=1, apply=True, pn=1)
+
+        elif axis == 'z' or 'Z':
+            pm.rotate(dup, 0,0,90, r=1, os=1)
+            pm.makeIdentity(dup, n=0, s=1, r=1, t=1, apply=True, pn=1)
+
+        # Duplicate source and move to target location
+        new_shape_dup = pm.duplicate(dup, rc=True)
+        pm.matchTransform(new_shape_dup[0], self.control, pos=True, rot=True)
+
+        # Parent source to target's parent
+        pm.parent(new_shape_dup, self.control.getTransform())
+        pm.makeIdentity(new_shape_dup, apply=True, t=1, r=1, s=1)
+
+        # Get transforms and shapes of source and target
+        new_shape_getShape = pm.PyNode(new_shape_dup[0]).getShapes()
+        old_shape_getShape = pm.PyNode(self.control).getShapes()
+
+        # Parent shapes of source to target
+        for srcShapes in new_shape_getShape:
+            pm.parent(srcShapes, self.control, add=True, s=True)
+
+        # ## Clean up
+        pm.delete(new_shape_dup)
+        pm.delete(old_shape_getShape)
+        pm.delete(dup)
 
 
     def addRotationOrderAttr(self):
