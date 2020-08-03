@@ -217,7 +217,7 @@ class LimbShoudler(moduleBase.ModuleBase):
         def create_ctrl():
             self.nameStructure['Suffix'] = NC.CTRL
             self.clavicule_ctrl_class = Control.Control(name='{Side}__{Basename}_{Parts[0]}__{Suffix}'.format(**self.nameStructure),
-                                                shape = sl.pin_shape,
+                                                shape = sl.pinX_shape,
                                                 scale=2,
                                                 matchTransforms = (self.starter_Shoulder[0], 1,0),
                                                 parent=self.shoulder_MOD.INPUT_GRP

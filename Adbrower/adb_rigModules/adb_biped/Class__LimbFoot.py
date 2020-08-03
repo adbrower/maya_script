@@ -323,7 +323,7 @@ class LimbFoot(moduleBase.ModuleBase):
     def addControls(self):
         self.nameStructure['Suffix'] = NC.CTRL
         ball_CTRL = Control.Control(name='{Side}__{Basename}_Ball__{Suffix}'.format(**self.nameStructure),
-                                shape = sl.pin_shape,
+                                shape = sl.pinX_shape,
                                 scale=1,
                                 matchTransforms = (self.footBall_joint, 1, 0),
                                 parent=self.Foot_MOD.INPUT_GRP,
