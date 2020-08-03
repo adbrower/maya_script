@@ -713,16 +713,14 @@ class AudreyToolBox():
             elif shape == "Pin" and mc.checkBox("myChBx3", q=True, v=True,) == 0 and mc.checkBox(ChBx4, q=True, v=True,) == 0:
 
                 if mc.checkBox('myChBxX', q=True, v=True,) == 1:
-                    _ctrl = flatList(adb.makeCtrl(sl.pin_shape))[0]
-                    pm.PyNode(_ctrl).rz.set(-90)
+                    _ctrl = flatList(adb.makeCtrl(sl.pinX_shape))[0]
                     pm.select(_ctrl, r=True)
                     mc.FreezeTransformations()
                 elif mc.checkBox('myChBxY', q=True, v=True,) == 1:
-                    _ctrl = flatList(adb.makeCtrl(sl.pin_shape))
+                    _ctrl = flatList(adb.makeCtrl(sl.pinY_shape))
 
                 elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
-                    _ctrl = flatList(adb.makeCtrl(sl.pin_shape))[0]
-                    pm.PyNode(_ctrl).rx.set(-90)
+                    _ctrl = flatList(adb.makeCtrl(sl.pinZ_shape))[0]
                     pm.select(_ctrl, r=True)
                     mc.FreezeTransformations()
 
@@ -732,7 +730,7 @@ class AudreyToolBox():
                     if mc.checkBox('myChBxX', q=True, v=True,) == 1:
                         for each in pm.selected():
                             pm.select(each, r=True)
-                            _ctrl = self.shape_replacement(sl.pin_shape)[0]
+                            _ctrl = self.shape_replacement(sl.pinX_shape)[0]
                             _shapes = pm.PyNode(_ctrl).getShapes()
                             pm.select('{}.cv[:]'.format(_shapes[0]))
                             pm.rotate(90, 0, 0)
@@ -741,12 +739,12 @@ class AudreyToolBox():
                     elif mc.checkBox('myChBxY', q=True, v=True,) == 1:
                         for each in pm.selected():
                             pm.select(each, r=True)
-                            _ctrl = self.shape_replacement(sl.pin_shape)[0]
+                            _ctrl = self.shape_replacement(sl.pinX_shape)[0]
 
                     elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
                         for each in pm.selected():
                             pm.select(each, r=True)
-                            _ctrl = self.shape_replacement(sl.pin_shape)[0]
+                            _ctrl = self.shape_replacement(sl.pinX_shape)[0]
                             _shapes = pm.PyNode(_ctrl).getShapes()
                             pm.select('{}.cv[:]'.format(_shapes[0]))
                             pm.rotate(0, 90, 0)
@@ -758,15 +756,15 @@ class AudreyToolBox():
 
             elif shape == "Pin" and mc.checkBox(ChBx4, q=True, v=True,) == 1:
                 if mc.checkBox('myChBxX', q=True, v=True,) == 1:
-                    _ctrl = adb.makeCtrl_Prop(sl.pin_shape)[0]
+                    _ctrl = adb.makeCtrl_Prop(sl.pinX_shape)[0]
                     pm.PyNode(_ctrl).rz.set(-90)
                     pm.select(_ctrl, r=True)
                     mc.FreezeTransformations()
                 elif mc.checkBox('myChBxY', q=True, v=True,) == 1:
-                    adb.makeCtrl_Prop(sl.pin_shape)
+                    adb.makeCtrl_Prop(sl.pinX_shape)
 
                 elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
-                    _ctrl = adb.makeCtrl_Prop(sl.pin_shape)[0]
+                    _ctrl = adb.makeCtrl_Prop(sl.pinX_shape)[0]
                     pm.PyNode(_ctrl).rx.set(-90)
                     pm.select(_ctrl, r=True)
                     mc.FreezeTransformations()
