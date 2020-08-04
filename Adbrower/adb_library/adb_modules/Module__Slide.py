@@ -4,6 +4,8 @@ import pymel.core as pm
 import adbrower
 adb = adbrower.Adbrower()
 
+import adb_core.ModuleBase as moduleBase
+reload(moduleBase)
 # -----------------------------------
 # CLASS
 # -----------------------------------
@@ -19,8 +21,12 @@ SLIDE_CONFIG = {
             },
                     }
 
+class SlideModel(moduleBase.ModuleBaseModel):
+    def __init__(self):
+        super(SlideModel, self).__init__()
 
-class Slide(object):
+
+class Slide(moduleBase.ModuleBase):
     """
     Sliding moduele
 
@@ -42,10 +48,22 @@ class Slide(object):
 
     # example:
     sliding = Slide.Slide(targets = target_list, driver = 'pPlane1_02__jnt____ctrl__',  range = 2, driver_axis='ty',  target_axis='ty')
-
     """
 
-    def __init__(self, targets=[], driver=None,  range=2, driver_axis='ty', target_axis='ty', config=SLIDE_CONFIG, useMinus=True):
+    def __init__(self,
+                module_name = 'Slide',
+                targets=[],
+                driver=None,
+                range=2,
+                driver_axis='ty',
+                target_axis='ty',
+                config=SLIDE_CONFIG,
+                useMinus=True):
+        super(Slide, self).__init__()
+
+        self._MODEL = SlideModel()
+
+        self.NAME = module_name
         self.targets = targets
         self.range = range
         self.falloff_FACTOR = 0.5
@@ -54,8 +72,6 @@ class Slide(object):
         self.target_axis = target_axis
         self.CONFIG = config
         self.useMinus = useMinus
-
-        self.md_ouptut_list = None
 
         try:
             self.driver_attribute = NodeAttr([self.driver])
@@ -67,22 +83,22 @@ class Slide(object):
         self.driver_falloff = '{}.falloff'.format(self.driver)
         self.driver_position = '{}.position'.format(self.driver)
 
-        self.create_metaData_GRP()
-        self.creates_nodes()
-        self.make_connections()
 
-    def create_metaData_GRP(self):
+    def __repr__(self):
+        return str('{} : {} \n {}'.format(self.__class__.__name__, self.subject, self.__class__))
 
-        if pm.objExists(METADATA_grp_name):
-            pm.delete(METADATA_grp_name)
+    # =========================
+    # METHOD
+    # =========================
 
-        # self.metaData_GRP = pm.group(n=METADATA_grp_name, em=True)
-        self.metaData_GRP = pm.shadingNode('transform', au=1, n='{}_{}'.format(self.driver, METADATA_grp_name))
+    def start(self, metaDataNode = 'transform'):
+        super(Slide, self)._start(self.NAME, _metaDataNode = metaDataNode)
+
         metaData_GRP_attribute = NodeAttr([self.metaData_GRP])
         metaData_GRP_attribute.addAttr('range', self.range, lock=True)
         metaData_GRP_attribute.addAttr('fallof_Factor', self.falloff_FACTOR)
         metaData_GRP_attribute.addAttr('driver', 'message')
-
+        metaData_GRP_attribute.addAttr('targets', 'string')
 
         pm.PyNode(self.metaData_GRP).addAttr('remapValue_position', numberOfChildren=len(self.CONFIG['remap'].keys()), attributeType='compound')
         for pt, val in zip(self.CONFIG['remap'].keys(), self.CONFIG['remap'].values()):
@@ -92,9 +108,26 @@ class Slide(object):
         for pt, val in zip(self.CONFIG['remap'].keys(), self.CONFIG['remap'].values()):
             pm.PyNode(self.metaData_GRP).addAttr('pt{}'.format(pt), at='float', parent='remapValue_values', dv=val[1])
 
+        ## Connecting Data to metaData_GRP
         self.driver.t >> self.metaData_GRP.driver
+        self.metaData_GRP.targets.set(str([str(joint) for joint in self.targets]), lock=True)
 
         return self.metaData_GRP
+
+    def build(self):
+        super(Slide, self)._build()
+
+        self.creates_nodes()
+        self.make_connections()
+
+        self._MODEL.getInputs = self.driver
+        self._MODEL.getOutputs = self.md_ouptut_list or []
+        self._MODEL.getJoints = self.targets
+
+
+    # =========================
+    # SOLVERS
+    # =========================
 
     def creates_nodes(self):
         # FALLOF FACTOR
@@ -171,7 +204,17 @@ class Slide(object):
             pm.connectAttr(md.outputX, '{}.{}'.format(target, self.target_axis))
 
 
-class FkVariable(object):
+# =========================
+# CLASS
+# =========================
+
+
+class FkVariableModel(moduleBase.ModuleBaseModel):
+    def __init__(self):
+        super(FkVariableModel, self).__init__()
+
+
+class FkVariable(moduleBase.ModuleBase):
     """
     Creates a Fk Variable Module
     Base on the Slide Class
@@ -186,7 +229,7 @@ class FkVariable(object):
     """
 
     def __init__(self,
-                 name = 'FkVariable',
+                 module_name = 'FkVariable',
                  joint_chain=[],
                  driver=[],
                  range=5,
@@ -194,8 +237,12 @@ class FkVariable(object):
                  target_axis='rz',
                  useMinus=False
                  ):
+        super(FkVariable, self).__init__()
 
-        self.name= name
+        self._MODEL = FkVariableModel()
+        self.CLASS_NAME = self.__class__.__name__
+        self.NAME = module_name
+
         self.joint_chain = joint_chain
         self.driver = driver
         self.range = range
@@ -203,25 +250,58 @@ class FkVariable(object):
         self.target_axis = target_axis
         self.useMinus = useMinus
 
-        self.offset_groups_layers = None
-        
-        self.creates_joint_offset_grp()
+    def __repr__(self):
+        return str('{} : {} \n {}'.format(self.__class__.__name__, self.subject, self.__class__))
+
+    # =========================
+    # PROPERTY
+    # =========================
+
+
+    # =========================
+    # METHOD
+    # =========================
+
+    def start(self, metaDataNode = 'transform'):
+        super(FkVariable, self)._start(self.NAME, _metaDataNode = metaDataNode)
+
+
+    def build(self):
+        super(FkVariable, self)._build
+
+        self._MODEL.getResetJoints = self.creates_joint_offset_grp()
         self.create_fkVariable()
 
-    @property
-    def md_ouptut_list(self):
-        return self.sliding.md_ouptut_list
+    # =========================
+    # SOLVERS
+    # =========================
 
     def creates_joint_offset_grp(self):
-        self.offset_groups_layers = []
+        offset_groups_layers = []
         for ctrl in xrange(len(self.driver)):
-            layer = [adb.makeroot_func(x, suff='{}0{}'.format(self.name, ctrl + 1), forceNameConvention=True) for i, x in enumerate(self.joint_chain)]
-            self.offset_groups_layers.append(layer)
+            layer = [adb.makeroot_func(x, suff='{}0{}'.format(self.NAME, ctrl + 1), forceNameConvention=True) for i, x in enumerate(self.joint_chain)]
+            offset_groups_layers.append(layer)
+        return offset_groups_layers
 
     def create_fkVariable(self):
-        for offset_grp, fk_ctrl in zip(self.offset_groups_layers, self.driver):
+        for offset_grp, fk_ctrl in zip(self._MODEL.getResetJoints, self.driver):
             self.sliding = Slide(targets=offset_grp, driver=fk_ctrl,  range=self.range, driver_axis=self.driver_axis, target_axis=self.target_axis, useMinus=self.useMinus)
-        return self.offset_groups_layers
+            self.sliding.start()
+            self.sliding.build()
+
+        ## Updating metaData nodes. Using the one from Slide Module instead
+        oldName = str(self.metaData_GRP)
+        pm.delete(self.metaData_GRP)
+        self.metaData_GRP = self.sliding.metaData_GRP
+        pm.rename(self.metaData_GRP, oldName)
+        metaData_GRP_attribute = NodeAttr([self.metaData_GRP])
+        metaData_GRP_attribute.addAttr('Ouputs', 'string')
+        self.metaData_GRP.Ouputs.set(str([str(joint) for joint in self._MODEL.getResetJoints[0]]), lock=True)
+
+        ## Delete MOD GROUPS
+        pm.delete(self.sliding.MOD_GRP)
+        pm.delete(self.MOD_GRP)
+
 
     def connect_position_to_uv(self, factor=2):
         """ To match the position of the control / UV postion while the position is changing

@@ -34,6 +34,7 @@ import adb_library.adb_utils.Class__FkShapes as adbFKShape
 import adb_library.adb_modules.Module__Folli as adbFolli
 import adb_library.adb_modules.Module__IkStretch as adbIkStretch
 import adb_library.adb_modules.Module__SquashStretch_Ribbon as adbRibbon
+import adb_library.adb_modules.Module__Slide as Slide
 import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
 
 import adb_rigModules.RigBase as RigBase
@@ -55,6 +56,7 @@ reload(adbFolli)
 reload(adbRibbon)
 reload(SpaceSwitch)
 reload(PoseReader)
+reload(Slide)
 
 #-----------------------------------
 #  DECORATORS
@@ -70,27 +72,13 @@ from adbrower import lockAttr
 # CLASS
 #-----------------------------------
 
-AUTO_CLAVICULE_CONFIG = {
+FkVARIABLE_CONFIG = {
     # color : key : position : value
-    'red' : {
-            0 : (0.0 , 0.5),
-            1 : (0.5 , 0.5),
-            2 : (1.0 , 0.5),
+    'remap' : {
+            0 : (0.0 , 0.0),
+            1 : (0.5 , 1.0),
+            2 : (1.0 , 0.0),
             },
-
-    'green' : {
-            0 : (0.0 , 0.3),
-            1 : (0.5 , 0.5),
-            2 : (0.75 , 0.8),
-            3 : (1.0 , 0.82),
-            },
-
-    'blue' : {
-            0 : (0 , 0.45),
-            1 : (0.5 , 0.5),
-            2 : (0.7 , 0.8),
-            3 : (1.0 , 1.0),
-                        }
                     }
 
 
@@ -145,18 +133,19 @@ class LimbSpine(moduleBase.ModuleBase):
                             }
 
         self.BUILD_MODULES = []
-
         self.RESULT_MOD = None
         self.REVERSE_MOD = None
+
+        self.FKVARIABLE_MOD = None
 
         # =================
         # BUILD
 
         self.createResultSystem()
-        self.createReverseSystem()
-        self.createFkRegularCTRLS()
+        self.FKVARIABLE_MOD = self.createVariableFkSystem()
 
-        self.createVariableFkSystem()
+        self.createReverseSystem(self.spine_chain_joints)
+        self.createFkRegularCTRLS()
 
 
     def connect(self):
@@ -222,7 +211,7 @@ class LimbSpine(moduleBase.ModuleBase):
 
         return self.fk_ctrl_class_list
 
-    def createReverseSystem(self):
+    def createReverseSystem(self, spine_joint_connect):
         self.REVERSE_MOD = moduleBase.ModuleBase()
         self.REVERSE_MOD.hiearchy_setup('{Side}__Reverse'.format(**self.nameStructure))
         self.BUILD_MODULES += [self.REVERSE_MOD]
@@ -273,39 +262,62 @@ class LimbSpine(moduleBase.ModuleBase):
                 return self.rev_fk_ctrl_class_list
 
 
-        def connectReverseToResult():
-            def makeConnections():
-                """ Connections for the fk reverse set up """
-                for resultJoint, reverseJoint in zip(self.spine_chain_joints, self.reverse_spine_chain_joints):
-                    reverseJoint.rotateOrder.set(5)
+        def connectReverseToResult(spine_joint_connect):
+            """ Connections for the fk reverse set up """
+            for resultJoint, reverseJoint in zip(spine_joint_connect, self.reverse_spine_chain_joints):
+                reverseJoint.rotateOrder.set(5)
+                multNode = pm.shadingNode('multiplyDivide', asUtility=1)
+                multNode.operation.set(1)
+                multNode.input2X.set(-1)
+                multNode.input2Y.set(-1)
+                multNode.input2Z.set(-1)
+
+                resultJoint.rx >> multNode.input1X
+                resultJoint.ry >> multNode.input1Y
+                resultJoint.rz >> multNode.input1Z
+
+                multNode.outputX >> reverseJoint.getParent().rx
+                multNode.outputY >> reverseJoint.getParent().ry
+                multNode.outputZ >> reverseJoint.getParent().rz
+
+            ## Connect FK Variable
+            if self.FKVARIABLE_MOD:
+                for revJnt, grp in zip(self.reverse_spine_chain_joints, self.FKVARIABLE_MOD.offset_groups_layers[0]):
+                    FkVariableRev = adb.makeroot_func(revJnt, suff=self.FKVARIABLE_MOD.name, forceNameConvention=True)
                     multNode = pm.shadingNode('multiplyDivide', asUtility=1)
                     multNode.operation.set(1)
                     multNode.input2X.set(-1)
                     multNode.input2Y.set(-1)
                     multNode.input2Z.set(-1)
 
-                    resultJoint.rx >> multNode.input1X
-                    resultJoint.ry >> multNode.input1Y
-                    resultJoint.rz >> multNode.input1Z
+                    grp.rx >> multNode.input1X
+                    grp.ry >> multNode.input1Y
+                    grp.rz >> multNode.input1Z
 
-                    multNode.outputX >> reverseJoint.getParent().rx
-                    multNode.outputY >> reverseJoint.getParent().ry
-                    multNode.outputZ >> reverseJoint.getParent().rz
-
-            makeConnections()
-
+                    multNode.outputX >> revJnt.getParent().rx
+                    multNode.outputY >> revJnt.getParent().ry
+                    multNode.outputZ >> revJnt.getParent().rz
 
         createReverseJoints()
         create_offset_grps()
         createFkReverseCTRLS()
         pm.parent(self.reverse_spine_chain_joints[-1].getParent().getParent(), self.REVERSE_MOD.OUTPUT_GRP)
         pm.parentConstraint(self.spine_chain_joints[-1], self.reverse_spine_chain_joints[-1].getParent().getParent(), mo=True)
-        connectReverseToResult()
+        connectReverseToResult(spine_joint_connect)
 
     def createVariableFkSystem(self):
-        pass
+        """
+        Create an Fk Variable system based on a Bend Attribute
+        Returns:
+            Module - Class object of the FkVariable Class
+        """
+        resultOffset_grp = [adb.makeroot_func(subject=x, suff = 'OFFSET', forceNameConvention=True) for x in self.spine_chain_joints]
 
+        settingsGrpAttr = adbAttr.NodeAttr([self.RIG.SETTINGS_GRP])
+        settingsGrpAttr.addAttr('Bend', 0)
+        fkV = Slide.FkVariable(name='Bend', joint_chain=self.spine_chain_joints, driver=[self.RIG.SETTINGS_GRP], range=2, driver_axis='Bend', target_axis='rx', useMinus=False)
 
+        return fkV
 
 
     # -------------------
