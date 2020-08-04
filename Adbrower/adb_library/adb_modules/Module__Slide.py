@@ -10,38 +10,55 @@ adb = adbrower.Adbrower()
 
 METADATA_grp_name = 'slide__METADATA'
 
+SLIDE_CONFIG = {
+    # color : key : position : value
+    'remap' : {
+            0 : (0.0 , 0.0),
+            1 : (0.5 , 1.0),
+            2 : (1.0 , 0.0),
+            },
+                    }
+
 
 class Slide(object):
     """
     Sliding moduele
 
-    @param targets : (list) List of transform who will be affected by the slide
-    @param driver  : (transform) Transform which will drive the sliding
-    @range         : (int) range for the remap values.
-    @driver_axis   : (string)
-    @target_axis   : (string)
+    Args:
+        targets      :(list) List of transform who will be affected by the slide
+        driver       :(transform) Transform which will drive the sliding
+        range        :(int) range for the remap values.
+        driver_axis  :(str): Driver's axis. Defaults to 'ty'.
+        target_axis  :(str): Target's axis influenced by the driver. Defaults to 'ty'.
+        config       :(Dictionnary): Config of value for the remapValue curves
+        useMinus     :(bool): if the setup is going tu Use PlusMinusAverage with operation to minus or not.
+                       if used, Fallof behaves equally both direction
+                       Defaults to True.
 
     ## EXTERIOR CLASS BUILD
     #------------------------
-    from adb_rig.Class__Slide import Slide
+    import adb_library.adb_modules.Module__Slide as Slide
+    reload(Slide)
 
     # example:
-    sliding = Slide( targets = target_list, driver = 'pPlane1_02__jnt____ctrl__',  range = 2, driver_axis='ry',  target_axis='rz')
+    sliding = Slide.Slide(targets = target_list, driver = 'pPlane1_02__jnt____ctrl__',  range = 2, driver_axis='ty',  target_axis='ty')
 
     """
 
-    def __init__(self, targets=[], driver=None,  range=2, driver_axis='ty', target_axis='ty'):
+    def __init__(self, targets=[], driver=None,  range=2, driver_axis='ty', target_axis='ty', config=SLIDE_CONFIG, useMinus=True):
         self.targets = targets
         self.range = range
         self.falloff_FACTOR = 0.5
         self.driver = pm.PyNode(driver)
         self.driver_axis = driver_axis
         self.target_axis = target_axis
+        self.CONFIG = config
+        self.useMinus = useMinus
 
         try:
             self.driver_attribute = NodeAttr([self.driver])
-            self.driver_attribute.addAttr('position', 0)
-            self.driver_attribute.addAttr('falloff', 0)
+            self.driver_attribute.addAttr('position', 1, min=1, max=len(targets)+1)
+            self.driver_attribute.addAttr('falloff', 0, min=-10, max=10)
         except RuntimeError:
             pass
 
@@ -58,37 +75,20 @@ class Slide(object):
             pm.delete(METADATA_grp_name)
 
         # self.metaData_GRP = pm.group(n=METADATA_grp_name, em=True)
-        self.metaData_GRP = pm.shadingNode('network', au=1, n='{}_{}'.format(self.driver, METADATA_grp_name))
+        self.metaData_GRP = pm.shadingNode('transform', au=1, n='{}_{}'.format(self.driver, METADATA_grp_name))
         metaData_GRP_attribute = NodeAttr([self.metaData_GRP])
-        metaData_GRP_attribute.addAttr('range', self.range)
+        metaData_GRP_attribute.addAttr('range', self.range, lock=True)
         metaData_GRP_attribute.addAttr('fallof_Factor', self.falloff_FACTOR)
         metaData_GRP_attribute.addAttr('driver', 'message')
 
-        pm.PyNode(self.metaData_GRP).addAttr('remapValue_values', numberOfChildren=5, attributeType='compound')
-        pm.PyNode(self.metaData_GRP).addAttr('pt0', at='float', parent='remapValue_values')
-        pm.PyNode(self.metaData_GRP).addAttr('pt1', at='float', parent='remapValue_values')
-        pm.PyNode(self.metaData_GRP).addAttr('pt2', at='float', parent='remapValue_values')
-        pm.PyNode(self.metaData_GRP).addAttr('pt3', at='float', parent='remapValue_values')
-        pm.PyNode(self.metaData_GRP).addAttr('pt4', at='float', parent='remapValue_values')
+        
+        pm.PyNode(self.metaData_GRP).addAttr('remapValue_position', numberOfChildren=len(self.CONFIG['remap'].keys()), attributeType='compound')
+        for pt, val in zip(self.CONFIG['remap'].keys(), self.CONFIG['remap'].values()):
+            pm.PyNode(self.metaData_GRP).addAttr('pos{}'.format(pt), at='float', parent='remapValue_position', dv=val[0])
 
-        pm.PyNode(self.metaData_GRP).addAttr('remapValue_position', numberOfChildren=5, attributeType='compound')
-        pm.PyNode(self.metaData_GRP).addAttr('pos0', at='float', parent='remapValue_position')
-        pm.PyNode(self.metaData_GRP).addAttr('pos1', at='float', parent='remapValue_position')
-        pm.PyNode(self.metaData_GRP).addAttr('pos2', at='float', parent='remapValue_position')
-        pm.PyNode(self.metaData_GRP).addAttr('pos3', at='float', parent='remapValue_position')
-        pm.PyNode(self.metaData_GRP).addAttr('pos4', at='float', parent='remapValue_position')
-
-        self.metaData_GRP.pt0.set(0)
-        self.metaData_GRP.pt1.set(0.6)
-        self.metaData_GRP.pt2.set(1)
-        self.metaData_GRP.pt3.set(1)
-        self.metaData_GRP.pt4.set(1)
-
-        self.metaData_GRP.pos0.set(0)
-        self.metaData_GRP.pos1.set(0.25)
-        self.metaData_GRP.pos2.set(0.5)
-        self.metaData_GRP.pos3.set(0.75)
-        self.metaData_GRP.pos4.set(1)
+        pm.PyNode(self.metaData_GRP).addAttr('remapValue_values', numberOfChildren=len(self.CONFIG['remap'].keys()), attributeType='compound')
+        for pt, val in zip(self.CONFIG['remap'].keys(), self.CONFIG['remap'].values()):
+            pm.PyNode(self.metaData_GRP).addAttr('pt{}'.format(pt), at='float', parent='remapValue_values', dv=val[1])
 
         self.driver.t >> self.metaData_GRP.driver
 
@@ -110,37 +110,26 @@ class Slide(object):
             getAtt = node.input3D[0].input3Dx.get()
             node.input3D[0].input3Dy.set(getAtt + self.range)
 
-        # PLUS MINUS AVERAGE - MINUS
-        self.pma_falloff_minus_list = [pm.shadingNode('plusMinusAverage', asUtility=1,  n='minus_PMA') for x in self.targets]
-        self.pma_falloff_minus_list[0].input3D[0].input3Dx.set(0)
-        self.pma_falloff_minus_list[0].input3D[0].input3Dy.set(self.range)
-        self.pma_falloff_minus_list[0].operation.set(2)
+        if self.useMinus:
+            # PLUS MINUS AVERAGE - MINUS
+            self.pma_falloff_minus_list = [pm.shadingNode('plusMinusAverage', asUtility=1,  n='minus_PMA') for x in self.targets]
+            self.pma_falloff_minus_list[0].input3D[0].input3Dx.set(0)
+            self.pma_falloff_minus_list[0].input3D[0].input3Dy.set(self.range)
+            self.pma_falloff_minus_list[0].operation.set(2)
 
-        for index, node in enumerate(self.pma_falloff_minus_list[1:]):
-            node.operation.set(2)
-            node.input3D[0].input3Dx.set(index - 1)
-            getAtt = node.input3D[0].input3Dx.get()
-            node.input3D[0].input3Dy.set(getAtt + self.range)
+            for index, node in enumerate(self.pma_falloff_minus_list[1:]):
+                node.operation.set(2)
+                node.input3D[0].input3Dx.set(index - 1)
+                getAtt = node.input3D[0].input3Dx.get()
+                node.input3D[0].input3Dy.set(getAtt + self.range)
 
         # REMAP VALUE FOR REMAPING THE POSITION
         self.rm_position_list = [pm.shadingNode('remapValue', asUtility=1, n='range_remap_RV') for x in self.targets]
         for node in self.rm_position_list:
-            self.metaData_GRP.pos0 >> node.value[0].value_Position
-            self.metaData_GRP.pt0 >> node.value[0].value_FloatValue
-
-            self.metaData_GRP.pos1 >> node.value[1].value_Position
-            self.metaData_GRP.pt1 >> node.value[1].value_FloatValue
-
-            self.metaData_GRP.pos2 >> node.value[2].value_Position
-            self.metaData_GRP.pt2 >> node.value[2].value_FloatValue
-
-            self.metaData_GRP.pos3 >> node.value[3].value_Position
-            self.metaData_GRP.pt3 >> node.value[3].value_FloatValue
-
-            self.metaData_GRP.pos4 >> node.value[4].value_Position
-            self.metaData_GRP.pt4 >> node.value[4].value_FloatValue
-
-            [node.value[i + 1].value_Interp.set(3) for i in xrange(4)]
+            for pt, val in zip(self.CONFIG['remap'].keys(), self.CONFIG['remap'].values()):
+                pm.connectAttr('{}.pos{}'.format(self.metaData_GRP, pt), '{}.value[{}].value_Position'.format(node, pt))
+                pm.connectAttr('{}.pt{}'.format(self.metaData_GRP, pt), '{}.value[{}].value_FloatValue'.format(node, pt))
+                node.value[pt + 1].value_Interp.set(1)
             node.outputMin.set(0)
             node.outputMax.set(1)
 
@@ -157,13 +146,15 @@ class Slide(object):
 
         for pma, rm in zip(self.pma_falloff_add_list, self.rm_position_list):
             pma.output3Dy >> rm.inputMax
-            # pma.output3Dx >> rm.inputMin
+            if self.useMinus is not True:
+                pma.output3Dx >> rm.inputMin
 
-        for pma_falloff in self.pma_falloff_minus_list:
-            self.md_fallof_FACTOR.outputX >> pma_falloff.input3D[1].input3Dx
-
-        for pma, rm in zip(self.pma_falloff_minus_list, self.rm_position_list):
-            pma.output3Dx >> rm.inputMin
+        if self.useMinus:
+            for pma_falloff in self.pma_falloff_minus_list:
+                self.md_fallof_FACTOR.outputX >> pma_falloff.input3D[1].input3Dx
+        
+            for pma, rm in zip(self.pma_falloff_minus_list, self.rm_position_list):
+                pma.output3Dx >> rm.inputMin
 
         for rm in self.rm_position_list:
             pm.PyNode(self.driver_position) >> rm.inputValue
@@ -184,24 +175,29 @@ class FkVariable(object):
     Base on the Slide Class
 
     # example
+    import adb_library.adb_modules.Module__Slide as Slide
+    reload(Slide)
+
     jnts = ['adb_00{}'.format(x+1) for x in xrange(49)]
     fk_ctrl = ['pPlane1_01__jnt____ctrl__', 'pPlane1_02__jnt____ctrl__', 'pPlane1_03__jnt____ctrl__']
-    fkV = FkVariable(jnts, fk_ctrl, 15 , 'ry', 'rz')
+    fkV = Slide.FkVariable(jnts, fk_ctrl, 15 , 'ry', 'rz')
     """
 
     def __init__(self,
                  joint_chain=[],
-                 fk_controls=[],
+                 driver=[],
                  range=5,
                  driver_axis='ry',
                  target_axis='rz',
+                 useMinus=False
                  ):
 
         self.joint_chain = joint_chain
-        self.fk_controls = fk_controls
+        self.driver = driver
         self.range = range
         self.driver_axis = driver_axis
         self.target_axis = target_axis
+        self.useMinus = useMinus
 
         self.creates_joint_offset_grp()
         self.create_fkVariable()
@@ -212,16 +208,20 @@ class FkVariable(object):
 
     def creates_joint_offset_grp(self):
         self.offset_groups_layers = []
-        for ctrl in xrange(len(self.fk_controls)):
+        for ctrl in xrange(len(self.driver)):
             layer = [adb.makeroot_func(x, suff='OFFSET0{}'.format(ctrl + 1)) for i, x in enumerate(self.joint_chain)]
             self.offset_groups_layers.append(layer)
 
     def create_fkVariable(self):
-        for offset_grp, fk_ctrl in zip(self.offset_groups_layers, self.fk_controls):
-            sliding = Slide(targets=offset_grp, driver=fk_ctrl,  range=self.range, driver_axis=self.driver_axis, target_axis=self.target_axis)
+        for offset_grp, fk_ctrl in zip(self.offset_groups_layers, self.driver):
+            sliding = Slide(targets=offset_grp, driver=fk_ctrl,  range=self.range, driver_axis=self.driver_axis, target_axis=self.target_axis, useMinus=self.useMinus)
 
     def connect_position_to_uv(self, factor=2):
-        for ctrl in self.fk_controls:
+        """ To match the position of the control / UV postion while the position is changing
+        Args:
+            factor (int): Defaults to 2.
+        """
+        for ctrl in self.driver:
             mult = pm.shadingNode('multiplyDivide', au=1)
             mult.input2X.set(factor)
             folli = pm.PyNode(ctrl).getParent().getParent()
