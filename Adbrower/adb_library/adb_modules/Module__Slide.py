@@ -55,6 +55,8 @@ class Slide(object):
         self.CONFIG = config
         self.useMinus = useMinus
 
+        self.md_ouptut_list = None
+
         try:
             self.driver_attribute = NodeAttr([self.driver])
             self.driver_attribute.addAttr('position', 1, min=1, max=len(targets)+1)
@@ -81,7 +83,7 @@ class Slide(object):
         metaData_GRP_attribute.addAttr('fallof_Factor', self.falloff_FACTOR)
         metaData_GRP_attribute.addAttr('driver', 'message')
 
-        
+
         pm.PyNode(self.metaData_GRP).addAttr('remapValue_position', numberOfChildren=len(self.CONFIG['remap'].keys()), attributeType='compound')
         for pt, val in zip(self.CONFIG['remap'].keys(), self.CONFIG['remap'].values()):
             pm.PyNode(self.metaData_GRP).addAttr('pos{}'.format(pt), at='float', parent='remapValue_position', dv=val[0])
@@ -152,7 +154,7 @@ class Slide(object):
         if self.useMinus:
             for pma_falloff in self.pma_falloff_minus_list:
                 self.md_fallof_FACTOR.outputX >> pma_falloff.input3D[1].input3Dx
-        
+
             for pma, rm in zip(self.pma_falloff_minus_list, self.rm_position_list):
                 pma.output3Dx >> rm.inputMin
 
@@ -184,6 +186,7 @@ class FkVariable(object):
     """
 
     def __init__(self,
+                 name = 'FkVariable',
                  joint_chain=[],
                  driver=[],
                  range=5,
@@ -192,6 +195,7 @@ class FkVariable(object):
                  useMinus=False
                  ):
 
+        self.name= name
         self.joint_chain = joint_chain
         self.driver = driver
         self.range = range
@@ -199,22 +203,25 @@ class FkVariable(object):
         self.target_axis = target_axis
         self.useMinus = useMinus
 
+        self.offset_groups_layers = None
+        
         self.creates_joint_offset_grp()
         self.create_fkVariable()
 
     @property
     def md_ouptut_list(self):
-        return sliding.md_ouptut_list
+        return self.sliding.md_ouptut_list
 
     def creates_joint_offset_grp(self):
         self.offset_groups_layers = []
         for ctrl in xrange(len(self.driver)):
-            layer = [adb.makeroot_func(x, suff='OFFSET0{}'.format(ctrl + 1)) for i, x in enumerate(self.joint_chain)]
+            layer = [adb.makeroot_func(x, suff='{}0{}'.format(self.name, ctrl + 1), forceNameConvention=True) for i, x in enumerate(self.joint_chain)]
             self.offset_groups_layers.append(layer)
 
     def create_fkVariable(self):
         for offset_grp, fk_ctrl in zip(self.offset_groups_layers, self.driver):
-            sliding = Slide(targets=offset_grp, driver=fk_ctrl,  range=self.range, driver_axis=self.driver_axis, target_axis=self.target_axis, useMinus=self.useMinus)
+            self.sliding = Slide(targets=offset_grp, driver=fk_ctrl,  range=self.range, driver_axis=self.driver_axis, target_axis=self.target_axis, useMinus=self.useMinus)
+        return self.offset_groups_layers
 
     def connect_position_to_uv(self, factor=2):
         """ To match the position of the control / UV postion while the position is changing
