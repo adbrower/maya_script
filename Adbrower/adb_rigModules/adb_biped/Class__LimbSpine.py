@@ -135,7 +135,6 @@ class LimbSpine(moduleBase.ModuleBase):
         self.BUILD_MODULES = []
         self.RESULT_MOD = None
         self.REVERSE_MOD = None
-
         self.FKVARIABLE_MOD = None
 
         # =================
@@ -149,7 +148,6 @@ class LimbSpine(moduleBase.ModuleBase):
 
 
     def connect(self):
-
         super(LimbSpine, self)._connect()
 
         self.setup_VisibilityGRP()
@@ -175,6 +173,7 @@ class LimbSpine(moduleBase.ModuleBase):
     # -------------------
 
     def createResultSystem(self):
+
         def createResultJoints():
             self.RESULT_MOD = moduleBase.ModuleBase()
             self.RESULT_MOD.hiearchy_setup('{Side}__Result'.format(**self.nameStructure))
@@ -188,6 +187,7 @@ class LimbSpine(moduleBase.ModuleBase):
 
             Joint.Joint(self.spine_chain_joints).orientAxis = 'Y'
             self.spine_chain.radius = 2
+            return self.spine_chain_joints
 
         # =========================
         # BUILD RESULT SYSTEM
@@ -205,9 +205,20 @@ class LimbSpine(moduleBase.ModuleBase):
                                             color=('index', 22)
                                             )
 
+            for att in ['tx', 'ty', 'tz', 'sx', 'sy', 'sz', 'radius']:
+                pm.PyNode(joint).setAttr(att, lock=True,
+                                        channelBox=False, keyable=False)
+
             self.fk_ctrl_class_list.append(ctrl)
             pm.parent(ctrl.control.getShape(), joint, relative=True, shape=True)
             pm.delete(ctrl.control)
+            pm.rename(joint, NC.getNameNoSuffix(joint))
+            adb.AutoSuffix([joint])
+
+        self.nameStructure['Suffix'] = NC.VISRULE
+        shapes = [x.getShape() for x in self.spine_chain_joints]
+        moduleBase.ModuleBase.setupVisRule(shapes, self.RESULT_MOD.VISRULE_GRP, '{Side}__{Basename}_FK_CTRL__{Suffix}'.format(**self.nameStructure), False)
+        self.setupVisRule(self.spine_chain_joints, self.RESULT_MOD.VISRULE_GRP, '{Side}__{Basename}_FK_JNT__{Suffix}'.format(**self.nameStructure), False)
 
         return self.fk_ctrl_class_list
 
@@ -217,7 +228,7 @@ class LimbSpine(moduleBase.ModuleBase):
         self.BUILD_MODULES += [self.REVERSE_MOD]
         pm.parent(self.REVERSE_MOD.MOD_GRP, self.RIG.MODULES_GRP)
 
-        @changeColor('index', col = (18))
+        @changeColor('index', col = (20))
         def createReverseJoints():
             revJnt = pm.duplicate(self.spine_chain_joints)
             [pm.rename(x, x.replace('Result', 'Reverse').replace('1__JNT','')) for x in revJnt]
@@ -246,20 +257,28 @@ class LimbSpine(moduleBase.ModuleBase):
 
 
         def createFkReverseCTRLS():
-                self.rev_fk_ctrl_class_list = []
-                for joint in self.reverse_spine_chain_joints:
-                    rev_ctrl = Control.Control(name=joint.replace(NC.JOINT, NC.CTRL),
-                                                    shape = sl.circleY_shape,
-                                                    scale=1,
-                                                    matchTransforms = (False, 1,0),
-                                                    color=('index', 22),
-                                                    )
+            self.rev_fk_ctrl_class_list = []
+            for joint in self.reverse_spine_chain_joints:
+                rev_ctrl = Control.Control(name=joint.replace(NC.JOINT, NC.CTRL),
+                                                shape = sl.circleY_shape,
+                                                scale=1,
+                                                matchTransforms = (False, 1,0),
+                                                color=('index', 20),
+                                                )
+                self.rev_fk_ctrl_class_list.append(rev_ctrl)
+                pm.parent(rev_ctrl.control.getShape(), joint, relative=True, shape=True)
+                pm.delete(rev_ctrl.control)
+                pm.rename(joint, NC.getNameNoSuffix(joint))
+                adb.AutoSuffix([joint])
 
-                    self.rev_fk_ctrl_class_list.append(rev_ctrl)
-                    pm.parent(rev_ctrl.control.getShape(), joint, relative=True, shape=True)
-                    pm.delete(rev_ctrl.control)
+                adb.lockAttr_func(joint, ['tx', 'ty', 'tz', 'sx', 'sy', 'sz', 'radius'])
 
-                return self.rev_fk_ctrl_class_list
+            self.nameStructure['Suffix'] = NC.VISRULE
+            shapes = [x.getShape() for x in self.reverse_spine_chain_joints]
+            moduleBase.ModuleBase.setupVisRule(shapes, self.REVERSE_MOD.VISRULE_GRP, '{Side}__{Basename}_FK_Reverse_CTRL__{Suffix}'.format(**self.nameStructure), False)
+            self.setupVisRule(self.reverse_spine_chain_joints, self.REVERSE_MOD.VISRULE_GRP, '{Side}__{Basename}_FK_Reverse_JNT__{Suffix}'.format(**self.nameStructure), False)
+
+            return self.rev_fk_ctrl_class_list
 
 
         def connectReverseToResult(spine_joint_connect):
@@ -282,8 +301,8 @@ class LimbSpine(moduleBase.ModuleBase):
 
             ## Connect FK Variable
             if self.FKVARIABLE_MOD:
-                for revJnt, grp in zip(self.reverse_spine_chain_joints, self.FKVARIABLE_MOD.offset_groups_layers[0]):
-                    FkVariableRev = adb.makeroot_func(revJnt, suff=self.FKVARIABLE_MOD.name, forceNameConvention=True)
+                for revJnt, grp in zip(self.reverse_spine_chain_joints, self.FKVARIABLE_MOD.getResetJoints[0]):
+                    FkVariableRev = adb.makeroot_func(revJnt, suff=self.FKVARIABLE_MOD.NAME, forceNameConvention=True)
                     multNode = pm.shadingNode('multiplyDivide', asUtility=1)
                     multNode.operation.set(1)
                     multNode.input2X.set(-1)
@@ -315,9 +334,15 @@ class LimbSpine(moduleBase.ModuleBase):
 
         settingsGrpAttr = adbAttr.NodeAttr([self.RIG.SETTINGS_GRP])
         settingsGrpAttr.addAttr('Bend', 0)
-        fkV = Slide.FkVariable(name='Bend', joint_chain=self.spine_chain_joints, driver=[self.RIG.SETTINGS_GRP], range=2, driver_axis='Bend', target_axis='rx', useMinus=False)
+        fkV = Slide.FkVariable(module_name='Bend', joint_chain=self.spine_chain_joints, driver=[self.RIG.SETTINGS_GRP], range=2, driver_axis='Bend', target_axis='rx', useMinus=False)
+        fkV.start()
+        fkV.build()
 
+        pm.parent(fkV.metaData_GRP, self.RIG.SETTINGS_GRP)
         return fkV
+
+    def createIkSystem(self):
+        pass
 
 
     # -------------------
@@ -325,15 +350,17 @@ class LimbSpine(moduleBase.ModuleBase):
     # -------------------
 
 
-
     def setup_VisibilityGRP(self):
         visGrp = adbAttr.NodeAttr([self.RIG.VISIBILITY_GRP])
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Joints')
-        visGrp.addAttr('Clavicule_JNT', True)
-        visGrp.addAttr('IK_JNT', False)
+        visGrp.addAttr('FK_JNT', True)
+        visGrp.addAttr('FK_Reverse_JNT', False)
+        visGrp.addAttr('IK_JNT', True)
 
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Controls')
-        visGrp.addAttr('Clavicule_CTRL', True)
+        visGrp.addAttr('FK_CTRL', True)
+        visGrp.addAttr('FK_Reverse_CTRL', False)
+        visGrp.addAttr('IK_CTRL', True)
 
         for attr in visGrp.allAttrs.keys():
             for module in self.BUILD_MODULES:
@@ -353,6 +380,31 @@ class LimbSpine(moduleBase.ModuleBase):
                     pm.delete(grp)
 
 
+    def setupVisRule(self, tansformList, parent, name=False, defaultValue=True):
+        """
+        Edit : for setting up the visrule for Fk shapes ctrl
+        Original one from ModuleBase
+        """
+        if name:
+            visRuleGrp = pm.group(n=name, em=1, parent=parent)
+        else:
+            visRuleGrp = pm.group(n='{}_{}__{}'.format(NC.getNameNoSuffix(tansformList[0]), NC.getSuffix(tansformList[0]), NC.VISRULE),  em=1, parent=parent)
+        visRuleGrp.v.set(0)
+        visRuleAttr = adbAttr.NodeAttr([visRuleGrp])
+        visRuleAttr.addAttr('vis', 'enum',  eName = "2:0")
+
+        self.nameStructure['Suffix'] = NC.ADDLINEAR_SUFFIX
+        addDouble = pm.shadingNode('addDoubleLinear', asUtility=1, n='{Side}__{Basename}_visrule__{Suffix}'.format(**self.nameStructure))
+        self.nameStructure['Suffix'] = NC.REVERSE_SUFFIX
+        reverse = pm.shadingNode('reverse', asUtility=1, n='{Side}__{Basename}_visrule__{Suffix}'.format(**self.nameStructure))
+        addDouble.input2.set(1)
+        pm.connectAttr('{}.{}'.format(visRuleGrp, visRuleAttr.name), '{}.inputX'.format(reverse), f=1)
+        pm.connectAttr('{}.outputX'.format(reverse), '{}.input1'.format(addDouble), f=1)
+        for transform in tansformList:
+            pm.connectAttr('{}.output'.format(addDouble), '{}.drawStyle'.format(transform))
+        adb.lockAttr_func(visRuleGrp, ['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz','v'])
+        return visRuleGrp, visRuleAttr.name
+
     # =========================
     # SLOTS
     # =========================
@@ -371,6 +423,6 @@ class LimbSpine(moduleBase.ModuleBase):
 
 L_Spine = LimbSpine(module_name='L__Spine')
 L_Spine.build(['C_spine001_guide', 'C_spine002_guide', 'C_spine003_guide', 'C_spine004_guide', 'C_spine005_guide', 'C_spine006_guide', 'C_spine007_guide'])
-# L_Spine.connect()
+L_Spine.connect()
 
 
