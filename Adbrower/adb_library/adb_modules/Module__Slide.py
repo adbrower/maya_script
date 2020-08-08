@@ -10,8 +10,6 @@ reload(moduleBase)
 # CLASS
 # -----------------------------------
 
-METADATA_grp_name = 'slide__METADATA'
-
 SLIDE_CONFIG = {
     # color : key : position : value
     'remap' : {

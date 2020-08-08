@@ -21,10 +21,8 @@ from adbrower import undo
 
 class Transform(adbAttr.NodeAttr):
     """
-
     import adb_core.Class__Transforms as Transform
     reload(Transform)
-
     """
 
     def __init__(self,
@@ -99,7 +97,6 @@ class Transform(adbAttr.NodeAttr):
         """
         [pm.PyNode(x).setRotatePivot(value) for x in self.transform]
         [pm.PyNode(x).setScalePivot(value) for x in self.transform]
-
 
     def getAllConns(self):
         """ Print all connections for selected subject """

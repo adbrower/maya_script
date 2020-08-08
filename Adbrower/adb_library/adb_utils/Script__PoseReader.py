@@ -27,7 +27,6 @@ def poseReader(name = '', driver='joint1__CTRL', target = 'joint2__CTRL', upPost
     Create a Pose Reader
 
     import adb_library.adb_utils.Script__PoseReader as PoseReader
-
     PoseReader.PoseReader()
 
     """

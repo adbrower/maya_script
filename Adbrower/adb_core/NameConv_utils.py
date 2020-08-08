@@ -147,7 +147,6 @@ def getSuffix(_transform):
     return suffix
 
 
-
 def getNameSpace(_name):
     """
     @param _name: (string)
@@ -232,6 +231,7 @@ MULTIPLY_DIVIDE_SUFFIX        = 'MD'
 REMAP_VALUE_SUFFIX            = 'RM'
 REMAP_COLOR_SUFFIX            = 'RMC'
 REVERSE_SUFFIX                = 'REV'
+ADDLINEAR_SUFFIX              = 'ADDL'
 CONDITION_SUFFIX              = 'COND'
 PLUS_MIN_AVER_SUFFIX          = 'PMA'
 BLENDCOLOR_SUFFIX             = 'BC'
