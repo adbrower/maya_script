@@ -242,7 +242,7 @@ class Folli(moduleBase.ModuleBase):
                     self._MODEL.getFollicules.append(oFoll)
                 else:
                     # reverse the direction of the follicles
-                    oFoll = create_follicle(myObject, currentFollNumber, uPos, vPos)
+                    oFoll = self.create_follicle(myObject, currentFollNumber, uPos, vPos)
                     self._MODEL.getFollicules.append(oFoll)
 
                 pm.rename(oFoll.getParent(), '{}_0{}__{}'.format(pName, currentFollNumber, NC.FOLL_SUFFIX))
