@@ -12,6 +12,7 @@ import adb_core.NameConv_utils as NC
 import adb_core.ModuleBase as moduleBase
 import pymel.core as pm
 from adb_core.Class__Transforms import Transform
+from adb_core.Class__AddAttr import NodeAttr
 import adbrower
 adb = adbrower.Adbrower()
 
@@ -32,11 +33,11 @@ class SquashStrech(moduleBase.ModuleBase):
 
     Arguments:
         module_name {String} -- Name of the module
-        ExpCtrl {String or None} -- Transform on which we add attributes settings. 
+        ExpCtrl {String or None} -- Transform on which we add attributes settings.
                                     Default: None, So it will be on the METADATA_GRP module group
         ribbon_ctrl {List} -- start and end for the distance calculation. Top first, then bottom
         jointList {List} -- List of the joints that will be squash and strech
-        
+
         jointListA {Tuple (List, int)} -- Section A of jointList, exposant Value of the squash and strech
         jointListB {Tuple (List, int)} -- Section B of jointList, exposant Value of the squash and strech
         jointListC {Tuple (List, int)} -- Section C of jointList, exposant Value of the squash and strech
@@ -124,6 +125,13 @@ class SquashStrech(moduleBase.ModuleBase):
     def start(self, metaDataNode = 'network'):
         super(SquashStrech, self)._start(self.NAME, _metaDataNode = metaDataNode)
 
+        metaData_GRP_attribute = NodeAttr([self.metaData_GRP])
+        metaData_GRP_attribute.addAttr('Toggle', True)
+        metaData_GRP_attribute.addAttr('jointList', 'string')
+
+        self.metaData_GRP.jointList.set(str([str(joint) for joint in self.jointList]), lock=True)
+
+
     def build(self):
         super(SquashStrech, self)._build()
 
@@ -132,7 +140,7 @@ class SquashStrech(moduleBase.ModuleBase):
         self.MakeConnections()
         self.JointConnections()
         self.setFinal_hiearchy()
-        # self.set_TAGS()
+        self.set_TAGS()
 
     def remove(self):
         self.removeSetup()
@@ -202,6 +210,10 @@ class SquashStrech(moduleBase.ModuleBase):
         self.expA_MD = pm.shadingNode('multiplyDivide', asUtility=1, n="{}_ExpA".format(self.NAME))
         self.expB_MD = pm.shadingNode('multiplyDivide', asUtility=1, n="{}_ExpB".format(self.NAME))
         self.expC_MD = pm.shadingNode('multiplyDivide', asUtility=1, n="{}_ExpC".format(self.NAME))
+
+        # blendColor node Toggle
+        self.toggle_node = pm.shadingNode('blendColors', asUtility=1, n='{}_Toggle__{}'.format(self.NAME, NC.BLENDCOLOR_SUFFIX))
+        self.toggle_node.blender.set(1)
 
         # Settings des nodes Multiply Divide
         self.Stretch_MD.operation.set(2)
@@ -277,17 +289,26 @@ class SquashStrech(moduleBase.ModuleBase):
         self.Squash_MD.outputX >> self.expC_MD.input1X
 
         # ExpCtrl >> Exp A,B,C
-        pm.PyNode(self.ExpCtrl).ExpA >> self.expA_MD.input2X
-        pm.PyNode(self.ExpCtrl).ExpB >> self.expB_MD.input2X
-        pm.PyNode(self.ExpCtrl).ExpC >> self.expC_MD.input2X
+        pm.PyNode(self.ExpCtrl).ExpA >> self.toggle_node.color1R
+        pm.PyNode(self.ExpCtrl).ExpB >> self.toggle_node.color1G
+        pm.PyNode(self.ExpCtrl).ExpC >> self.toggle_node.color1B
+        self.metaData_GRP.Toggle >> self.toggle_node.blender
 
-        pm.PyNode(self.ExpCtrl).ExpA >> self.expA_MD.input2Y
-        pm.PyNode(self.ExpCtrl).ExpB >> self.expB_MD.input2Y
-        pm.PyNode(self.ExpCtrl).ExpC >> self.expC_MD.input2Y
+        self.toggle_node.color2R.set(0)
+        self.toggle_node.color2G.set(0)
+        self.toggle_node.color2B.set(0)
 
-        pm.PyNode(self.ExpCtrl).ExpA >> self.expA_MD.input2Z
-        pm.PyNode(self.ExpCtrl).ExpB >> self.expB_MD.input2Z
-        pm.PyNode(self.ExpCtrl).ExpC >> self.expC_MD.input2Z
+        self.toggle_node.outputR >> self.expA_MD.input2X
+        self.toggle_node.outputG >> self.expB_MD.input2X
+        self.toggle_node.outputB >> self.expC_MD.input2X
+
+        self.toggle_node.outputR >> self.expA_MD.input2Y
+        self.toggle_node.outputG >> self.expB_MD.input2Y
+        self.toggle_node.outputB >> self.expC_MD.input2Y
+
+        self.toggle_node.outputR >> self.expA_MD.input2Z
+        self.toggle_node.outputG >> self.expB_MD.input2Z
+        self.toggle_node.outputB >> self.expC_MD.input2Z
 
 
     def JointConnections(self):
