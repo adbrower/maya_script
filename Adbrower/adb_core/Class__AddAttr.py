@@ -303,7 +303,7 @@ class NodeAttr(object):
         self.list_methods.update(
             {self.attrName: self.getValue})  # self.addMethods()
         if lock is True:
-            self.lockAttribute()
+            pm.setAttr('{}.{}'.format(self.subject, self.attrName), lock=True)
         else:
             pass
         return(self.node)
