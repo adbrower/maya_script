@@ -53,7 +53,7 @@ class stretchyIK(moduleBase.ModuleBase):
     leg.build()
     """
 
-    def __init__(self,  
+    def __init__(self,
                  module_name,
                  ik_joints=pm.selected(),
                  ik_ctrl=None,
@@ -99,7 +99,7 @@ class stretchyIK(moduleBase.ModuleBase):
     def hingeJnts(self):
         self._MODEL.hingeJnts = self._MODEL.ikJnts[1:-1]
         return self._MODEL.hingeJnts
-    
+
     @property
     def endJnt(self):
         self._MODEL.endJnt = self._MODEL.ikJnts[-1]
@@ -135,7 +135,7 @@ class stretchyIK(moduleBase.ModuleBase):
     # =========================
 
     def start(self, metaDataNode = 'transform'):
-        super(stretchyIK, self)._start(self.NAME, _metaDataNode = metaDataNode)  
+        super(stretchyIK, self)._start(self.NAME, _metaDataNode = metaDataNode)
 
         self.metaData_GRP.addAttr('Toggle', at='bool', keyable=True, dv=True)
         self.metaData_GRP.addAttr('Ik_Handle', at='message', keyable=False)
@@ -152,7 +152,7 @@ class stretchyIK(moduleBase.ModuleBase):
         self.metaData_GRP.addAttr('Stretch_MDV_Node', at='message',  keyable=False)
         self.metaData_GRP.addAttr('Condition_Node', at='message',  keyable=False)
 
-    
+
     def build(self):
         super(stretchyIK, self)._build()
         self.stretchyIKSetUp()
@@ -278,7 +278,7 @@ class stretchyIK(moduleBase.ModuleBase):
         self.metaData_GRP.Joint_Axis.set(self.stretchAxis, lock=True)
         self.metaData_GRP.Original_joint_distance.set(self.originalDistance, lock=True)
 
-       
+
 
 # leg = stretchyIK('legIk',
 #                 ik_joints = ['joint1', 'joint2', 'joint3'],
