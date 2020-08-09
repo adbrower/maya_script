@@ -228,7 +228,6 @@ class LimbFoot(moduleBase.ModuleBase):
 
             # Parenting the joints
             pm.parent(self.footHeel_joint,  self.footAnkle_joint)
-
             pm.PyNode(self.footAnkle_joint).rename('{Side}__{Basename}_{Parts[0]}'.format(**self.nameStructure))
             pm.PyNode(self.footBall_joint).rename('{Side}__{Basename}_{Parts[1]}'.format(**self.nameStructure))
             pm.PyNode(self.footToes_joint).rename('{Side}__{Basename}_{Parts[2]}'.format(**self.nameStructure))
@@ -238,9 +237,8 @@ class LimbFoot(moduleBase.ModuleBase):
             ## orient joint
             if self.side == NC.RIGTH_SIDE_PREFIX:
                 mirror_chain_1 = pm.mirrorJoint(self.footAnkle_joint, mirrorYZ=1)
-
                 mirror_chain_3 = pm.mirrorJoint(mirror_chain_1[0], mirrorBehavior=1, mirrorYZ=1)
-                pm.delete(mirror_chain_1,  self.footAnkle_joint)
+                pm.delete(self.footAnkle_joint, mirror_chain_1)
                 self.foot_chain =  Joint.Joint(mirror_chain_3)
                 self.footAnkle_joint, self.footBall_joint, self.footToes_joint, self.footHeel_joint = self.foot_chain.joints
 
@@ -248,7 +246,7 @@ class LimbFoot(moduleBase.ModuleBase):
                 pm.PyNode(self.footBall_joint).rename('{Side}__{Basename}_{Parts[1]}'.format(**self.nameStructure))
                 pm.PyNode(self.footToes_joint).rename('{Side}__{Basename}_{Parts[2]}'.format(**self.nameStructure))
                 pm.PyNode(self.footHeel_joint).rename('{Side}__{Basename}_{Parts[3]}'.format(**self.nameStructure))
-
+                adb.AutoSuffix(self.foot_chain.joints)
 
             pm.parent(self.footAnkle_joint, self.Foot_MOD.OUTPUT_GRP)
             self.footOffsetGrp = self.createPivotGrps(self.footAnkle_joint, name='{Basename}_Offset'.format(**self.nameStructure))
@@ -260,7 +258,6 @@ class LimbFoot(moduleBase.ModuleBase):
             self.nameStructure['Suffix'] = NC.VISRULE
             moduleBase.ModuleBase.setupVisRule([self.footAnkle_joint], self.Foot_MOD.VISRULE_GRP, '{Side}__{Basename}_JNT__{Suffix}'.format(**self.nameStructure), True)
             return self.foot_chain.joints
-
 
 
         # ============
@@ -392,7 +389,6 @@ class LimbFoot(moduleBase.ModuleBase):
                     if shortName.lower() in attr.lower():
                         pm.connectAttr('{}.{}'.format(visGrp.subject, attr), '{}.vis'.format(grp))
 
-
     def cleanUpEmptyGrps(self):
         for ModGrp in self.RIG.MODULES_GRP.getChildren():
             for grp in ModGrp.getChildren():
@@ -484,6 +480,9 @@ class LimbFoot(moduleBase.ModuleBase):
         Transform(ballRoll).pivotPoint = Transform(self.footBall_joint).worldTrans
         Transform(toeRoll).pivotPoint = Transform(self.footToes_joint).worldTrans
 
+        if self.side == 'R':
+            pm.makeIdentity(toeRoll, n=0, r=1, apply=True, pn=1)
+
         if forceConnection:
             ## connect Attributes
             pm.PyNode(self.Foot_MOD.metaData_GRP.heelRoll) >> heelRoll.rx
@@ -493,7 +492,6 @@ class LimbFoot(moduleBase.ModuleBase):
             pm.PyNode(self.Foot_MOD.metaData_GRP.heelSide) >> heelRoll.ry
             pm.PyNode(self.Foot_MOD.metaData_GRP.heelTwist) >> heelRoll.rz
             pm.PyNode(self.Foot_MOD.metaData_GRP.toeSide) >> toeRoll.ry
-
 
             self.nameStructure['Suffix'] = NC.MULTIPLY_DIVIDE_SUFFIX
             mult_node = pm.shadingNode('multiplyDivide', asUtility=1, n='{Side}__{Basename}_toeNegate__{Suffix}'.format(**self.nameStructure))
@@ -527,3 +525,5 @@ class LimbFoot(moduleBase.ModuleBase):
 # L_foot.connect()
 
 
+# R_foot = LimbFoot(module_name='R__Foot')
+# R_foot.build(['R__ankle_guide', 'R__ball_guide', 'R__toe_guide', 'R__heel_guide'])
