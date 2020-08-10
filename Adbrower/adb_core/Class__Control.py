@@ -10,12 +10,13 @@ import pymel.core as pm
 import maya.cmds as mc
 
 import ShapesLibrary as sl
+import adb_core.NameConv_utils as NC
 import adb_core.Class__AddAttr as adbAttr
 import adbrower
 
 adb = adbrower.Adbrower()
 
-from adbrower import changeColor, propScale
+from adbrower import changeColor, propScale, makeroot
 from CollDict import indexColor
 
 
@@ -47,6 +48,29 @@ class Control(adbAttr.NodeAttr):
     #===================
     # PROPERTIES
     #===================
+
+    @classmethod
+    @makeroot(suf='Offset', forceNameConvention=True)
+    def fkShape(cls, joints=[], name = None, shape=sl.circleX_shape , scale=1, color=('index', 18)):
+        """
+        Returns:
+            List: List of Joints from Joint Class
+        """
+        fk_joint = []
+        for joint in joints:
+            ctrl = cls(joint, shape=shape, scale=scale, color=color)
+            tras = pm.xform(joint, ws=True, q=True, t=True)
+            pivot = pm.xform(joint, ws=True, q=True, rp=True)
+            pm.xform(ctrl.control, ws=True, t=tras, rp=pivot)
+            pm.parent(ctrl.control.getShape(), joint, relative=True, shape=True)
+            pm.delete(ctrl.control)
+            if name:
+                pm.rename(joint, name)
+                joint = adb.AutoSuffix([joint])
+            else:
+                joint = adb.AutoSuffix([joint])
+            fk_joint.append(joint)
+        return fk_joint
 
     @property
     def shape(self):
