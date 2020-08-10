@@ -33,6 +33,7 @@ class SquashStrech(moduleBase.ModuleBase):
 
     Arguments:
         module_name {String} -- Name of the module
+        UsingCurve {Bool} -- using the curve lenght. Otherwise use a in between distance
         ExpCtrl {String or None} -- Transform on which we add attributes settings.
                                     Default: None, So it will be on the METADATA_GRP module group
         ribbon_ctrl {List} -- start and end for the distance calculation. Top first, then bottom
@@ -61,6 +62,7 @@ class SquashStrech(moduleBase.ModuleBase):
 
     def __init__(self,
                  module_name,
+                 usingCurve  = False,
                  ExpCtrl     = None,
                  ribbon_ctrl = [],  # Top first, then bottom
 
@@ -75,6 +77,7 @@ class SquashStrech(moduleBase.ModuleBase):
         self._MODEL = SquashStrechModel()
 
         self.NAME = module_name
+        self.usingCurve = usingCurve
         self.ExpCtrl = ExpCtrl
         self.jointList = jointList
         self.ribbon_ctrl = ribbon_ctrl
@@ -166,10 +169,7 @@ class SquashStrech(moduleBase.ModuleBase):
     @undo
     def CreateNodes(self):
         """Creation et settings de mes nodes"""
-
-        pm.select(self.jointList, r=True)
-
-        def createloc(sub=pm.selected()):
+        def createloc(sub):
             """Creates locator at the Pivot of the object selected """
 
             locs = []
@@ -180,30 +180,33 @@ class SquashStrech(moduleBase.ModuleBase):
                 pm.select(locs, add=True)
             return locs
 
-        posLocs = createloc([self.jointList[0], self.jointList[-1]])
+        self.CurveInfoNode = None
+        posLocs = []
+        if self.usingCurve:
+            self.spineLenghtCurve = adb.createCurveFrom(self.jointList, curve_name='{}_lenght__CRV'.format(self.NAME))
+            pm.parent(self.spineLenghtCurve, self.RIG_GRP)
+            self.CurveInfoNode = pm.shadingNode('curveInfo', asUtility=1, n='{}_CurveInfo'.format(self.NAME))
 
-        sp = (pm.PyNode(posLocs[0]).translateX.get(), pm.PyNode(posLocs[0]).translateY.get(), pm.PyNode(posLocs[0]).translateZ.get())
-        ep = (pm.PyNode(posLocs[1]).translateX.get(), pm.PyNode(posLocs[1]).translateY.get(), pm.PyNode(posLocs[1]).translateZ.get())
+        else:
+            posLocs = createloc([self.jointList[0], self.jointList[-1]])
+            sp = (pm.PyNode(posLocs[0]).translateX.get(), pm.PyNode(posLocs[0]).translateY.get(), pm.PyNode(posLocs[0]).translateZ.get())
+            ep = (pm.PyNode(posLocs[1]).translateX.get(), pm.PyNode(posLocs[1]).translateY.get(), pm.PyNode(posLocs[1]).translateZ.get())
 
-        # create Distances Nodes
-        self.DistanceLoc = pm.distanceDimension(sp=sp,  ep=ep)
-        pm.rename(self.DistanceLoc, 'bendy_distDimShape')
-        pm.rename(pm.PyNode(self.DistanceLoc).getParent(), 'bendy_distDim')
-        distance = self.DistanceLoc.distance.get()
-        pm.parent(self.DistanceLoc.getParent(), self.RIG_GRP)
-
-        pm.parent(posLocs[0], self.ribbon_ctrl[0])
-        pm.parent(posLocs[1], self.ribbon_ctrl[1])
-
-        pm.rename(posLocs[0], 'distance_depart__{}'.format(NC.LOC))
-        pm.rename(posLocs[1], 'distance_end__{}'.format(NC.LOC))
-
-        posLocs[0].v.set(0)
-        posLocs[1].v.set(0)
-        self.DistanceLoc.getParent().v.set(0)
+            # create Distances Nodes
+            self.DistanceLoc = pm.distanceDimension(sp=sp,  ep=ep)
+            pm.rename(self.DistanceLoc, 'bendy_distDimShape')
+            pm.rename(pm.PyNode(self.DistanceLoc).getParent(), 'bendy_distDim')
+            distance = self.DistanceLoc.distance.get()
+            pm.parent(self.DistanceLoc.getParent(), self.RIG_GRP)
+            pm.parent(posLocs[0], self.ribbon_ctrl[0])
+            pm.parent(posLocs[1], self.ribbon_ctrl[1])
+            pm.rename(posLocs[0], 'distance_depart__{}'.format(NC.LOC))
+            pm.rename(posLocs[1], 'distance_end__{}'.format(NC.LOC))
+            posLocs[0].v.set(0)
+            posLocs[1].v.set(0)
+            self.DistanceLoc.getParent().v.set(0)
 
         # Creation des nodes Multiply Divide
-        self.CurveInfoNode = pm.shadingNode('curveInfo', asUtility=1, n="IK_Spline_CurveInfo")
         self.Stretch_MD = pm.shadingNode('multiplyDivide', asUtility=1, n="StretchMult")
         self.Squash_MD = pm.shadingNode('multiplyDivide', asUtility=1, n="SquashMult")
 
@@ -228,7 +231,7 @@ class SquashStrech(moduleBase.ModuleBase):
         self.expC_MD.operation.set(3)
         self.expC_MD.input1X.set(1)
 
-        return self.expA_MD, self.expB_MD, self.expC_MD, self.Squash_MD,  self.Stretch_MD, self.CurveInfoNode, posLocs[0], posLocs[1]
+        return self.expA_MD, self.expB_MD, self.expC_MD, self.Squash_MD,  self.Stretch_MD, self.CurveInfoNode, posLocs
 
 
     def create_scale_distance(self):
@@ -267,21 +270,20 @@ class SquashStrech(moduleBase.ModuleBase):
 
     @undo
     def MakeConnections(self):
-
         self.scale_distanceNode = self.create_scale_distance()
-
         self.scale_distanceNode.distance >> self.Stretch_MD.input2X
         self.scale_distanceNode.distance >> self.Squash_MD.input1X
 
-        ## Distance >> StretchMult
-        self.DistanceLoc.distance >> self.Stretch_MD.input1X
-
-        # StretchMult >> All scale X of each joint
-        for each in self.jointList[1:-1]:
-            self.Stretch_MD.outputX >> pm.PyNode(each).scaleX
-
-        ## Distance >> SquashMult
-        self.DistanceLoc.distance >> self.Squash_MD.input2X
+        if self.usingCurve:
+            (pm.PyNode(self.spineLenghtCurve).getShape()).worldSpace[0] >> self.CurveInfoNode.inputCurve
+            self.CurveInfoNode.arcLength >> self.Stretch_MD.input1X
+            self.CurveInfoNode.arcLength >> self.Squash_MD.input2X
+        else:
+            ## Distance >> StretchMult
+            self.DistanceLoc.distance >> self.Stretch_MD.input1X
+            for each in self.jointList[1:-1]:
+                self.Stretch_MD.outputX >> pm.PyNode(each).scaleX
+            self.DistanceLoc.distance >> self.Squash_MD.input2X
 
         # SquashMult >> Exp A,B,C
         self.Squash_MD.outputX >> self.expA_MD.input1X
