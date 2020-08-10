@@ -111,7 +111,7 @@ class Skinning(object):
 
     ## EXTERIOR CLASS BUILD
     #------------------------
-        import adb_core..Class__Skinning as skin
+        import adb_core.Class__Skinning as skin
         reload (skin)
     """
 
@@ -453,7 +453,7 @@ class Skinning(object):
         for component in selection:
             mc.skinPercent(skn, component, transformValue=transformation_value)
 
-    def verifyJntsSkin(self, sign_to_split='_', left_side='L', right_side='R'):
+    def verifyJntsSkin(self, sign_to_split='__', left_side='L', right_side='R'):
         """
         Verify if the same amount of joint on the Left side are skinned to the Right side to exexute a proper mirror
         """
@@ -628,8 +628,7 @@ class Skinning(object):
         self.lockAll_Weight()
         sys.stdout.write('Transfer complete! \n ')
 
-    def find_replacement_joints(self, search='L', replace='R_', _custom=False):
-        skin_cluster = self.getSkinCluster()
+    def find_replacement_joints(self, search='L__', replace='R__', _custom=False):
         original_jnts = self.getBindJoints()
         if _custom:
             replace_skin_joints = _custom
