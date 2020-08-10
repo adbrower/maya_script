@@ -554,7 +554,7 @@ class Adbrower(object):
         for _input, _output in zip(inputs, outputs):
             try:
                 blendShapeNode = (('{}_BLS'.format(_input)).split(
-                    '|')[-1]).split(':')[1]  # remove namespace if one
+                    '|')[-1]).split(':')[-1]  # remove namespace if one
             except:
                 blendShapeNode = (
                     '{}_BLS'.format(_input)).split('|')[-1]
@@ -1279,7 +1279,7 @@ class Adbrower(object):
         knot = []
         for i in range(len(selection)):
             knot.append(i)
-        _curve = pm.curve(p=pos, k=knot, d=1, n='curve_name')
+        _curve = pm.curve(p=pos, k=knot, d=1, n=curve_name)
         pm.rebuildCurve(_curve, rt=0, ch=0, end=1, d=3, kr=0, s=len(
             selection), kcp=0, tol=0.1, kt=0, rpo=1, kep=1)
         pm.delete(starting_locs)
@@ -1369,12 +1369,12 @@ class Adbrower(object):
             pm.select('{}.cv[:]'.format(_shapes[0]), r=True)
             for x in range(1, (len(_shapes))):
                 pm.select('{}.cv[:]'.format(_shapes[x]), add=True)
-        if axis == 'x':
-            pm.rotate(90, 0, 0)
-        elif axis == 'y':
-            pm.rotate(0, 90, 0)
-        elif axis == 'z':
-            pm.rotate(0, 0, 90)
+        if axis == 'x' or 'X':
+            pm.rotate(90, 0, 0, r=1, os=1, fo=1)
+        elif axis == 'y' or 'Y':
+            pm.rotate(0, 90, 0, r=1, os=1, fo=1)
+        elif axis == 'z' or 'Z':
+            pm.rotate(0, 0, 90, r=1, os=1, fo=1)
         pm.select(subject, r=True)
 
     def rotateVertex(self, axis, subject=pm.selected()):
@@ -1858,5 +1858,5 @@ class Adbrower(object):
         Removed the namespace before the ':'
         """
         for each in pm.selected():
-            new_name = each.split(':')[1]
+            new_name = each.split(':')[-1]
             pm.PyNode(each).rename(new_name)
