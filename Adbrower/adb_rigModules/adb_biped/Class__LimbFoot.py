@@ -228,10 +228,10 @@ class LimbFoot(moduleBase.ModuleBase):
 
             # Parenting the joints
             pm.parent(self.footHeel_joint,  self.footAnkle_joint)
-            pm.PyNode(self.footAnkle_joint).rename('{Side}__{Basename}_{Parts[0]}'.format(**self.nameStructure))
-            pm.PyNode(self.footBall_joint).rename('{Side}__{Basename}_{Parts[1]}'.format(**self.nameStructure))
-            pm.PyNode(self.footToes_joint).rename('{Side}__{Basename}_{Parts[2]}'.format(**self.nameStructure))
-            pm.PyNode(self.footHeel_joint).rename('{Side}__{Basename}_{Parts[3]}'.format(**self.nameStructure))
+            pm.PyNode(self.footAnkle_joint).rename('{Side}__{Basename}_{Parts[0]}_END'.format(**self.nameStructure))
+            pm.PyNode(self.footBall_joint).rename('{Side}__{Basename}_{Parts[1]}_END'.format(**self.nameStructure))
+            pm.PyNode(self.footToes_joint).rename('{Side}__{Basename}_{Parts[2]}_END'.format(**self.nameStructure))
+            pm.PyNode(self.footHeel_joint).rename('{Side}__{Basename}_{Parts[3]}_END'.format(**self.nameStructure))
             adb.AutoSuffix(self.foot_chain.joints)
 
             ## orient joint
@@ -242,10 +242,10 @@ class LimbFoot(moduleBase.ModuleBase):
                 self.foot_chain =  Joint.Joint(mirror_chain_3)
                 self.footAnkle_joint, self.footBall_joint, self.footToes_joint, self.footHeel_joint = self.foot_chain.joints
 
-                pm.PyNode(self.footAnkle_joint).rename('{Side}__{Basename}_{Parts[0]}'.format(**self.nameStructure))
-                pm.PyNode(self.footBall_joint).rename('{Side}__{Basename}_{Parts[1]}'.format(**self.nameStructure))
-                pm.PyNode(self.footToes_joint).rename('{Side}__{Basename}_{Parts[2]}'.format(**self.nameStructure))
-                pm.PyNode(self.footHeel_joint).rename('{Side}__{Basename}_{Parts[3]}'.format(**self.nameStructure))
+                pm.PyNode(self.footAnkle_joint).rename('{Side}__{Basename}_{Parts[0]}_END'.format(**self.nameStructure))
+                pm.PyNode(self.footBall_joint).rename('{Side}__{Basename}_{Parts[1]}_END'.format(**self.nameStructure))
+                pm.PyNode(self.footToes_joint).rename('{Side}__{Basename}_{Parts[2]}_END'.format(**self.nameStructure))
+                pm.PyNode(self.footHeel_joint).rename('{Side}__{Basename}_{Parts[3]}_END'.format(**self.nameStructure))
                 adb.AutoSuffix(self.foot_chain.joints)
 
             pm.parent(self.footAnkle_joint, self.Foot_MOD.OUTPUT_GRP)

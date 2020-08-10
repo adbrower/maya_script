@@ -7,8 +7,10 @@
 # ------------------------------------------------------
 
 import sys
+import os
 
 import pymel.core as pm
+import maya.cmds as mc
 
 import ShapesLibrary as sl
 from CollDict import indexColor
@@ -86,6 +88,7 @@ DATA_WEIGHT_PATH = 'C:/Users/Audrey/Documents/maya/projects/Roller_Rigging_Proje
 
 class LimbLeg(moduleBase.ModuleBase):
     """
+    import adb_rigModules.adb_biped.Class__LimbLeg as LimbLeg
     """
     def __init__(self,
                 module_name=None,
@@ -243,7 +246,7 @@ class LimbLeg(moduleBase.ModuleBase):
             Joint.Joint(mirror_chain_1).orientAxis = 'Y'
 
             mirror_chain_3 = pm.mirrorJoint(mirror_chain_1[0] ,mirrorBehavior=1, mirrorYZ=1)
-            pm.delete(mirror_chain_1,mirror_chain_1,self.base_leg_joints)
+            pm.delete(mirror_chain_1,mirror_chain_1, self.base_leg_joints)
             self.base_leg_joints = [pm.PyNode(x) for x in mirror_chain_3]
 
             pm.PyNode(self.base_leg_joints[0]).rename('{Side}__{Basename}_Result_{Parts[0]}'.format(**self.nameStructure))
@@ -350,7 +353,7 @@ class LimbLeg(moduleBase.ModuleBase):
             return FkShapeSetup.controls
 
 
-        def CreateIKcontrols(Ikshape = sl.cube_shape, exposant=0.5, pvShape = sl.ball_shape):
+        def CreateIKcontrols(Ikshape = sl.cube_shape, exposant= 1, pvShape = sl.ball_shape):
             """
             Create the IK handle setup on the IK joint chain
             """
@@ -375,7 +378,7 @@ class LimbLeg(moduleBase.ModuleBase):
                 _leg_IkHandle_ctrl = Control.Control(name='{Side}__{Basename}_IK__{Suffix}'.format(**self.nameStructure),
                                                  shape = Ikshape,
                                                  scale=0.8,
-                                                 matchTransforms = (self.ik_leg_joints[-1], 1,0)
+                                                 matchTransforms = (self.ik_leg_joints[-1], 1, 0)
                                                  ).control
                 moduleBase.ModuleBase.setupVisRule([_leg_IkHandle_ctrl], self.ikFk_MOD.VISRULE_GRP)
                 return _leg_IkHandle_ctrl
@@ -404,7 +407,7 @@ class LimbLeg(moduleBase.ModuleBase):
                 pm.rename(self.poleVectorCtrl,name)
                 last_point = pm.PyNode(pv_guide).getCVs()
                 pm.move(self.poleVectorCtrl,last_point[-1])
-                pm.poleVectorConstraint(self.poleVectorCtrl,leg_IkHandle[0] ,weight=1)
+                pm.poleVectorConstraint(self.poleVectorCtrl, leg_IkHandle[0], weight=1)
 
                 def curve_setup():
                     pm.select(self.poleVectorCtrl, r=True)
@@ -415,14 +418,14 @@ class LimbLeg(moduleBase.ModuleBase):
                     _loc = pm.spaceLocator(p= adb.getWorldTrans([self.ik_leg_joints[-2]]))
                     mc.CenterPivot()
                     pm.select(_loc, r=True)
-                    pv_base_jnt = adb.jointAtCenter()[0]
+                    self.pv_base_jnt = adb.jointAtCenter()[0]
                     pm.delete(_loc)
-                    pm.rename(pv_base_jnt, '{}__pvBase__{}'.format(self.side, NC.JOINT))
-                    pm.skinCluster(pv_base_jnt , pv_guide, pv_tip_jnt)
-                    pm.parent(pv_base_jnt, self.ik_leg_joints[1])
+                    pm.rename(self.pv_base_jnt, '{}__pvBase__{}'.format(self.side, NC.JOINT))
+                    pm.skinCluster(self.pv_base_jnt , pv_guide, pv_tip_jnt)
+                    pm.parent(self.pv_base_jnt, self.ik_leg_joints[1])
                     pm.setAttr(pv_guide.inheritsTransform, 0)
                     pm.setAttr(pv_guide.overrideDisplayType, 1)
-                    [pm.setAttr('{}.drawStyle'.format(joint),  2) for joint in [pv_tip_jnt, pv_base_jnt]]
+                    [pm.setAttr('{}.drawStyle'.format(joint),  2) for joint in [pv_tip_jnt, self.pv_base_jnt]]
                     pm.parent(pv_guide, self.ikFk_MOD.RIG_GRP)
                     return pv_guide
 
@@ -444,6 +447,7 @@ class LimbLeg(moduleBase.ModuleBase):
                                  ikJointChain = self.ik_leg_joints,
                                  poleVectorCTL = self.poleVectorCtrl,
                                  )
+            [pm.setAttr('{}.r{}'.format(self.ik_leg_joints[2], axis), 0) for axis in 'xyz']
             pm.parent(autPoleVectorGrp, self.ikFk_MOD.INPUT_GRP)
 
             autPoleVectorGrpEnd = pm.createNode('transform', n='{Side}__{Basename}_IK_SPACES_SWITCH_AUTO__GRP'.format(**self.nameStructure))
@@ -537,7 +541,7 @@ class LimbLeg(moduleBase.ModuleBase):
 
             @makeroot()
             def hipSlidingKnee_ctrl():
-                hipSlidingKnee_CTL = Control.Control(name='{Side}__{Basename}_hip_slidingKnee'.format(**self.nameStructure),
+                hipSlidingKnee_CTL = Control.Control(name='{Side}__{Basename}_{Parts[0]}_slidingKnee'.format(**self.nameStructure),
                                 shape=sl.locator_shape,
                                 scale=1,
                                 parent=self.SLIDING_KNEE_MOD.INPUT_GRP,
@@ -547,7 +551,7 @@ class LimbLeg(moduleBase.ModuleBase):
 
             @makeroot()
             def kneeSlidingKnee01_ctrl():
-                kneeSlidingKnee01_CTL = Control.Control(name='{Side}__{Basename}_knee_slidingKnee_01'.format(**self.nameStructure),
+                kneeSlidingKnee01_CTL = Control.Control(name='{Side}__{Basename}_{Parts[1]}_slidingKnee_01'.format(**self.nameStructure),
                                 shape=sl.locator_shape,
                                 scale=1,
                                 parent=self.SLIDING_KNEE_MOD.INPUT_GRP,
@@ -579,7 +583,8 @@ class LimbLeg(moduleBase.ModuleBase):
 
             for jnt in topJoints:
                 adb.matrixConstraint(str(self.base_leg_joints[0]), str(jnt), channels='rs', mo=True)
-
+ 
+            pm.parent(self.pv_base_jnt, kneeSlidingKnee01_CTL)
             return hipSlidingKnee_CTL, kneeSlidingKnee01_CTL
 
 
@@ -599,7 +604,7 @@ class LimbLeg(moduleBase.ModuleBase):
 
             @makeroot()
             def kneeSlidingKnee02_ctrl():
-                kneeSlidingKnee02_CTL = Control.Control(name='{Side}__{Basename}_knee_slidingKnee'.format(**self.nameStructure),
+                kneeSlidingKnee02_CTL = Control.Control(name='{Side}__{Basename}_knee_slidingKnee_02'.format(**self.nameStructure),
                                 shape=sl.locator_shape,
                                 scale=1,
                                 parent=self.SLIDING_KNEE_MOD.INPUT_GRP,
@@ -696,8 +701,14 @@ class LimbLeg(moduleBase.ModuleBase):
         pm.parent(topJoint[0], baseJoint[0])
         pm.parent(botJoint[0], topJoint[0])
         adb.makeroot_func(baseJoint[0], 'offset', forceNameConvention = True)
-        pm.move(topJoint[0], 0, 0.6, 0, r=1, os=1, wd=1)
-        pm.move(botJoint[0], 0, -1.2, 0, r=1, os=1, wd=1)
+
+        if self.side == 'L':
+            pm.move(topJoint[0], 0, 0.6, 0, r=1, os=1, wd=1)
+            pm.move(botJoint[0], 0, -1.2, 0, r=1, os=1, wd=1)
+        else:
+            pm.move(topJoint[0], 0, -0.6, 0, r=1, os=1, wd=1)
+            pm.move(botJoint[0], 0, 1.2, 0, r=1, os=1, wd=1)
+
 
         _multDivid = pm.shadingNode('multiplyDivide', asUtility=1,  n='{}__DoubleKneeRotation__{}'.format(self.side, NC.MULTIPLY_DIVIDE_SUFFIX))
         _multDivid.input2X.set(0.5)

@@ -226,7 +226,10 @@ class LimbShoudler(moduleBase.ModuleBase):
             self.clavicule_ctrl = self.clavicule_ctrl_class.control
 
             self.clavicule_ctrl_class.addRotationOrderAttr()
-            self.clavicule_ctrl.rz.set(-45)
+            if self.side == 'L':
+                self.clavicule_ctrl.rz.set(45)
+            elif self.side == 'R':
+                self.clavicule_ctrl.rz.set(-45)
             pm.makeIdentity(self.clavicule_ctrl, n=0, s=1, r=1, t=1, apply=True, pn=1)
             adb.makeroot_func(self.clavicule_ctrl, suff='Offset', forceNameConvention=True)
             return self.clavicule_ctrl
@@ -241,8 +244,8 @@ class LimbShoudler(moduleBase.ModuleBase):
         self.shoulder_chain = Joint.Joint.point_base(*points, name='{Side}__{Basename}'.format(**self.nameStructure), chain=True, padding=2)
         self.clavicule_joint, self.shoulder_joint, = self.shoulder_chain.joints
 
-        pm.PyNode(self.clavicule_joint).rename('{Side}__{Basename}_{Parts[0]}'.format(**self.nameStructure))
-        pm.PyNode(self.shoulder_joint).rename('{Side}__{Basename}_{Parts[1]}'.format(**self.nameStructure))
+        pm.PyNode(self.clavicule_joint).rename('{Side}__{Basename}_{Parts[0]}_END'.format(**self.nameStructure))
+        pm.PyNode(self.shoulder_joint).rename('{Side}__{Basename}_{Parts[1]}_END'.format(**self.nameStructure))
         adb.AutoSuffix(self.shoulder_chain.joints)
 
         ## orient joint
@@ -255,8 +258,8 @@ class LimbShoudler(moduleBase.ModuleBase):
             self.shoulder_chain =  Joint.Joint(mirror_chain_3)
             self.clavicule_joint, self.shoulder_joint, = self.shoulder_chain.joints
 
-            pm.PyNode(self.clavicule_joint).rename('{Side}__{Basename}_{Parts[0]}'.format(**self.nameStructure))
-            pm.PyNode(self.shoulder_joint).rename('{Side}__{Basename}_{Parts[1]}'.format(**self.nameStructure))
+            pm.PyNode(self.clavicule_joint).rename('{Side}__{Basename}_{Parts[0]}_END'.format(**self.nameStructure))
+            pm.PyNode(self.shoulder_joint).rename('{Side}__{Basename}_{Parts[1]}_END'.format(**self.nameStructure))
             adb.AutoSuffix(self.shoulder_chain.joints)
         else:
             self.shoulder_chain.orientAxis = '-Y'

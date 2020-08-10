@@ -134,7 +134,7 @@ class LimbArm(moduleBase.ModuleBase):
 
         RIBBON
 
-         SLIDING KNEE
+         SLIDING elbow
              - Create control
         """
         super(LimbArm, self)._build()
@@ -149,11 +149,11 @@ class LimbArm(moduleBase.ModuleBase):
             self.col_main = indexColor['fluoRed']
             self.col_layer1 = indexColor['darkRed']
             self.pol_vector_col = (0.5, 0.000, 0.000)
-            self.sliding_knee_col = indexColor['darkRed']
+            self.sliding_elbow_col = indexColor['darkRed']
         else:
             self.col_main = indexColor['fluoBlue']
             self.col_layer1 = indexColor['blue']
-            self.sliding_knee_col = indexColor['blue']
+            self.sliding_elbow_col = indexColor['blue']
             self.pol_vector_col = (0, 0.145, 0.588)
 
         self.nameStructure = {
@@ -368,14 +368,14 @@ class LimbArm(moduleBase.ModuleBase):
             arm_IkHandle[0].v.set(0)
             self.arm_IkHandle = arm_IkHandle[0]
 
-            vec1 = self.base_arm_joints[0].getTranslation(space='world') # "hips"
-            vec2 = self.base_arm_joints[1].getTranslation(space='world') # "knee"
+            vec1 = self.base_arm_joints[0].getTranslation(space='world') # "shoulders"
+            vec2 = self.base_arm_joints[1].getTranslation(space='world') # "elbow"
             vec3 = self.base_arm_joints[2].getTranslation(space='world') # "wrist"
 
             # 1. Calculate a "nice distance" based on average of the two bone lengths.
             armLength = (vec2-vec1).length()
-            kneeLength = (vec3-vec2).length()
-            distance = (armLength + kneeLength) * 0.5
+            elbowLength = (vec3-vec2).length()
+            distance = (armLength + elbowLength) * 0.5
 
             @makeroot('')
             @changeColor('index', self.col_main)
@@ -427,14 +427,14 @@ class LimbArm(moduleBase.ModuleBase):
                     _loc = pm.spaceLocator(p= adb.getWorldTrans([self.ik_arm_joints[-2]]))
                     mc.CenterPivot()
                     pm.select(_loc, r=True)
-                    pv_base_jnt = adb.jointAtCenter()[0]
+                    self.pv_base_jnt = adb.jointAtCenter()[0]
                     pm.delete(_loc)
-                    pm.rename(pv_base_jnt, '{}__pvBase__{}'.format(self.side, NC.JOINT))
-                    pm.skinCluster(pv_base_jnt , pv_guide, pv_tip_jnt)
-                    pm.parent(pv_base_jnt, self.ik_arm_joints[1])
+                    pm.rename(self.pv_base_jnt, '{}__pvBase__{}'.format(self.side, NC.JOINT))
+                    pm.skinCluster(self.pv_base_jnt , pv_guide, pv_tip_jnt)
+                    pm.parent(self.pv_base_jnt, self.ik_arm_joints[1])
                     pm.setAttr(pv_guide.inheritsTransform, 0)
                     pm.setAttr(pv_guide.overrideDisplayType, 1)
-                    [pm.setAttr('{}.drawStyle'.format(joint),  2) for joint in [pv_tip_jnt, pv_base_jnt]]
+                    [pm.setAttr('{}.drawStyle'.format(joint),  2) for joint in [pv_tip_jnt, self.pv_base_jnt]]
                     pm.parent(pv_guide, self.ikFk_MOD.RIG_GRP)
                     return pv_guide
 
@@ -550,37 +550,37 @@ class LimbArm(moduleBase.ModuleBase):
             self.SLIDING_ELBOW_MOD.getJoints += topJoints
 
             @makeroot()
-            def hipSlidingElbow_ctrl():
-                hipSlidingElbow_CTL = Control.Control(name='{Side}__{Basename}_hip_slidingElbow'.format(**self.nameStructure),
+            def shoulderSlidingElbow_ctrl():
+                shoulderSlidingElbow_CTL = Control.Control(name='{Side}__{Basename}_{Parts[0]}_slidingElbow'.format(**self.nameStructure),
                                 shape=sl.locator_shape,
                                 scale=1,
                                 parent=self.SLIDING_ELBOW_MOD.INPUT_GRP,
                                 matchTransforms=(self.base_arm_joints[0], 1,0)
                                 ).control
-                return hipSlidingElbow_CTL
+                return shoulderSlidingElbow_CTL
 
             @makeroot()
-            def kneeSlidingElbow01_ctrl():
-                kneeSlidingElbow01_CTL = Control.Control(name='{Side}__{Basename}_knee_slidingElbow_01'.format(**self.nameStructure),
+            def elbowSlidingElbow01_ctrl():
+                elbowSlidingElbow01_CTL = Control.Control(name='{Side}__{Basename}_{Parts[1]}_slidingElbow_01'.format(**self.nameStructure),
                                 shape=sl.locator_shape,
                                 scale=1,
                                 parent=self.SLIDING_ELBOW_MOD.INPUT_GRP,
                                 matchTransforms=(self.base_arm_joints[1], 1,0)
                                 ).control
-                return kneeSlidingElbow01_CTL
+                return elbowSlidingElbow01_CTL
 
-            hipSlidingElbow_CTL = hipSlidingElbow_ctrl()[0]
-            kneeSlidingElbow01_CTL = kneeSlidingElbow01_ctrl()[0]
+            shoulderSlidingElbow_CTL = shoulderSlidingElbow_ctrl()[0]
+            elbowSlidingElbow01_CTL = elbowSlidingElbow01_ctrl()[0]
 
             pm.parent(topJointsPiston[0], self.SLIDING_ELBOW_MOD.RIG_GRP)
             pm.parent(topJointsPiston[-1], self.SLIDING_ELBOW_MOD.RIG_GRP)
 
-            pm.parentConstraint(hipSlidingElbow_CTL, topJointsPiston[0], mo=1)
-            pm.parentConstraint(kneeSlidingElbow01_CTL, topJointsPiston[-1], mo=1)
+            pm.parentConstraint(shoulderSlidingElbow_CTL, topJointsPiston[0], mo=1)
+            pm.parentConstraint(elbowSlidingElbow01_CTL, topJointsPiston[-1], mo=1)
 
             pistons_pairs = [
-                [topJointsPiston[0], topJointsPiston[1], kneeSlidingElbow01_CTL],
-                [topJointsPiston[3], topJointsPiston[2], hipSlidingElbow_CTL],
+                [topJointsPiston[0], topJointsPiston[1], elbowSlidingElbow01_CTL],
+                [topJointsPiston[3], topJointsPiston[2], shoulderSlidingElbow_CTL],
             ]
 
             ## create piston system
@@ -594,7 +594,8 @@ class LimbArm(moduleBase.ModuleBase):
             for jnt in topJoints:
                 adb.matrixConstraint(str(self.base_arm_joints[0]), str(jnt), channels='rs', mo=True)
 
-            return hipSlidingElbow_CTL, kneeSlidingElbow01_CTL
+            pm.parent(self.pv_base_jnt, elbowSlidingElbow01_CTL)
+            return shoulderSlidingElbow_CTL, elbowSlidingElbow01_CTL
 
 
         def createLowerPart():
@@ -612,18 +613,18 @@ class LimbArm(moduleBase.ModuleBase):
             self.SLIDING_ELBOW_MOD.getJoints += lowerJoints
 
             @makeroot()
-            def kneeSlidingElbow02_ctrl():
-                kneeSlidingElbow02_CTL = Control.Control(name='{Side}__{Basename}_knee_slidingElbow'.format(**self.nameStructure),
+            def elbowSlidingElbow02_ctrl():
+                elbowSlidingElbow02_CTL = Control.Control(name='{Side}__{Basename}_{Parts[1]}_slidingElbow_02'.format(**self.nameStructure),
                                 shape=sl.locator_shape,
                                 scale=1,
                                 parent=self.SLIDING_ELBOW_MOD.INPUT_GRP,
                                 matchTransforms=(self.base_arm_joints[1], 1,0)
                                 ).control
-                return kneeSlidingElbow02_CTL
+                return elbowSlidingElbow02_CTL
 
             @makeroot()
             def wristSlidingElbow_ctrl():
-                wristSlidingElbow_CTL = Control.Control(name='{Side}__{Basename}_wrist_slidingElbow_01'.format(**self.nameStructure),
+                wristSlidingElbow_CTL = Control.Control(name='{Side}__{Basename}_{Parts[2]}_slidingElbow'.format(**self.nameStructure),
                                 shape=sl.locator_shape,
                                 scale=1,
                                 parent=self.SLIDING_ELBOW_MOD.INPUT_GRP,
@@ -631,18 +632,18 @@ class LimbArm(moduleBase.ModuleBase):
                                 ).control
                 return wristSlidingElbow_CTL
 
-            kneeSlidingElbow02_CTL = kneeSlidingElbow02_ctrl()[0]
+            elbowSlidingElbow02_CTL = elbowSlidingElbow02_ctrl()[0]
             wristSlidingElbow_CTL = wristSlidingElbow_ctrl()[0]
 
             pm.parent(lowerJointsPiston[0], self.SLIDING_ELBOW_MOD.RIG_GRP)
             pm.parent(lowerJointsPiston[-1], self.SLIDING_ELBOW_MOD.RIG_GRP)
 
-            pm.parentConstraint(kneeSlidingElbow02_CTL, lowerJointsPiston[0], mo=1)
+            pm.parentConstraint(elbowSlidingElbow02_CTL, lowerJointsPiston[0], mo=1)
             pm.parentConstraint(wristSlidingElbow_CTL, lowerJointsPiston[-1], mo=1)
 
             pistons_pairs = [
                 [lowerJointsPiston[0], lowerJointsPiston[1], wristSlidingElbow_CTL],
-                [lowerJointsPiston[3], lowerJointsPiston[2], kneeSlidingElbow02_CTL],
+                [lowerJointsPiston[3], lowerJointsPiston[2], elbowSlidingElbow02_CTL],
             ]
 
             for pairs in pistons_pairs:
@@ -657,27 +658,27 @@ class LimbArm(moduleBase.ModuleBase):
 
             pm.delete(lowLocs)
 
-            return kneeSlidingElbow02_CTL, wristSlidingElbow_CTL
+            return elbowSlidingElbow02_CTL, wristSlidingElbow_CTL
 
         ## BUILD
         ##-------------
-        hipSlidingElbow_CTL, kneeSlidingElbow01_CTL = createUpperPart()
-        kneeSlidingElbow02_CTL, wristSlidingElbow_CTL = createLowerPart()
+        shoulderSlidingElbow_CTL, elbowSlidingElbow01_CTL = createUpperPart()
+        elbowSlidingElbow02_CTL, wristSlidingElbow_CTL = createLowerPart()
 
-        [self.SLIDING_ELBOW_MOD.getControls.append(ctl) for ctl in [hipSlidingElbow_CTL, kneeSlidingElbow01_CTL, kneeSlidingElbow02_CTL, wristSlidingElbow_CTL]]
-        [ctl.v.set(0) for ctl in self.SLIDING_ELBOW_MOD.getControls if ctl is not kneeSlidingElbow01_CTL]
-        pm.parent(kneeSlidingElbow02_CTL.getParent(), kneeSlidingElbow01_CTL)
-        kneeSlidingElbow01_CTL.v.set(0)
+        [self.SLIDING_ELBOW_MOD.getControls.append(ctl) for ctl in [shoulderSlidingElbow_CTL, elbowSlidingElbow01_CTL, elbowSlidingElbow02_CTL, wristSlidingElbow_CTL]]
+        [ctl.v.set(0) for ctl in self.SLIDING_ELBOW_MOD.getControls if ctl is not elbowSlidingElbow01_CTL]
+        pm.parent(elbowSlidingElbow02_CTL.getParent(), elbowSlidingElbow01_CTL)
+        elbowSlidingElbow01_CTL.v.set(0)
         pm.parent(self.SLIDING_ELBOW_MOD.getJoints, self.SLIDING_ELBOW_MOD.OUTPUT_GRP)
 
         pm.parent(self.SLIDING_ELBOW_MOD.MOD_GRP, self.RIG.MODULES_GRP)
 
-        self.SLIDING_ELBOW_MOD.getControls.append(kneeSlidingElbow01_CTL)
-        self.SLIDING_ELBOW_MOD.getResetControls.append(kneeSlidingElbow01_CTL.getParent())
+        self.SLIDING_ELBOW_MOD.getControls.append(elbowSlidingElbow01_CTL)
+        self.SLIDING_ELBOW_MOD.getResetControls.append(elbowSlidingElbow01_CTL.getParent())
 
         ## CONNECT
         ##--------------
-        for jnt, ctl in zip(self.base_arm_joints, [hipSlidingElbow_CTL, kneeSlidingElbow01_CTL, wristSlidingElbow_CTL]):
+        for jnt, ctl in zip(self.base_arm_joints, [shoulderSlidingElbow_CTL, elbowSlidingElbow01_CTL, wristSlidingElbow_CTL]):
             pm.parentConstraint(jnt, ctl.getParent(), mo=True)
 
         moduleBase.ModuleBase.setupVisRule([self.SLIDING_ELBOW_MOD.OUTPUT_GRP, self.SLIDING_ELBOW_MOD.RIG_GRP], self.SLIDING_ELBOW_MOD.VISRULE_GRP, '{Side}__{Basename}_SlidingElbow_JNT__{Suffix}'.format(**self.nameStructure), False)
@@ -1175,7 +1176,7 @@ class LimbArm(moduleBase.ModuleBase):
 
 L_arm = LimbArm(module_name='L__Arm')
 L_arm.build(['L__arm_guide', 'L__elbow_guide', 'L__wrist_guide'])
-L_arm.connect(builderShoulder = (False, ['L__clavicule_guide', 'L__shoulder_guide']))
+L_arm.connect(builderShoulder = (True, ['L__clavicule_guide', 'L__shoulder_guide']))
 
 # R_arm = LimbArm(module_name='R__Arm')
 # R_arm.build(['R__shoulder_guide', 'R__elbow_guide', 'R__wrist_guide'])
