@@ -1748,6 +1748,7 @@ class Adbrower(object):
         """
         Add the correct suffix according to the type
         """
+        new_subject = []
         for name in subject:
             try:
                 _type = pm.objectType(pm.PyNode(name).getShape())
@@ -1772,11 +1773,19 @@ class Adbrower(object):
                                 else:
                                     pass
                     new_index = getIndex()
-                    pm.PyNode(name).rename((str(name)).replace((str(name).split('__')[new_index]), suffixDic[_type]).replace(
-                        '____', '__').replace('___', '__').replace('hi_msh__', '').replace('proxy_msh__', ''))
+                    new_name = (str(name)).replace((str(name).split('__')[new_index]), suffixDic[_type]).replace(
+                        '____', '__').replace('___', '__').replace('hi_msh__', '').replace('proxy_msh__', '')
+                    
+                    pm.PyNode(name).rename(new_name)
+                    new_subject.append(new_name)
                 except:
-                    pm.PyNode(name).rename((str(name) + suffixDic[_type]).replace('____', '__').replace(
-                        '___', '__').replace('hi_msh__', '').replace('proxy_msh__', ''))
+                    new_name = (str(name) + suffixDic[_type]).replace('____', '__').replace(
+                        '___', '__').replace('hi_msh__', '').replace('proxy_msh__', '')
+                    
+                    pm.PyNode(name).rename(new_name)
+                    new_subject.append(new_name)
+        
+        return new_subject
 
 
     def renameOutputs(self, _type='', suffix=''):
