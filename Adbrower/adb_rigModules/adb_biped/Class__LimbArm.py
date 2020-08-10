@@ -6,6 +6,7 @@
 #     audreydb23@gmail.com
 # ------------------------------------------------------
 
+import json
 import sys
 import os
 
@@ -82,6 +83,12 @@ class LimbArmModel(moduleBase.ModuleBaseModel):
         pass
 
 DATA_WEIGHT_PATH = 'C:/Users/Audrey/Documents/maya/projects/Roller_Rigging_Project/data/skinWeights/'
+CONFIG_PATH = 'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_rigModules/adb_biped'
+
+os.chdir(CONFIG_PATH)
+with open("LimbConfig.json", "r") as f:
+    LIMB_CONFIG = json.load(f)
+
 
 class LimbArm(moduleBase.ModuleBase):
     """
@@ -359,7 +366,7 @@ class LimbArm(moduleBase.ModuleBase):
             return FkShapeSetup.controls
 
 
-        def CreateIKcontrols(Ikshape = sl.cube_shape, exposant=1, pvShape = sl.ball_shape):
+        def CreateIKcontrols():
             """
             Create the IK handle setup on the IK joint chain
             """
@@ -382,8 +389,8 @@ class LimbArm(moduleBase.ModuleBase):
             def Ik_ctrl():
                 self.nameStructure['Suffix'] = NC.CTRL
                 _arm_IkHandle_ctrl = Control.Control(name='{Side}__{Basename}_IK__{Suffix}'.format(**self.nameStructure),
-                                                 shape = Ikshape,
-                                                 scale=0.8,
+                                                 shape=sl.sl[LIMB_CONFIG['CONTROLS']['IK_Control']['shape']],
+                                                 scale=LIMB_CONFIG['CONTROLS']['IK_Control']['scale'],
                                                  matchTransforms = (self.ik_arm_joints[-1], 1,0),
                                                  ).control
                 adb.addRotationOrderAttr(_arm_IkHandle_ctrl)
@@ -396,8 +403,8 @@ class LimbArm(moduleBase.ModuleBase):
             @changeColor('index', self.col_main)
             def Ik_ctrl_offset():
                 _arm_IkHandle_ctrl_offset = Control.Control(name='{Side}__{Basename}_IK_offset__{Suffix}'.format(**self.nameStructure),
-                                 shape = Ikshape,
-                                 scale = 0.6,
+                                 shape = sl.sl[LIMB_CONFIG['CONTROLS']['IK_Control_Offset']['shape']],
+                                 scale = LIMB_CONFIG['CONTROLS']['IK_Control_Offset']['scale'],
                                  parent = self.arm_IkHandle_ctrl,
                                  matchTransforms = (self.ik_arm_joints[-1], 1, 0),
                                  ).control
@@ -410,10 +417,11 @@ class LimbArm(moduleBase.ModuleBase):
             @changeColor('rgb', col = self.pol_vector_col)
             @makeroot()
             def pole_vector_ctrl(name ='{Side}__{Basename}_PoleVector__{Suffix}'.format(**self.nameStructure)):
-                pv_guide = adb.PvGuide(arm_IkHandle[0],self.ik_arm_joints[-2], exposant=exposant*distance)
-                self.poleVectorCtrl = pvShape()
-
-                pm.rename(self.poleVectorCtrl,name)
+                pv_guide = adb.PvGuide(arm_IkHandle[0],self.ik_arm_joints[-2], exposant=LIMB_CONFIG['CONTROLS']['PoleVector_Control']['exposant']*distance)
+                self.poleVectorCtrl = Control.Control(name=name,
+                                 shape = sl.sl[LIMB_CONFIG['CONTROLS']['PoleVector_Control']['shape']],
+                                 scale = LIMB_CONFIG['CONTROLS']['PoleVector_Control']['scale'],
+                                 ).control
                 last_point = pm.PyNode(pv_guide).getCVs()
                 pm.move(self.poleVectorCtrl,last_point[-1])
                 pm.poleVectorConstraint(self.poleVectorCtrl, arm_IkHandle[0], weight=1)
@@ -552,8 +560,8 @@ class LimbArm(moduleBase.ModuleBase):
             @makeroot()
             def shoulderSlidingElbow_ctrl():
                 shoulderSlidingElbow_CTL = Control.Control(name='{Side}__{Basename}_{Parts[0]}_slidingElbow'.format(**self.nameStructure),
-                                shape=sl.locator_shape,
-                                scale=1,
+                                shape=sl.sl[LIMB_CONFIG['CONTROLS']['Sliding_Elbow_Shoulder']['shape']],
+                                scale=LIMB_CONFIG['CONTROLS']['Sliding_Elbow_Shoulder']['scale'],
                                 parent=self.SLIDING_ELBOW_MOD.INPUT_GRP,
                                 matchTransforms=(self.base_arm_joints[0], 1,0)
                                 ).control
@@ -562,8 +570,8 @@ class LimbArm(moduleBase.ModuleBase):
             @makeroot()
             def elbowSlidingElbow01_ctrl():
                 elbowSlidingElbow01_CTL = Control.Control(name='{Side}__{Basename}_{Parts[1]}_slidingElbow_01'.format(**self.nameStructure),
-                                shape=sl.locator_shape,
-                                scale=1,
+                                shape=sl.sl[LIMB_CONFIG['CONTROLS']['Sliding_Elbow_Elbow_01']['shape']],
+                                scale=LIMB_CONFIG['CONTROLS']['Sliding_Elbow_Elbow_01']['scale'],
                                 parent=self.SLIDING_ELBOW_MOD.INPUT_GRP,
                                 matchTransforms=(self.base_arm_joints[1], 1,0)
                                 ).control
@@ -615,8 +623,8 @@ class LimbArm(moduleBase.ModuleBase):
             @makeroot()
             def elbowSlidingElbow02_ctrl():
                 elbowSlidingElbow02_CTL = Control.Control(name='{Side}__{Basename}_{Parts[1]}_slidingElbow_02'.format(**self.nameStructure),
-                                shape=sl.locator_shape,
-                                scale=1,
+                                shape=sl.sl[LIMB_CONFIG['CONTROLS']['Sliding_Elbow_Elbow_02']['shape']],
+                                scale=LIMB_CONFIG['CONTROLS']['Sliding_Elbow_Elbow_02']['scale'],
                                 parent=self.SLIDING_ELBOW_MOD.INPUT_GRP,
                                 matchTransforms=(self.base_arm_joints[1], 1,0)
                                 ).control
@@ -625,8 +633,8 @@ class LimbArm(moduleBase.ModuleBase):
             @makeroot()
             def wristSlidingElbow_ctrl():
                 wristSlidingElbow_CTL = Control.Control(name='{Side}__{Basename}_{Parts[2]}_slidingElbow'.format(**self.nameStructure),
-                                shape=sl.locator_shape,
-                                scale=1,
+                                shape=sl.sl[LIMB_CONFIG['CONTROLS']['Sliding_Elbow_Wrist']['shape']],
+                                scale=LIMB_CONFIG['CONTROLS']['Sliding_Elbow_Wrist']['scale'],
                                 parent=self.SLIDING_ELBOW_MOD.INPUT_GRP,
                                 matchTransforms=(self.base_arm_joints[2], 1,0)
                                 ).control
@@ -692,8 +700,8 @@ class LimbArm(moduleBase.ModuleBase):
         @makeroot()
         def doubleElbow_ctrl():
             doubleElbow_ctrl = Control.Control(name='{Side}__{Basename}_DoubleElbow'.format(**self.nameStructure),
-                            shape=sl.locator_shape,
-                            scale=1,
+                            shape=sl.sl[LIMB_CONFIG['CONTROLS']['Double_Elbow']['shape']],
+                            scale=LIMB_CONFIG['CONTROLS']['Double_Elbow']['scale'],
                             parent=self.DOUBLE_ELBOW_MOD.INPUT_GRP,
                             matchTransforms=(baseJoint, 1,0),
                             color = ('index', self.col_layer1)
@@ -889,8 +897,8 @@ class LimbArm(moduleBase.ModuleBase):
         arm_folli_lower.getResetControls[0].v.set(0)
         arm_folli_upper.getResetControls[-1].v.set(0)
 
-        moduleBase.ModuleBase.setupVisRule([self.RIBBON_MOD.OUTPUT_GRP], self.RIBBON_MOD.VISRULE_GRP, '{Side}__{Basename}_Ribbon_JNT__{Suffix}'.format(**self.nameStructure), True)
-        moduleBase.ModuleBase.setupVisRule([self.RIBBON_MOD.INPUT_GRP], self.RIBBON_MOD.VISRULE_GRP, '{Side}__{Basename}_Ribbon_CTRL__{Suffix}'.format(**self.nameStructure), False)
+        moduleBase.ModuleBase.setupVisRule([self.RIBBON_MOD.OUTPUT_GRP], self.RIBBON_MOD.VISRULE_GRP, '{Side}__{Basename}_Macro_JNT__{Suffix}'.format(**self.nameStructure), True)
+        moduleBase.ModuleBase.setupVisRule([self.RIBBON_MOD.INPUT_GRP], self.RIBBON_MOD.VISRULE_GRP, '{Side}__{Basename}_Macro_CTRL__{Suffix}'.format(**self.nameStructure), False)
         self.RIBBON_MOD.RIG_GRP.v.set(0)
 
         for each in [arm_folli_upper_end, arm_folli_lower_end]:
@@ -941,17 +949,16 @@ class LimbArm(moduleBase.ModuleBase):
     def setup_VisibilityGRP(self):
         visGrp = adbAttr.NodeAttr([self.RIG.VISIBILITY_GRP])
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Joints')
-        visGrp.addAttr('IK_JNT', True)
-        visGrp.addAttr('FK_JNT', True)
-        visGrp.addAttr('Result_JNT', True)
-        visGrp.addAttr('Ribbon_JNT', False)
+        visGrp.addAttr('IK_JNT', LIMB_CONFIG['VISRULES']['IK_JNT'])
+        visGrp.addAttr('FK_JNT', LIMB_CONFIG['VISRULES']['FK_JNT'])
+        visGrp.addAttr('Result_JNT', LIMB_CONFIG['VISRULES']['Result_JNT'])
+        visGrp.addAttr('Macro_JNT', LIMB_CONFIG['VISRULES']['Macro_JNT'])
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Controls')
-        visGrp.addAttr('IK_CTRL', True)
-        visGrp.addAttr('IK_Offset_CTRL', False)
-        visGrp.addAttr('IK_PoleVector_CTRL', True)
-        visGrp.addAttr('FK_CTRL', True)
-        visGrp.addAttr('DoubleElbow_CTRL', False)
-        visGrp.addAttr('Ribbon_CTRL', False)
+        visGrp.addAttr('IK_CTRL', LIMB_CONFIG['VISRULES']['IK_CTRL'])
+        visGrp.addAttr('IK_Offset_CTRL', LIMB_CONFIG['VISRULES']['IK_Offset_CTRL'])
+        visGrp.addAttr('IK_PoleVector_CTRL', LIMB_CONFIG['VISRULES']['IK_PoleVector_CTRL'])
+        visGrp.addAttr('FK_CTRL', LIMB_CONFIG['VISRULES']['FK_CTRL'])
+        visGrp.addAttr('Macro_CTRL', LIMB_CONFIG['VISRULES']['Macro_CTRL'])
 
         for attr in visGrp.allAttrs.keys():
             for module in self.BUILD_MODULES:
@@ -1174,9 +1181,9 @@ class LimbArm(moduleBase.ModuleBase):
 # BUILD
 # =========================
 
-L_arm = LimbArm(module_name='L__Arm')
-L_arm.build(['L__arm_guide', 'L__elbow_guide', 'L__wrist_guide'])
-L_arm.connect(builderShoulder = (True, ['L__clavicule_guide', 'L__shoulder_guide']))
+# L_arm = LimbArm(module_name='L__Arm')
+# L_arm.build(['L__arm_guide', 'L__elbow_guide', 'L__wrist_guide'])
+# L_arm.connect(builderShoulder = (True, ['L__clavicule_guide', 'L__shoulder_guide']))
 
 # R_arm = LimbArm(module_name='R__Arm')
 # R_arm.build(['R__shoulder_guide', 'R__elbow_guide', 'R__wrist_guide'])
