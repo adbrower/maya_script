@@ -353,17 +353,17 @@ class LimbArm(moduleBase.ModuleBase):
 
         @changeColor('index', col = self.col_main)
         @lockAttr(att_to_lock=['tx', 'ty', 'tz'])
-        def CreateFkcontrols(radius = 3,
-                    normalsCtrl=(0,1,0)):
+        def CreateFkcontrols():
             """Creates the FK controls on the Fk joint chain """
-            FkShapeSetup = adbFKShape.FkShape(self.fk_arm_joints)
-            FkShapeSetup.shapeSetup(radius, normalsCtrl)
-            [adb.addRotationOrderAttr(ctrl) for ctrl in FkShapeSetup.controls]
+            FkShapeSetup = Control.Control.fkShape(joints=self.fk_arm_joints, 
+                                                    shape=sl.sl[LIMB_CONFIG['CONTROLS']['FK_Control']['shape']],
+                                                    scale=LIMB_CONFIG['CONTROLS']['FK_Control']['scale'],
+                                                    )
 
-            shapes = [ctl.getShape() for ctl in FkShapeSetup.controls]
+            shapes = [ctl.getShape() for ctl in FkShapeSetup]
             self.nameStructure['Suffix'] = NC.VISRULE
             visRuleGrp, attribute = moduleBase.ModuleBase.setupVisRule(shapes, self.ikFk_MOD.VISRULE_GRP, name='{Side}__{Basename}_Fk_CTRL__{Suffix}'.format(**self.nameStructure))
-            return FkShapeSetup.controls
+            return FkShapeSetup
 
 
         def CreateIKcontrols():

@@ -315,10 +315,7 @@ class LimbLeg(moduleBase.ModuleBase):
             pm.connectAttr('{}.{}'.format(visRuleGrp, attribute), '{}.inputValue'.format(_remapValue))
             for bone in self.fk_leg_joints:
                 pm.connectAttr('{}.outValue'.format(_remapValue), '{}.drawStyle'.format(bone))
-
             pm.parent(self.fk_leg_joints[0], self.ikFk_MOD.RIG_GRP)
-
-
             return self.fk_leg_joints
 
 
@@ -347,16 +344,17 @@ class LimbLeg(moduleBase.ModuleBase):
             self.ikfk_ctrl.addAttr('IK_FK_Switch', keyable=True, attributeType='enum', en="IK:FK")
 
         @changeColor('index', col = self.col_main )
-        def CreateFkcontrols(radius = 3,
-                    normalsCtrl=(0,1,0)):
+        def CreateFkcontrols():
             """Creates the FK controls on the Fk joint chain """
-            FkShapeSetup = adbFKShape.FkShape(self.fk_leg_joints)
-            FkShapeSetup.shapeSetup(radius, normalsCtrl)
+            FkShapeSetup = Control.Control.fkShape(joints=self.fk_leg_joints, 
+                                                    shape=sl.sl[LIMB_CONFIG['CONTROLS']['FK_Control']['shape']],
+                                                    scale=LIMB_CONFIG['CONTROLS']['FK_Control']['scale'],
+                                                    )
 
-            shapes = [ctl.getShape() for ctl in FkShapeSetup.controls]
+            shapes = [ctl.getShape() for ctl in FkShapeSetup]
             self.nameStructure['Suffix'] = NC.VISRULE
             visRuleGrp, attribute = moduleBase.ModuleBase.setupVisRule(shapes, self.ikFk_MOD.VISRULE_GRP, name='{Side}__{Basename}_Fk_CTRL__{Suffix}'.format(**self.nameStructure))
-            return FkShapeSetup.controls
+            return FkShapeSetup
 
 
         def CreateIKcontrols():
