@@ -1,0 +1,125 @@
+{
+    "VISRULES" : {
+        "IK_JNT" : false,
+        "FK_JNT" : false,
+        "Result_JNT" : true,
+        "DoubleKnee_JNT" : true,
+        "DoubleElbow_JNT" : true,
+        "Macro_JNT" : true,
+        "IK_CTRL": true,
+        "IK_Offset_CTRL": false,
+        "IK_PoleVector_CTRL": true,
+        "FK_CTRL": true,
+        "DoubleKnee_CTRL": false,
+        "DoubleElbow_CTRL": false,
+        "Macro_CTRL": false
+    },
+    "ATTRIBUTES":{
+        "StretchyLimb": true
+        },
+    "CONTROLS":{
+        "IK_Control":{
+            "shape": "cube_shape",
+            "scale": 1
+        },
+        "IK_Control_Offset":{
+            "shape": "cube_shape",
+            "scale": 0.8
+        },
+        "FK_Control":{
+            "shape": "circleY_shape",
+            "scale": 2
+        },
+        "PoleVector_Control":{
+            "shape": "ball_shape",
+            "scale": 0.5,
+            "exposant": 1.0
+        },
+        "Sliding_Knee_Hip":{
+            "shape": "locator_shape",
+            "scale": 1
+        },
+        "Sliding_Knee_Knee_01":{
+            "shape": "locator_shape",
+            "scale": 1
+        },
+        "Sliding_Knee_Knee_02":{
+            "shape": "locator_shape",
+            "scale": 1
+        },
+        "Sliding_Knee_ankle":{
+            "shape": "locator_shape",
+            "scale": 1
+        },
+        "Double_Knee":{
+            "shape": "locator_shape",
+            "scale": 2
+        },
+        "Sliding_Elbow_Shoulder":{
+            "shape": "locator_shape",
+            "scale": 1
+        },
+        "Sliding_Elbow_Elbow_01":{
+            "shape": "locator_shape",
+            "scale": 1
+        },
+        "Sliding_Elbow_Elbow_02":{
+            "shape": "locator_shape",
+            "scale": 1
+        },
+        "Sliding_Elbow_Wrist":{
+            "shape": "locator_shape",
+            "scale": 1
+        },
+        "Double_Elbow":{
+            "shape": "locator_shape",
+            "scale": 2
+        },
+        "Clavicule":{
+            "shape": "pinY_shape",
+            "scale": 1
+        },
+        "Shoulder":{
+            "shape": "ball_shape",
+            "scale": 1
+        },
+        "Foot":{
+            "shape": "foot_shape",
+            "scale": 2
+        },
+        "Foot_Ball":{
+            "shape": "pinX_shape",
+            "scale": 1
+        },
+        "Foot_Heel":{
+            "shape": "ball2_shape",
+            "scale": 0.6
+        },
+        "Foot_Toe":{
+            "shape": "ball2_shape",
+            "scale": 0.4
+        },
+        "Foot_ToeBend":{
+            "shape": "cylinder_shape",
+            "scale": 0.4
+        }
+    },
+    "JOINTS":{
+        "Result_JNT":{
+            "radius": 6
+        },
+        "IK_JNT":{
+            "radius": 4
+        },
+        "FK_JNT":{
+            "radius": 3
+        },
+        "Follicule_JNT":{
+            "radius": 0.5
+        },
+        "Macro_JNT":{
+            "radius": 2
+        }
+    }
+
+}
