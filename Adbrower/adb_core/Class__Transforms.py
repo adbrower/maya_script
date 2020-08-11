@@ -395,3 +395,23 @@ class Transform(adbAttr.NodeAttr):
                 result.append(elem)
         return result
 
+    @undo
+    def findDeformer(self, deformerType='wrap'):
+        """
+        Find the blendShape from a string
+        @param _tranformToCheck: Needs to be a String!!
+        """
+        result = []
+        if not (pm.objExists(self.transform)):
+            return result
+
+        validList = mel.eval(
+            'findRelatedDeformer("' + str(self.transform) + '")')
+
+        if validList is None:
+            return result
+
+        for elem in validList:
+            if pm.nodeType(elem) == deformerType:
+                result.append(elem)
+        return result

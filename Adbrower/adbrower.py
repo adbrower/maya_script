@@ -516,6 +516,29 @@ class Adbrower(object):
         def __init__():
             pass
 
+
+    @staticmethod
+    def findDeformer(_tranformToCheck, deformerType='wrap'):
+        """
+        Find the blendShape from a string
+        @param _tranformToCheck: Needs to be a String!!
+        """
+        result = []
+        if not (pm.objExists(_tranformToCheck)):
+            return result
+
+        validList = mel.eval(
+            'findRelatedDeformer("' + str(_tranformToCheck) + '")')
+
+        if validList is None:
+            return result
+
+        for elem in validList:
+            if pm.nodeType(elem) == deformerType:
+                result.append(elem)
+        return result
+
+
     @undo
     def findBlendShape(self, _tranformToCheck):
         """
@@ -802,14 +825,16 @@ class Adbrower(object):
         pm.rename(end_point_loc, '{}_Dist_loc__'.format(distObjs_LIST_QDT[1]))
         pm.matchTransform(start_point_loc, distObjs_LIST_QDT[0])
         pm.matchTransform(end_point_loc, distObjs_LIST_QDT[1])
-        pm.parent(start_point_loc, distObjs_LIST_QDT[0])
-        pm.parent(end_point_loc, distObjs_LIST_QDT[1])
+        pm.parentConstraint(distObjs_LIST_QDT[0], start_point_loc)
+        pm.parentConstraint(distObjs_LIST_QDT[1], end_point_loc)
 
         if pm.objExists('dist_GRP'):
             pm.parent(distanceNode, 'dist_GRP')
         else:
             pm.group(n='dist_GRP', w=True, em=True)
             pm.parent(distanceNode, 'dist_GRP')
+            pm.parent(start_point_loc, 'dist_GRP')
+            pm.parent(end_point_loc, 'dist_GRP')
         return distanceNode
 
     def connect_sameAttr(self, driver, target, att_to_connect=['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz']):
