@@ -6,6 +6,7 @@
 #     audreydb23@gmail.com
 # ------------------------------------------------------
 
+import json
 import sys
 import os
 
@@ -38,23 +39,23 @@ import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
 
 import adb_rigModules.RigBase as RigBase
 
-reload(adbrower)
-reload(sl)
-reload(Joint)
-reload(RigBase)
-reload(adbAttr)
-reload(adbFKShape)
-reload(NC)
-reload(moduleBase)
-reload(adbIkStretch)
-reload(Control)
-reload(locGen)
-reload(adbPiston)
-reload(Locator)
-reload(adbFolli)
-reload(adbRibbon)
-reload(SpaceSwitch)
-reload(PoseReader)
+# reload(adbrower)
+# reload(sl)
+# reload(Joint)
+# reload(RigBase)
+# reload(adbAttr)
+# reload(adbFKShape)
+# reload(NC)
+# reload(moduleBase)
+# reload(adbIkStretch)
+# reload(Control)
+# reload(locGen)
+# reload(adbPiston)
+# reload(Locator)
+# reload(adbFolli)
+# reload(adbRibbon)
+# reload(SpaceSwitch)
+# reload(PoseReader)
 
 #-----------------------------------
 #  DECORATORS
@@ -100,19 +101,25 @@ class LimbShoudlerModel(moduleBase.ModuleBaseModel):
         pass
 
 DATA_WEIGHT_PATH = 'C:/Users/Audrey/Documents/maya/projects/Roller_Rigging_Project/data/skinWeights/'
+CONFIG_PATH = 'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_rigModules/adb_biped'
 
+os.chdir(CONFIG_PATH)
+with open("BipedConfig.json", "r") as f:
+    BIPED_CONFIG = json.load(f)
 
 class LimbShoudler(moduleBase.ModuleBase):
     """
     """
     def __init__(self,
                  module_name=None,
+                 config = BIPED_CONFIG
                 ):
         super(LimbShoudler, self).__init__('')
 
         self.nameStructure = None
         self._MODEL = LimbShoudlerModel()
         self.NAME = module_name
+        self.config = config
 
 
     def __repr__(self):
@@ -168,13 +175,19 @@ class LimbShoudler(moduleBase.ModuleBase):
         self.create_clavicule_ctrl()
         self.createJoints()
         self.ikSetup()
-        self.autoClavicule()
+        self.autoClavicule(
+                      arm_ik_joints = ['{Side}__Arm_Ik_Shoulder__JNT'.format(**self.nameStructure), '{Side}__Arm_Ik_Elbow__JNT'.format(**self.nameStructure), '{Side}__Arm_Ik_Wrist__JNT'.format(**self.nameStructure)],
+                      poleVector_ctl = '{Side}__Arm_PoleVector__CTRL'.format(**self.nameStructure),
+                      arm_ik_offset_ctrl = '{Side}__Arm_IK_offset__CTRL'.format(**self.nameStructure)
+                      )
+
 
 
     def connect(self,
-                 arm_result_joint = 'L__Arm_Result_Shoulder__JNT',
-                 arm_ik_joint = 'L__Arm_Ik_Shoulder__JNT',
-                 arm_fk_joint_parent = 'L__Arm_Fk_Shoulder_root__GRP'):
+                 arm_result_joint = [],
+                 arm_ik_joint = [] ,
+                 arm_fk_joint_parent = []
+                ):
 
         super(LimbShoudler, self)._connect()
 
@@ -217,8 +230,8 @@ class LimbShoudler(moduleBase.ModuleBase):
         def create_ctrl():
             self.nameStructure['Suffix'] = NC.CTRL
             self.clavicule_ctrl_class = Control.Control(name='{Side}__{Basename}_{Parts[0]}__{Suffix}'.format(**self.nameStructure),
-                                                shape = sl.pinX_shape,
-                                                scale=2,
+                                                shape = sl.sl[self.config['CONTROLS']['Clavicule']['shape']],
+                                                scale=self.config['CONTROLS']['Clavicule']['scale'],
                                                 matchTransforms = (self.starter_Shoulder[0], 1,0),
                                                 parent=self.shoulder_MOD.INPUT_GRP
                                                 )
@@ -227,9 +240,9 @@ class LimbShoudler(moduleBase.ModuleBase):
 
             self.clavicule_ctrl_class.addRotationOrderAttr()
             if self.side == 'L':
-                self.clavicule_ctrl.rz.set(45)
+                self.clavicule_ctrl.rz.set(self.config['CONTROLS']['Clavicule']['rotation_degree']*-1)
             elif self.side == 'R':
-                self.clavicule_ctrl.rz.set(-45)
+                self.clavicule_ctrl.rz.set(self.config['CONTROLS']['Clavicule']['rotation_degree'])
             pm.makeIdentity(self.clavicule_ctrl, n=0, s=1, r=1, t=1, apply=True, pn=1)
             adb.makeroot_func(self.clavicule_ctrl, suff='Offset', forceNameConvention=True)
             return self.clavicule_ctrl
@@ -280,8 +293,8 @@ class LimbShoudler(moduleBase.ModuleBase):
         def create_ik_ctrl():
             self.nameStructure['Suffix'] = NC.CTRL
             self.shoulder_ik_ctrl_class = Control.Control(name='{Side}__{Basename}_{Parts[1]}__{Suffix}'.format(**self.nameStructure),
-                                                shape = sl.ball_shape,
-                                                scale=0.7,
+                                                shape=sl.sl[self.config['CONTROLS']['Shoulder']['shape']],
+                                                scale=self.config['CONTROLS']['Shoulder']['scale'],
                                                 matchTransforms = (self.starter_Shoulder[1], 1,0),
                                                 parent=self.shoulder_MOD.INPUT_GRP
                                                 )
@@ -301,12 +314,12 @@ class LimbShoudler(moduleBase.ModuleBase):
 
 
     def autoClavicule(self,
-                      arm_ik_joints = ['L__Arm_Ik_Shoulder__JNT', 'L__Arm_Ik_Elbow__JNT', 'L__Arm_Ik_Wrist__JNT'],
-                      poleVector_ctl = 'L__Arm_PoleVector__CTRL',
-                      arm_ik_offset_ctrl = 'L__Arm_IK_offset__CTRL',
+                      arm_ik_joints = [],
+                      poleVector_ctl = [],
+                      arm_ik_offset_ctrl = [],
                         ):
 
-        
+
         self.AUTO_CLAVICULE_MOD = moduleBase.ModuleBase()
         self.AUTO_CLAVICULE_MOD._start('{Side}__AutoClavicule'.format(**self.nameStructure) ,_metaDataNode = 'transform')
         self.BUILD_MODULES += [self.AUTO_CLAVICULE_MOD]
@@ -351,10 +364,17 @@ class LimbShoudler(moduleBase.ModuleBase):
             self.nameStructure['Suffix'] = NC.REMAP_COLOR_SUFFIX
             autoShoulder_remapNode  = pm.shadingNode('remapColor', au=True, n='{Side}__Auto{Basename}__{Suffix}'.format(**self.nameStructure))
 
-            autoShoulder_remapNode.inputMin.set(-90)
-            autoShoulder_remapNode.inputMax.set(90)
-            autoShoulder_remapNode.outputMin.set(-45)
-            autoShoulder_remapNode.outputMax.set(45)
+            if self.side == 'L':
+                autoShoulder_remapNode.inputMin.set(-90)
+                autoShoulder_remapNode.inputMax.set(90)
+                autoShoulder_remapNode.outputMin.set(-45)
+                autoShoulder_remapNode.outputMax.set(45)
+            elif self.side == 'R':
+                autoShoulder_remapNode.inputMin.set(90)
+                autoShoulder_remapNode.inputMax.set(-90)
+                autoShoulder_remapNode.outputMin.set(45)
+                autoShoulder_remapNode.outputMax.set(-45)
+
 
             for color in AUTO_CLAVICULE_CONFIG.keys():
                 for points in AUTO_CLAVICULE_CONFIG[color].keys():
@@ -363,10 +383,10 @@ class LimbShoudler(moduleBase.ModuleBase):
                     pm.PyNode('{}.{}[{}].{}_FloatValue'.format(autoShoulder_remapNode, color, str(points), color)).set(AUTO_CLAVICULE_CONFIG[color][points][1])
 
             ## Connection
-            claviculePoseReader = PoseReader.poseReader(name='{Side}__Clavicule'.format(**self.nameStructure), 
-                                  driver=self.AUTO_CLAVICULE_MOD.OUTPUT_GRP, 
-                                  target=self.ik_AutoShoulder_joint[0], 
-                                  upPostion=(0,10,0), 
+            claviculePoseReader = PoseReader.poseReader(name='{Side}__Clavicule'.format(**self.nameStructure),
+                                  driver=self.AUTO_CLAVICULE_MOD.OUTPUT_GRP,
+                                  target=self.ik_AutoShoulder_joint[0],
+                                  upPostion=(0,10,0),
                                   targetPosition=(10,0,0),
                                   )[0]
 
@@ -411,11 +431,11 @@ class LimbShoudler(moduleBase.ModuleBase):
     def setup_VisibilityGRP(self):
         visGrp = adbAttr.NodeAttr([self.RIG.VISIBILITY_GRP])
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Joints')
-        visGrp.addAttr('Clavicule_JNT', True)
-        visGrp.addAttr('IK_JNT', False)
+        visGrp.addAttr('{Side}_{Basename}_Clavicule_JNT'.format(**self.nameStructure), True)
+        visGrp.addAttr('{Side}_{Basename}_IK_JNT'.format(**self.nameStructure), False)
 
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Controls')
-        visGrp.addAttr('Clavicule_CTRL', True)
+        visGrp.addAttr('{Side}_{Basename}_Clavicule_CTRL'.format(**self.nameStructure), True)
 
         for attr in visGrp.allAttrs.keys():
             for module in self.BUILD_MODULES:

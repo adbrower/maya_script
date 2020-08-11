@@ -30,7 +30,6 @@ import adb_library.adb_utils.Func__Piston as adbPiston
 import adb_library.adb_utils.Script__LocGenerator as locGen
 import adb_library.adb_utils.Script__PoseReader as PoseReader
 import adb_library.adb_utils.Script__ProxyPlane as adbProxy
-import adb_library.adb_utils.Class__FkShapes as adbFKShape
 import adb_core.Class__Skinning as Skinning
 
 import adb_library.adb_modules.Module__Folli as adbFolli
@@ -41,25 +40,24 @@ import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
 
 import adb_rigModules.RigBase as RigBase
 
-reload(adbrower)
-reload(sl)
-reload(Joint)
-reload(RigBase)
-reload(adbAttr)
-reload(adbFKShape)
-reload(NC)
-reload(moduleBase)
-reload(adbIkStretch)
-reload(Control)
-reload(locGen)
-reload(adbPiston)
-reload(Locator)
-reload(adbFolli)
-reload(adbRibbon)
-reload(SpaceSwitch)
-reload(PoseReader)
-reload(Slide)
-reload(Skinning)
+# reload(adbrower)
+# reload(sl)
+# reload(Joint)
+# reload(RigBase)
+# reload(adbAttr)
+# reload(NC)
+# reload(moduleBase)
+# reload(adbIkStretch)
+# reload(Control)
+# reload(locGen)
+# reload(adbPiston)
+# reload(Locator)
+# reload(adbFolli)
+# reload(adbRibbon)
+# reload(SpaceSwitch)
+# reload(PoseReader)
+# reload(Slide)
+# reload(Skinning)
 
 #-----------------------------------
 #  DECORATORS
@@ -131,7 +129,7 @@ class LimbSpine(moduleBase.ModuleBase):
         self.nameStructure = {
                             'Side'    : self.side,
                             'Basename': 'Spine',
-                            'Parts'   : [],
+                            'Parts'   : ['Hips', 'Belly', 'Chest'],
                             'Suffix'  : ''
                             }
 
@@ -168,7 +166,7 @@ class LimbSpine(moduleBase.ModuleBase):
                 pm.parent(grp, self.RIG.SETTINGS_GRP)
                 grp.v.set(0)
 
-        self.loadSkinClustersWeights()
+        # self.loadSkinClustersWeights()
 
 
     # =========================
@@ -361,7 +359,12 @@ class LimbSpine(moduleBase.ModuleBase):
 
             points = [pm.PyNode(guide).getRotatePivot(space='world') for guide in ik_starter_guide]
             self.spine_ik = Joint.Joint.point_base(*points, name='{Side}__{Basename}_Ik'.format(**self.nameStructure), chain=False, padding=2)
+
             self.spine_ik_joints = self.spine_ik.joints
+            pm.PyNode(self.spine_ik_joints[0]).rename('{Side}__{Basename}_{Parts[0]}'.format(**self.nameStructure))
+            pm.PyNode(self.spine_ik_joints[1]).rename('{Side}__{Basename}_{Parts[1]}'.format(**self.nameStructure))
+            pm.PyNode(self.spine_ik_joints[2]).rename('{Side}__{Basename}_{Parts[2]}'.format(**self.nameStructure))
+
             adb.AutoSuffix(self.spine_ik.joints)
             [adb.makeroot_func(x, suff='OFFSET', forceNameConvention=True) for x in self.spine_ik.joints]
             self.spine_ik.radius = 0.5
@@ -463,6 +466,12 @@ class LimbSpine(moduleBase.ModuleBase):
                 pm.select(addVolumePreservationMod.spineLenghtCurve, r=1)
                 pm.select(spine_proxy_plane, add=1)
                 mc.CreateWrap()
+                addVolumePreservationMod.spineLenghtCurve.inheritsTransform.set(0)
+                wrapNode = adb.findDeformer(addVolumePreservationMod.spineLenghtCurve)[0]
+                pm.PyNode(wrapNode).autoWeightThreshold.set(1)
+                self.nameStructure['Suffix'] = NC.WRAP_SUFFIX
+                wrapNode = pm.rename(wrapNode, '{Side}__{Basename}_volumePreservation__{Suffix}'.format(**self.nameStructure))
+                print wrapNode
 
             for grp in spine_folli.MOD_GRP.getChildren():
                 if len(grp.getChildren()) is 0:
@@ -470,6 +479,7 @@ class LimbSpine(moduleBase.ModuleBase):
 
             moduleBase.ModuleBase.setupVisRule([self.RIBBON_MOD.OUTPUT_GRP], self.RIBBON_MOD.VISRULE_GRP, '{Side}__{Basename}_MACRO_JNT__{Suffix}'.format(**self.nameStructure), False)
             moduleBase.ModuleBase.setupVisRule([self.RIBBON_MOD.INPUT_GRP], self.RIBBON_MOD.VISRULE_GRP, '{Side}__{Basename}_MACRO_CTRL__{Suffix}'.format(**self.nameStructure), False)
+            self.RIBBON_MOD.RIG_GRP.v.set(0)
 
 
         # =========================
@@ -481,6 +491,13 @@ class LimbSpine(moduleBase.ModuleBase):
         self.SPINEIK_MOD.setFinalHiearchy(OUTPUT_GRP_LIST=[x.getParent() for x in self.spine_ik_joints])
         createRibbon()
 
+    def createMainCTRL(self):
+        ctrl = Control.Control(name='{Side}__{Basename}_Reverse'.format(**self.nameStructure),
+                                            shape = sl.square_shape,
+                                            scale=0.8,
+                                            matchTransforms = (False, 1,0),
+                                            color=('index', 22)
+                                            )
 
 
     # -------------------
@@ -568,8 +585,8 @@ class LimbSpine(moduleBase.ModuleBase):
 # BUILD
 # =========================
 
-L_Spine = LimbSpine(module_name='L__Spine')
-L_Spine.build(['C_spine001_guide', 'C_spine002_guide', 'C_spine003_guide', 'C_spine004_guide', 'C_spine005_guide', 'C_spine006_guide', 'C_spine007_guide'])
-L_Spine.connect()
+# L_Spine = LimbSpine(module_name='L__Spine')
+# L_Spine.build(['C_spine001_guide', 'C_spine002_guide', 'C_spine003_guide', 'C_spine004_guide', 'C_spine005_guide', 'C_spine006_guide', 'C_spine007_guide'])
+# L_Spine.connect()
 
 

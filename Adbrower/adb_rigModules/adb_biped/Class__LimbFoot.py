@@ -6,6 +6,7 @@
 #     audreydb23@gmail.com
 # ------------------------------------------------------
 
+import json
 import sys
 import os
 
@@ -37,22 +38,22 @@ import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
 
 import adb_rigModules.RigBase as RigBase
 
-reload(adbrower)
-reload(sl)
-reload(Joint)
-reload(RigBase)
-reload(adbAttr)
-reload(adbFKShape)
-reload(NC)
-reload(moduleBase)
-reload(adbIkStretch)
-reload(Control)
-reload(locGen)
-reload(adbPiston)
-reload(Locator)
-reload(adbFolli)
-reload(adbRibbon)
-reload(SpaceSwitch)
+# reload(adbrower)
+# reload(sl)
+# reload(Joint)
+# reload(RigBase)
+# reload(adbAttr)
+# reload(adbFKShape)
+# reload(NC)
+# reload(moduleBase)
+# reload(adbIkStretch)
+# reload(Control)
+# reload(locGen)
+# reload(adbPiston)
+# reload(Locator)
+# reload(adbFolli)
+# reload(adbRibbon)
+# reload(SpaceSwitch)
 
 #-----------------------------------
 #  DECORATORS
@@ -75,19 +76,25 @@ class LimbFootModel(moduleBase.ModuleBaseModel):
         pass
 
 DATA_WEIGHT_PATH = 'C:/Users/Audrey/Documents/maya/projects/Roller_Rigging_Project/data/skinWeights/'
+CONFIG_PATH = 'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_rigModules/adb_biped'
 
+os.chdir(CONFIG_PATH)
+with open("BipedConfig.json", "r") as f:
+    BIPED_CONFIG = json.load(f)
 
 class LimbFoot(moduleBase.ModuleBase):
     """
     """
     def __init__(self,
                  module_name=None,
+                 config = BIPED_CONFIG
                 ):
         super(LimbFoot, self).__init__('')
 
         self.nameStructure = None
         self._MODEL = LimbFootModel()
         self.NAME = module_name
+        self.config = config
 
 
     def __repr__(self):
@@ -146,9 +153,10 @@ class LimbFoot(moduleBase.ModuleBase):
 
     def connect(self,
                 legSpaceGroup = None,
-                leg_ikHandle = 'L__Leg__IKHDL',
-                leg_offset_ik_ctrl = 'L__Leg_IK_offset__CTRL',
-                leg_ankle_fk_ctrl = 'L__Leg_Fk_Ankle__CTRL'):
+                leg_ikHandle = [],
+                leg_offset_ik_ctrl = [],
+                leg_ankle_fk_ctrl = []
+                ): 
 
         super(LimbFoot, self)._connect()
 
@@ -195,8 +203,8 @@ class LimbFoot(moduleBase.ModuleBase):
         def create_ctrl():
             self.nameStructure['Suffix'] = NC.CTRL
             self.foot_ctrl = Control.Control(name='{Side}__{Basename}_Main__{Suffix}'.format(**self.nameStructure),
-                                                shape = sl.foot_shape,
-                                                scale=2,
+                                                shape = sl.sl[self.config['CONTROLS']['Foot']['shape']],
+                                                scale=self.config['CONTROLS']['Foot']['scale'],
                                                 matchTransforms = (self.starter_Foot[1], 1,0)
                                                 ).control
 
@@ -320,8 +328,8 @@ class LimbFoot(moduleBase.ModuleBase):
     def addControls(self):
         self.nameStructure['Suffix'] = NC.CTRL
         ball_CTRL = Control.Control(name='{Side}__{Basename}_Ball__{Suffix}'.format(**self.nameStructure),
-                                shape = sl.pinX_shape,
-                                scale=1,
+                                shape = sl.sl[self.config['CONTROLS']['Foot_Ball']['shape']],
+                                scale = self.config['CONTROLS']['Foot_Ball']['scale'],
                                 matchTransforms = (self.footBall_joint, 1, 0),
                                 parent=self.Foot_MOD.INPUT_GRP,
                                 color=('index', self.col_layer2)
@@ -332,8 +340,8 @@ class LimbFoot(moduleBase.ModuleBase):
 
 
         heel_CTRL = Control.Control(name='{Side}__{Basename}_Heel__{Suffix}'.format(**self.nameStructure),
-                                shape = sl.ball2_shape,
-                                scale=0.6,
+                                shape = sl.sl[self.config['CONTROLS']['Foot_Heel']['shape']],
+                                scale=self.config['CONTROLS']['Foot_Heel']['scale'],
                                 matchTransforms = (self.footHeel_joint, 1, 0),
                                 parent=self.Foot_MOD.INPUT_GRP,
                                 color=('index', self.col_layer2)
@@ -346,8 +354,8 @@ class LimbFoot(moduleBase.ModuleBase):
 
 
         toe_CTRL = Control.Control(name='{Side}__{Basename}_Toe__{Suffix}'.format(**self.nameStructure),
-                                shape = sl.ball2_shape,
-                                scale=0.4,
+                                shape = sl.sl[self.config['CONTROLS']['Foot_Toe']['shape']],
+                                scale=self.config['CONTROLS']['Foot_Toe']['scale'],
                                 matchTransforms = (self.footToes_joint, 1, 0),
                                 parent=self.Foot_MOD.INPUT_GRP,
                                 color=('index', self.col_layer2)
@@ -359,8 +367,8 @@ class LimbFoot(moduleBase.ModuleBase):
 
 
         toeBend_CTRL = Control.Control(name='{Side}__{Basename}_ToeBend__{Suffix}'.format(**self.nameStructure),
-                                shape = sl.cube_shape,
-                                scale=0.6,
+                                shape = sl.sl[self.config['CONTROLS']['Foot_ToeBend']['shape']],
+                                scale=self.config['CONTROLS']['Foot_ToeBend']['scale'],
                                 matchTransforms = (self.footBall_joint, 1, 0),
                                 parent=self.Foot_MOD.INPUT_GRP,
                                 color=('index', self.col_layer2)
@@ -376,10 +384,10 @@ class LimbFoot(moduleBase.ModuleBase):
     def setup_VisibilityGRP(self):
         visGrp = adbAttr.NodeAttr([self.RIG.VISIBILITY_GRP])
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Joints')
-        visGrp.addAttr('JNT', True)
+        visGrp.addAttr('{Side}_{Basename}_JNT'.format(**self.nameStructure), True)
 
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Controls')
-        visGrp.addAttr('Main_CTRL', True)
+        visGrp.addAttr('{Side}_{Basename}_Main_CTRL'.format(**self.nameStructure), True)
 
         for attr in visGrp.allAttrs.keys():
             for module in self.BUILD_MODULES:
