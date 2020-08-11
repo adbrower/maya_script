@@ -204,7 +204,7 @@ class stretchyIK(moduleBase.ModuleBase):
         def getMaxDistance():
             pm.parent(self.posLoc[1], self.endJnt)
             oriTranslate = self.ik_ctrl.getTranslation()
-            pm.move(self.ik_ctrl, 0, -1000, 0)
+            pm.move(self.ik_ctrl, -1000, -1000, 0)
             _max_distance = self.distanceLoc.distance.get()
             self.ik_ctrl.setTranslation(oriTranslate)
             return _max_distance
@@ -234,7 +234,6 @@ class stretchyIK(moduleBase.ModuleBase):
         # multiply Divide proportion
         self.md_prp_node = pm.shadingNode('multiplyDivide', asUtility=1, n='{}_proportion__{}'.format(self.NAME, NC.MULTIPLY_DIVIDE_SUFFIX))
         self.md_prp_node.operation.set(2)
-        # self.md_prp_node.input2X.set(max_distance)
 
         # parenting
         pm.parent(self.posLoc[1], self.ik_ctrl)

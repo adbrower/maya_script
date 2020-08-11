@@ -4,8 +4,6 @@ from functools import wraps
 
 import adb_core.NameConv_utils as NC
 
-#CBB : Using a Json File for curves data or Simply use a dictionnary ???
-
 # -----------------------------------
 #  DECORATORS
 # -----------------------------------
