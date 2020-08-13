@@ -6,6 +6,7 @@
 #     audreydb23@gmail.com
 # ------------------------------------------------------
 
+import json
 import sys
 import os
 
@@ -43,12 +44,12 @@ import adb_rigModules.RigBase as RigBase
 # reload(adbrower)
 # reload(sl)
 # reload(Joint)
-# reload(RigBase)
+reload(RigBase)
 # reload(adbAttr)
 # reload(NC)
-# reload(moduleBase)
+reload(moduleBase)
 # reload(adbIkStretch)
-# reload(Control)
+reload(Control)
 # reload(locGen)
 # reload(adbPiston)
 # reload(Locator)
@@ -84,6 +85,11 @@ FkVARIABLE_CONFIG = {
 
 
 DATA_WEIGHT_PATH = 'C:/Users/Audrey/Documents/maya/projects/Roller_Rigging_Project/data/skinWeights/'
+CONFIG_PATH = 'C:/Users/Audrey/Google Drive/[SCRIPT]/python/maya_script/Adbrower/adb_rigModules/adb_biped'
+
+os.chdir(CONFIG_PATH)
+with open("BipedConfig.json", "r") as f:
+    BIPED_CONFIG = json.load(f)
 
 
 class LimbSpineModel(moduleBase.ModuleBaseModel):
@@ -97,12 +103,14 @@ class LimbSpine(moduleBase.ModuleBase):
     """
     def __init__(self,
                  module_name=None,
+                 config = BIPED_CONFIG
                 ):
         super(LimbSpine, self).__init__('')
 
         self.nameStructure = None
         self._MODEL = LimbSpineModel()
         self.NAME = module_name
+        self.config = config
 
 
     def __repr__(self):
@@ -115,7 +123,7 @@ class LimbSpine(moduleBase.ModuleBase):
     def start(self, metaDataNode = 'transform'):
         super(LimbSpine, self)._start('', _metaDataNode = metaDataNode)
 
-        # TODO: Create Guide Setup
+        # Create Guide Setup
 
     def build(self, GUIDES):
         """
@@ -125,6 +133,10 @@ class LimbSpine(moduleBase.ModuleBase):
         self.RIG = RigBase.RigBase(rigName = self.NAME)
         self.starter_Spine = GUIDES
         self.side = 'C'
+
+        self.col_main = indexColor[self.config["COLORS"]['C_col_main']]
+        self.col_layer1 = indexColor[self.config["COLORS"]['C_col_layer1']]
+        self.col_layer2 = indexColor[self.config["COLORS"]['C_col_layer2']]
 
         self.nameStructure = {
                             'Side'    : self.side,
@@ -148,6 +160,8 @@ class LimbSpine(moduleBase.ModuleBase):
         self.createFkRegularCTRLS()
 
         self.createIkSystem()
+        self.createChestMainCTRL()
+        self.createHipsMainCTRL()
 
 
     def connect(self):
@@ -166,7 +180,7 @@ class LimbSpine(moduleBase.ModuleBase):
                 pm.parent(grp, self.RIG.SETTINGS_GRP)
                 grp.v.set(0)
 
-        # self.loadSkinClustersWeights()
+        self.loadSkinClustersWeights()
 
 
     # =========================
@@ -205,10 +219,10 @@ class LimbSpine(moduleBase.ModuleBase):
         self.RESULT_MOD.getJoints = []
         for joint in self.spine_chain_joints:
             ctrl = Control.Control(name=joint.replace(NC.JOINT, NC.CTRL),
-                                            shape = sl.pinZ_shape,
-                                            scale=0.8,
+                                            shape = sl.sl[self.config['CONTROLS']['Spine_FK_Reg']['shape']],
+                                            scale=self.config['CONTROLS']['Spine_FK_Reg']['scale'],
                                             matchTransforms = (False, 1,0),
-                                            color=('index', 22)
+                                            color=('index', 21)
                                             )
 
             for att in ['tx', 'ty', 'tz', 'sx', 'sy', 'sz', 'radius']:
@@ -266,8 +280,8 @@ class LimbSpine(moduleBase.ModuleBase):
             self.REVERSE_MOD.getJoints = []
             for joint in self.reverse_spine_chain_joints:
                 rev_ctrl = Control.Control(name=joint.replace(NC.JOINT, NC.CTRL),
-                                                shape = sl.circleY_shape,
-                                                scale=1,
+                                                shape = sl.sl[self.config['CONTROLS']['Spine_FK_Rev']['shape']],
+                                                scale=self.config['CONTROLS']['Spine_FK_Rev']['scale'],
                                                 matchTransforms = (False, 1,0),
                                                 color=('index', 20),
                                                 )
@@ -372,17 +386,35 @@ class LimbSpine(moduleBase.ModuleBase):
 
         def createIkCTRLS():
             self.SPINEIK_MOD.getJoints = []
+            hips_ctrl = Control.Control(name=self.spine_ik_joints[0].replace(NC.JOINT, NC.CTRL),
+                                        shape = sl.sl[self.config['CONTROLS']['Spine_IK_Hips']['shape']],
+                                        scale= self.config['CONTROLS']['Spine_IK_Hips']['scale'],
+                                        matchTransforms = (False, 1,0),
+                                        color = ('index', self.col_layer1)
+                                        )
+
+            belly_ctrl = Control.Control(name=self.spine_ik_joints[1].replace(NC.JOINT, NC.CTRL),
+                                        shape = sl.sl[self.config['CONTROLS']['Spine_IK_Belly']['shape']],
+                                        scale=self.config['CONTROLS']['Spine_IK_Belly']['scale'],
+                                        matchTransforms = (False, 1,0),
+                                        color=('index', self.col_layer1)
+                                        )
+
+            chest_ctrl = Control.Control(name=self.spine_ik_joints[2].replace(NC.JOINT, NC.CTRL),
+                                        shape = sl.sl[self.config['CONTROLS']['Spine_IK_Chest']['shape']],
+                                        scale = self.config['CONTROLS']['Spine_IK_Chest']['scale'],
+                                        matchTransforms = (False, 1,0),
+                                        color = ('index', self.col_layer1)
+                                        )
+
+
+            self.SPINEIK_MOD.getJoints = self.spine_ik_joints
+
             for joint in self.spine_ik_joints:
-                ctrl = Control.Control(name=joint.replace(NC.JOINT, NC.CTRL),
-                                                shape = sl.square_shape,
-                                                scale=1.2,
-                                                matchTransforms = (False, 1,0),
-                                                color=('index', 18)
-                                                )
-                for att in ['radius']:
+                for att in ['sx','sy','sz','radius']:
                     pm.PyNode(joint).setAttr(att, lock=True, channelBox=False, keyable=False)
 
-                self.SPINEIK_MOD.getJoints.append(joint)
+            for ctrl, joint in zip([hips_ctrl, belly_ctrl, chest_ctrl], self.spine_ik_joints):
                 pm.parent(ctrl.control.getShape(), joint, relative=True, shape=True)
                 pm.delete(ctrl.control)
                 pm.rename(joint, NC.getNameNoSuffix(joint))
@@ -394,10 +426,11 @@ class LimbSpine(moduleBase.ModuleBase):
             self.setupVisRule(self.spine_ik_joints, self.SPINEIK_MOD.VISRULE_GRP, '{Side}__{Basename}_IK_JNT__{Suffix}'.format(**self.nameStructure), False)
 
             if self.REVERSE_MOD:
-                ik_reverse_spine_guide = [self.reverse_spine_chain_joints[0], self.reverse_spine_chain_joints[(len(self.reverse_spine_chain_joints))/2], self.reverse_spine_chain_joints[-1]]
-                for revJnt, ctl in zip(ik_reverse_spine_guide, self.SPINEIK_MOD.getJoints):
+                ik_reverse_spine_guide = [self.reverse_spine_chain_joints[0], self.reverse_spine_chain_joints[(len(self.reverse_spine_chain_joints))/2]]
+                for revJnt, ctl in zip(ik_reverse_spine_guide, self.SPINEIK_MOD.getJoints[:-1]):
                     adb.matrixConstraint(revJnt, pm.PyNode(ctl).getParent(), mo=True)
 
+            self.SPINEIK_MOD.getResetJoints = [x.getParent() for x in self.SPINEIK_MOD.getJoints]
             return self.SPINEIK_MOD.getJoints
 
         def createRibbon(volumePreservation=True):
@@ -462,7 +495,6 @@ class LimbSpine(moduleBase.ModuleBase):
                 addVolumePreservationMod = addVolumePreservation()
                 pm.parent(addVolumePreservationMod.MOD_GRP, self.RIG.MODULES_GRP)
 
-                # CBB: Wrap integration
                 pm.select(addVolumePreservationMod.spineLenghtCurve, r=1)
                 pm.select(spine_proxy_plane, add=1)
                 mc.CreateWrap()
@@ -491,13 +523,37 @@ class LimbSpine(moduleBase.ModuleBase):
         self.SPINEIK_MOD.setFinalHiearchy(OUTPUT_GRP_LIST=[x.getParent() for x in self.spine_ik_joints])
         createRibbon()
 
-    def createMainCTRL(self):
-        ctrl = Control.Control(name='{Side}__{Basename}_Reverse'.format(**self.nameStructure),
-                                            shape = sl.square_shape,
-                                            scale=0.8,
-                                            matchTransforms = (False, 1,0),
-                                            color=('index', 22)
-                                            )
+    @makeroot()
+    def createHipsMainCTRL(self):
+        hips_Ctrl_Object = Control.Control(name='{Side}__Hips__CTRL'.format(**self.nameStructure),
+                                           shape = sl.sl[self.config['CONTROLS']['Spine_Hips']['shape']],
+                                           scale=self.config['CONTROLS']['Spine_Hips']['scale'],
+                                           matchTransforms = (self.SPINEIK_MOD.getJoints[0], 1,0),
+                                           parent = self.RIG.MAIN_RIG_GRP,
+                                           color=('index', self.col_main)
+                                           )
+        self.hips_Ctrl = hips_Ctrl_Object.control
+        pm.parentConstraint(self.hips_Ctrl, self.RESULT_MOD.getJoints[0].getParent().getParent())
+        return self.hips_Ctrl
+
+
+    def createChestMainCTRL(self):
+        chest_Ctrl_Object = Control.Control(name='{Side}__Chest__CTRL'.format(**self.nameStructure),
+                                           shape = sl.sl[self.config['CONTROLS']['Spine_Chest']['shape']],
+                                           scale = self.config['CONTROLS']['Spine_Chest']['scale'],
+                                           matchTransforms = (self.SPINEIK_MOD.getJoints[2], 1,0),
+                                           parent = self.RIG.MAIN_RIG_GRP,
+                                           color=('index', self.col_main)
+                                           )
+        self.chest_Ctrl = chest_Ctrl_Object.control
+        adb.makeroot_func(self.chest_Ctrl, suff='OFFSET', forceNameConvention=True)
+        pm.parentConstraint(self.chest_Ctrl, self.SPINEIK_MOD.getJoints[-1].getParent(), mo=True)
+
+        if self.REVERSE_MOD:
+            pm.parentConstraint(self.REVERSE_MOD.getJoints[-1], self.chest_Ctrl.getParent(), mo=True)
+
+
+        return self.chest_Ctrl
 
 
     # -------------------
@@ -505,19 +561,51 @@ class LimbSpine(moduleBase.ModuleBase):
     # -------------------
 
 
+    def connectSpineToLeg(self,
+                    legSpaceGroup = None,
+                    leg_Ik_Hips = [],
+                    leg_Fk_Offset_Hips = [],
+                    ):
+        """
+        Args:
+            legSpaceGroup (list, optional): [description]. Defaults to None.
+            leg_Ik_Hips (list, optional): [description]. ex: ['{Side}__Leg_Ik_Hips__JNT'.format(x) for x in 'LR'].
+            leg_Fk_Offset_Hips (list, optional): [description]. ex: ['{Side}__Leg_Fk_Hips_Offset__GRP'.format(x) for x in 'LR'].
+        """
+        [pm.parentConstraint(self.SPINEIK_MOD.getJoints[0], jnt, mo=True) for jnt in leg_Ik_Hips]
+        [pm.parentConstraint(self.SPINEIK_MOD.getJoints[0], jnt, mo=True) for jnt in leg_Fk_Offset_Hips]
+
+
+    def connectSpineToShoulder(self,
+                    spaceSwitchLocatorHips = [],
+                    spaceSwitchLocatorChest = [],
+                    shoulder_ctrl_offset = [],
+                    ):
+        """
+        Args:
+            shoulderSpaceGroup (list, optional): [description]. Defaults to None.
+            shoulder_ctrl_offset (list, optional): [description]. ex: ['{Side}__Shoulder_Clavicule_AutoClavicule__GRP'.format(x) for x in 'LR'].
+        """
+        [pm.parentConstraint(self.SPINEIK_MOD.getJoints[2], jnt, mo=True) for jnt in shoulder_ctrl_offset]
+        [pm.scaleConstraint(self.SPINEIK_MOD.getJoints[2], jnt, mo=True) for jnt in shoulder_ctrl_offset]
+
+        [pm.parentConstraint(self.SPINEIK_MOD.getJoints[0], loc, mo=True) for loc in spaceSwitchLocatorHips]
+        [pm.parentConstraint(self.SPINEIK_MOD.getJoints[2], loc, mo=True) for loc in spaceSwitchLocatorChest]
+
+
     def setup_VisibilityGRP(self):
         visGrp = adbAttr.NodeAttr([self.RIG.VISIBILITY_GRP])
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Joints')
-        visGrp.addAttr('FK_JNT', False)
-        visGrp.addAttr('FK_Reverse_JNT', False)
-        visGrp.addAttr('IK_JNT', False)
-        visGrp.addAttr('MACRO_JNT', True)
+        visGrp.addAttr('{Side}_{Basename}_FK_JNT'.format(**self.nameStructure), self.config['VISRULES']['FK_Reg_JNT'])
+        visGrp.addAttr('{Side}_{Basename}_FK_Reverse_JNT'.format(**self.nameStructure), self.config['VISRULES']['FK_Rev_JNT'])
+        visGrp.addAttr('{Side}_{Basename}_IK_JNT'.format(**self.nameStructure), self.config['VISRULES']['IK_JNT'])
+        visGrp.addAttr('{Side}_{Basename}_MACRO_JNT'.format(**self.nameStructure), self.config['VISRULES']['Macro_JNT'])
 
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Controls')
-        visGrp.addAttr('FK_CTRL', True)
-        visGrp.addAttr('FK_Reverse_CTRL', False)
-        visGrp.addAttr('IK_CTRL', True)
-        visGrp.addAttr('MACRO_CTRL', False)
+        visGrp.addAttr('{Side}_{Basename}_FK_CTRL'.format(**self.nameStructure), self.config['VISRULES']['FK_Reg_CTRL'])
+        visGrp.addAttr('{Side}_{Basename}_FK_Reverse_CTRL'.format(**self.nameStructure), self.config['VISRULES']['FK_Rev_CTRL'])
+        visGrp.addAttr('{Side}_{Basename}_IK_CTRL'.format(**self.nameStructure), self.config['VISRULES']['IK_CTRL'])
+        visGrp.addAttr('{Side}_{Basename}_MACRO_CTRL'.format(**self.nameStructure), self.config['VISRULES']['Macro_CTRL'])
 
         for attr in visGrp.allAttrs.keys():
             for module in self.BUILD_MODULES:
@@ -544,6 +632,7 @@ class LimbSpine(moduleBase.ModuleBase):
                 Skinning.Skinning.importWeights(DATA_WEIGHT_PATH, _file)
             except:
                 pass
+
 
     # =========================
     # SLOTS
@@ -581,6 +670,8 @@ class LimbSpine(moduleBase.ModuleBase):
                 pm.connectAttr('{}.output'.format(addDouble), '{}.drawStyle'.format(transform))
             adb.lockAttr_func(visRuleGrp, ['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz','v'])
             return visRuleGrp, visRuleAttr.name
+
+
 # =========================
 # BUILD
 # =========================

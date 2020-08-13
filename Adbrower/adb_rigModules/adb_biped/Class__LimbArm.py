@@ -145,21 +145,19 @@ class LimbArm(moduleBase.ModuleBase):
         super(LimbArm, self)._build()
 
         self.RIG = RigBase.RigBase(rigName = self.NAME)
-
         self.starter_Arm = GUIDES
-
         self.side = NC.getSideFromPosition(GUIDES[0])
 
-        if self.side == 'R':
-            self.col_main = indexColor['fluoRed']
-            self.col_layer1 = indexColor['darkRed']
-            self.sliding_elbow_col = indexColor['darkRed']
-            self.pol_vector_col = indexColor['lightRed']
-        else:
-            self.col_main = indexColor['fluoBlue']
-            self.col_layer1 = indexColor['blue']
-            self.sliding_elbow_col = indexColor['blue']
-            self.pol_vector_col = indexColor['lightBlue']
+        if self.side == 'L':
+            self.col_main = indexColor[self.config["COLORS"]['L_col_main']]
+            self.col_layer1 = indexColor[self.config["COLORS"]['L_col_layer1']]
+            self.sliding_elbow_col = indexColor[self.config["COLORS"]['L_col_layer2']]
+            self.pol_vector_col = indexColor[self.config["COLORS"]['L_col_poleVector']]
+        elif self.side == 'R':
+            self.col_main = indexColor[self.config["COLORS"]['R_col_main']]
+            self.col_layer1 = indexColor[self.config["COLORS"]['R_col_layer1']]
+            self.sliding_elbow_col = indexColor[self.config["COLORS"]['R_col_layer2']]
+            self.pol_vector_col = indexColor[self.config["COLORS"]['R_col_poleVector']]
 
         self.nameStructure = {
                             'Side'    : self.side,
@@ -446,7 +444,7 @@ class LimbArm(moduleBase.ModuleBase):
             pole_vector_ctrl()
 
             # ==================================================
-            # CREATE SPACE SWITCH
+            # CREATE SPACE SWITCH FOR PV
 
             # AUTO SPACE
             autPoleVectorGrp, autPoleVectorSpaceLoc = AutoPoleVector.autoPoleVectorSystem(prefix=self.NAME,
@@ -455,18 +453,18 @@ class LimbArm(moduleBase.ModuleBase):
                                  poleVectorCTL = self.poleVectorCtrl,
                                  )
             pm.parent(autPoleVectorGrp, self.ikFk_MOD.INPUT_GRP)
-            autPoleVectorGrpEnd = pm.createNode('transform', n='{Side}__{Basename}_IK_SPACES_SWITCH_AUTO__GRP'.format(**self.nameStructure))
+            autPoleVectorGrpEnd = pm.createNode('transform', n='{Side}__{Basename}PV_IK_SPACES_SWITCH_AUTO__GRP'.format(**self.nameStructure))
             pm.matchTransform(autPoleVectorGrpEnd, self.poleVectorCtrl)
             pm.parent(autPoleVectorGrpEnd, self.RIG.SPACES_GRP)
             pm.parentConstraint(autPoleVectorSpaceLoc.getChildren()[0], autPoleVectorGrpEnd, mo=True)
 
             # wORLD SPACE
-            ikSpaceSwitchWorldGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.WORLD_LOC)
+            ikSpaceSwitchWorldGrp = pm.group(n='{Side}__{Basename}PV_IK_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.WORLD_LOC)
             ikSpaceSwitchWorldGrp.v.set(0)
             pm.matchTransform(ikSpaceSwitchWorldGrp, self.poleVectorCtrl, pos=1, rot=1)
             
             # WRIST SPACE
-            ikSpaceSwitchWristdGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_WRIST__GRP'.format(**self.nameStructure), em=1, parent=self.arm_IkHandle_ctrl_offset)
+            ikSpaceSwitchWristdGrp = pm.group(n='{Side}__{Basename}PV_IK_SPACES_SWITCH_WRIST__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.SPACES_GRP)
             pm.matchTransform(ikSpaceSwitchWristdGrp, self.poleVectorCtrl, pos=1, rot=1)
             pm.parentConstraint(self.arm_IkHandle_ctrl_offset, ikSpaceSwitchWristdGrp, mo=True)
 
@@ -474,16 +472,38 @@ class LimbArm(moduleBase.ModuleBase):
                                                     spacesInputs =[autPoleVectorGrpEnd, ikSpaceSwitchWristdGrp, ikSpaceSwitchWorldGrp],
                                                     spaceOutput = self.poleVectorCtrl.getParent(),
                                                     maintainOffset = True,
-                                                    attrNames = ['auto', 'wrist', 'world'],)
+                                                    attrNames = ['auto', 'wrist', 'world'])
             self.ikFk_MOD.metaDataGRPS += [self.povSpaceSwitch.metaData_GRP]
+
+            # ==================================================
+            # CREATE SPACE SWITCH FOR IK CTRL
+
+            # wORLD SPACE
+            ikSpaceSwitchWorldGrpArm = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.WORLD_LOC)
+            ikSpaceSwitchWorldGrp.v.set(0)
+            pm.matchTransform(ikSpaceSwitchWorldGrpArm, self.arm_IkHandle_ctrl, pos=1, rot=1)
+
+            # HIPS SPACE
+            self.ikSpaceSwitchHipsdGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_HIPS__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.SPACES_GRP)
+            pm.matchTransform(self.ikSpaceSwitchHipsdGrp, self.arm_IkHandle_ctrl, pos=1, rot=1)
+            
+            # CHEST SPACE
+            self.ikSpaceSwitchChestdGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_CHEST__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.SPACES_GRP)
+            pm.matchTransform(self.ikSpaceSwitchChestdGrp, self.arm_IkHandle_ctrl, pos=1, rot=1)
+
+            self.ikArmpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__IK_{Basename}'.format(**self.nameStructure),
+                                                    spacesInputs =[ikSpaceSwitchWorldGrpArm, self.ikSpaceSwitchHipsdGrp, self.ikSpaceSwitchChestdGrp],
+                                                    spaceOutput = self.arm_IkHandle_ctrl.getParent(),
+                                                    maintainOffset = False,
+                                                    attrNames = ['world', 'hips', 'chest'])
+            self.ikFk_MOD.metaDataGRPS += [self.ikArmpaceSwitch.metaData_GRP]
 
             pm.parent(arm_IkHandle[0], self.arm_IkHandle_ctrl_offset)
             pm.parent(self.arm_IkHandle_ctrl.getParent(), self.ikFk_MOD.INPUT_GRP)
 
 
         def makeConnections():
-            self.Ik_FK_attributeName = self.setup_SpaceGRP(self.RIG.SPACES_GRP, Ik_FK_attributeName ='{Side}_IK_{Basename}'.format(**self.nameStructure))
-
+            self.Ik_FK_attributeName = self.setup_SpaceGRP(self.RIG.SPACES_GRP, Ik_FK_attributeName ='{Side}_IK_FK_{Basename}'.format(**self.nameStructure))
             self.blendSystem(ctrl_name = self.RIG.SPACES_GRP,
                             blend_attribute = self.Ik_FK_attributeName,
                             result_joints = self.base_arm_joints,
@@ -520,8 +540,7 @@ class LimbArm(moduleBase.ModuleBase):
         self.BUILD_MODULES += [armIk_MOD]
 
         armIk_MOD.build()
-
-
+        pm.pointConstraint(self.ik_arm_joints[0], armIk_MOD.posLoc[0], mo=True)
         pm.parent((self.arm_IkHandle_ctrl_offset).getParent(), self.arm_IkHandle_ctrl)
         pm.parent(armIk_MOD.MOD_GRP, self.RIG.MODULES_GRP)
 
@@ -908,7 +927,6 @@ class LimbArm(moduleBase.ModuleBase):
                     pm.delete(grp)
 
 
-
     def scalingUniform(self):
         all_groups = [self.RIG.MODULES_GRP, self.RIG.MAIN_RIG_GRP]
         all_groups += self.RIG.MODULES_GRP.getChildren()
@@ -1163,6 +1181,7 @@ class LimbArm(moduleBase.ModuleBase):
         switch_ctrl.AddSeparator(transform, 'ARMS')
         switch_ctrl.addAttr(Ik_FK_attributeName, 'enum',  eName = "IK:FK:")
         adbAttr.NodeAttr.copyAttr(self.povSpaceSwitch.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.ikArmpaceSwitch.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
         return Ik_FK_attributeName
 
 

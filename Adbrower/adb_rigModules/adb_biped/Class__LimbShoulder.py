@@ -132,7 +132,7 @@ class LimbShoudler(moduleBase.ModuleBase):
     def start(self, metaDataNode = 'transform'):
         super(LimbShoudler, self)._start('', _metaDataNode = metaDataNode)
 
-        # TODO: Create Guide Setup
+        # Create Guide Setup
 
     def build(self, GUIDES):
         """
@@ -143,18 +143,12 @@ class LimbShoudler(moduleBase.ModuleBase):
         self.starter_Shoulder = GUIDES
         self.side = NC.getSideFromPosition(GUIDES[-1])
 
-        if self.side == 'R':
-            self.col_main = indexColor['fluoRed']
-            self.col_layer1 = indexColor['darkRed']
-            self.col_layer2 = indexColor['red']
-            self.pol_vector_col = (0.5, 0.000, 0.000)
-            self.sliding_knee_col = indexColor['darkRed']
-        else:
-            self.col_main = indexColor['fluoBlue']
-            self.col_layer1 = indexColor['blue']
-            self.col_layer2 = indexColor['lightBlue']
-            self.sliding_knee_col = indexColor['blue']
-            self.pol_vector_col = (0, 0.145, 0.588)
+        if self.side == 'L':
+            self.col_main = indexColor[self.config["COLORS"]['L_col_main']]
+            self.col_layer1 = indexColor[self.config["COLORS"]['L_col_layer1']]
+        elif self.side == 'R':
+            self.col_main = indexColor[self.config["COLORS"]['R_col_main']]
+            self.col_layer1 = indexColor[self.config["COLORS"]['R_col_layer1']]
 
         self.nameStructure = {
                             'Side'    : self.side,
@@ -289,7 +283,7 @@ class LimbShoudler(moduleBase.ModuleBase):
 
     def ikSetup(self):
         @changeColor('index', col = self.col_layer1)
-        @lockAttr(['rx', 'ry', 'rz','sx', 'sy', 'sz'])
+        @lockAttr(['sx', 'sy', 'sz'])
         def create_ik_ctrl():
             self.nameStructure['Suffix'] = NC.CTRL
             self.shoulder_ik_ctrl_class = Control.Control(name='{Side}__{Basename}_{Parts[1]}__{Suffix}'.format(**self.nameStructure),

@@ -107,7 +107,7 @@ class LimbFoot(moduleBase.ModuleBase):
     def start(self, metaDataNode = 'transform'):
         super(LimbFoot, self)._start('', _metaDataNode = metaDataNode)
 
-        # TODO: Create Guide Setup
+        # Create Guide Setup
 
     def build(self, GUIDES):
         """
@@ -121,18 +121,16 @@ class LimbFoot(moduleBase.ModuleBase):
         self.starter_Foot = GUIDES
         self.side = NC.getSideFromPosition(GUIDES[0])
 
-        if self.side == 'R':
-            self.col_main = indexColor['fluoRed']
-            self.col_layer1 = indexColor['darkRed']
-            self.col_layer2 = indexColor['red']
-            self.pol_vector_col = (0.5, 0.000, 0.000)
-            self.sliding_knee_col = indexColor['darkRed']
-        else:
-            self.col_main = indexColor['fluoBlue']
-            self.col_layer1 = indexColor['blue']
-            self.col_layer2 = indexColor['lightBlue']
-            self.sliding_knee_col = indexColor['blue']
-            self.pol_vector_col = (0, 0.145, 0.588)
+        if self.side == 'L':
+            self.col_main = indexColor[self.config["COLORS"]['L_col_main']]
+            self.col_layer1 = indexColor[self.config["COLORS"]['L_col_layer1']]
+            self.col_layer2 = indexColor[self.config["COLORS"]['L_col_layer2']]
+            self.pol_vector_col = indexColor[self.config["COLORS"]['L_col_poleVector']]
+        elif self.side == 'R':
+            self.col_main = indexColor[self.config["COLORS"]['R_col_main']]
+            self.col_layer1 = indexColor[self.config["COLORS"]['R_col_layer1']]
+            self.col_layer2 = indexColor[self.config["COLORS"]['R_col_layer2']]
+            self.pol_vector_col = indexColor[self.config["COLORS"]['R_col_poleVector']]
 
         self.nameStructure = {
                             'Side'    : self.side,
@@ -156,7 +154,7 @@ class LimbFoot(moduleBase.ModuleBase):
                 leg_ikHandle = [],
                 leg_offset_ik_ctrl = [],
                 leg_ankle_fk_ctrl = []
-                ): 
+                ):
 
         super(LimbFoot, self)._connect()
 
@@ -207,7 +205,9 @@ class LimbFoot(moduleBase.ModuleBase):
                                                 scale=self.config['CONTROLS']['Foot']['scale'],
                                                 matchTransforms = (self.starter_Foot[1], 1,0)
                                                 ).control
-
+            if self.side == 'L':
+                pm.PyNode(self.foot_ctrl).sx.set(-1)
+                pm.makeIdentity(self.foot_ctrl, n=0, s=1, apply=True, pn=1)
             Transform(self.foot_ctrl).pivotPoint = Transform(self.starter_Foot[0]).worldTrans
             adb.makeroot_func(self.foot_ctrl, suff='Offset', forceNameConvention=True)
             return self.foot_ctrl
@@ -280,7 +280,7 @@ class LimbFoot(moduleBase.ModuleBase):
                  leg_offset_ik_ctrl = None,
                  leg_ankle_fk_ctrl = None,
                  ):
-
+        # TODO: ADD SPACE SWITCH TO PIN THE FOOT WHEN IS ON STRETCHY LIMB OR NOT
         # ik Foot Connect
         ikBlendGrp = self.createPivotGrps(leg_ikHandle, name='{Basename}_Pivots'.format(**self.nameStructure))
         Transform(ikBlendGrp).pivotPoint = Transform(self.footAnkle_joint).worldTrans

@@ -48,7 +48,7 @@ import adb_rigModules.adb_biped.Class__LimbFoot as LimbFoot
 # reload(adbAttr)
 # reload(NC)
 # reload(moduleBase)
-reload(adbIkStretch)
+# reload(adbIkStretch)
 # reload(Control)
 # reload(locGen)
 # reload(adbPiston)
@@ -116,7 +116,7 @@ class LimbLeg(moduleBase.ModuleBase):
     def start(self, metaDataNode = 'transform'):
         super(LimbLeg, self)._start('', _metaDataNode = metaDataNode)
 
-        # TODO: Create Guide Setup
+        # Create Guide Setup
 
     def build(self, GUIDES):
         """
@@ -144,21 +144,19 @@ class LimbLeg(moduleBase.ModuleBase):
         super(LimbLeg, self)._build()
 
         self.RIG = RigBase.RigBase(rigName = self.NAME)
-
         self.starter_Leg = GUIDES
-
         self.side = NC.getSideFromPosition(GUIDES[0])
 
-        if self.side == 'R':
-            self.col_main = indexColor['fluoRed']
-            self.col_layer1 = indexColor['darkRed']
-            self.sliding_knee_col = indexColor['darkRed']
-            self.pol_vector_col = indexColor['lightRed']
-        else:
-            self.col_main = indexColor['fluoBlue']
-            self.col_layer1 = indexColor['blue']
-            self.sliding_knee_col = indexColor['blue']
-            self.pol_vector_col = indexColor['lightBlue']
+        if self.side == 'L':
+            self.col_main = indexColor[self.config["COLORS"]['L_col_main']]
+            self.col_layer1 = indexColor[self.config["COLORS"]['L_col_layer1']]
+            self.sliding_knee_col = indexColor[self.config["COLORS"]['L_col_layer2']]
+            self.pol_vector_col = indexColor[self.config["COLORS"]['L_col_poleVector']]
+        elif self.side == 'R':
+            self.col_main = indexColor[self.config["COLORS"]['R_col_main']]
+            self.col_layer1 = indexColor[self.config["COLORS"]['R_col_layer1']]
+            self.sliding_knee_col = indexColor[self.config["COLORS"]['R_col_layer2']]
+            self.pol_vector_col = indexColor[self.config["COLORS"]['R_col_poleVector']]
 
         self.nameStructure = {
                             'Side'    : self.side,
@@ -682,7 +680,7 @@ class LimbLeg(moduleBase.ModuleBase):
                             shape=sl.sl[self.config['CONTROLS']['Double_Knee']['shape']],
                             scale=self.config['CONTROLS']['Double_Knee']['scale'],
                             parent=self.DOUBLE_KNEE_MOD.INPUT_GRP,
-                            matchTransforms=(baseJoint, 1,0),
+                            matchTransforms=(baseJoint, 1, 0),
                             color = ('index', self.col_layer1)
                             ).control
             return doubleKnee_ctrl
@@ -711,18 +709,21 @@ class LimbLeg(moduleBase.ModuleBase):
         _multDivid.input2Y.set(0.5)
         _multDivid.input2Z.set(0.5)
 
-        self.base_leg_joints[1].rx >>  _multDivid.input1X
-        self.base_leg_joints[1].ry >>  _multDivid.input1Y
-        self.base_leg_joints[1].rz >>  _multDivid.input1Z
+        self.base_leg_joints[1].rx >> _multDivid.input1X
+        self.base_leg_joints[1].ry >> _multDivid.input1Y
+        self.base_leg_joints[1].rz >> _multDivid.input1Z
 
         _multDivid.outputX >> baseJoint[0].rx
         _multDivid.outputY >> baseJoint[0].ry
         _multDivid.outputZ >> baseJoint[0].rz
 
         doubleKnee_CTL = doubleKnee_ctrl()[0]
-        adb.lockAttr_func(doubleKnee_CTL, attributes=['ry', 'rx', 'rz', 'sx', 'sy', 'sz'])
-        adb.matrixConstraint(str(doubleKnee_CTL), str(baseJoint[0]), channels='ts', mo=True)
-        adb.matrixConstraint(str(self.base_leg_joints[0]), str(doubleKnee_CTL.getParent()), channels='tr', mo=True)
+        pm.matchTransform(doubleKnee_CTL, topJoint[0], pos=0, rot=1)
+        adb.lockAttr_func(doubleKnee_CTL, attributes=['ry', 'rx', 'rz'])
+        adb.matrixConstraint(str(doubleKnee_CTL), str(baseJoint[0]), channels='t', mo=True)
+        adb.matrixConstraint(str(doubleKnee_CTL), str(topJoint[0]), channels='s', mo=True)
+        # TODO: ADD SPACE SWITCH TO PIN THE KNEE
+        adb.matrixConstraint(str(self.base_leg_joints[0]), str(doubleKnee_CTL.getParent()), channels='t', mo=True)
 
         pm.parent(baseJoint[0].getParent(), self.DOUBLE_KNEE_MOD.OUTPUT_GRP)
         self.DOUBLE_KNEE_MOD.getResetJoints = [baseJoint[0].getParent()]
@@ -977,7 +978,6 @@ class LimbLeg(moduleBase.ModuleBase):
                     lenght_blend = 1,
                     ):
             """
-            # CBB: Add Blend Options for Rotate And Translate
             Function to create an Ik - Fk rotation based script
 
             @param ctrl_name            : (str) Name of the control having the switch attribute
