@@ -31,6 +31,7 @@ class SpaceSwitch(object):
                 maintainOffset = False,
                 worldSpace = True,
                 attrNames = [],
+                channels = 't',
                 metaDataNode = 'transform'
                 ):
 
@@ -40,6 +41,7 @@ class SpaceSwitch(object):
         self.maintainOffset = maintainOffset
         self.worldSpace = worldSpace
         self.attrNames = attrNames
+        self.channels = channels
         self.metaDataNode = metaDataNode
 
         self.create()
@@ -56,7 +58,7 @@ class SpaceSwitch(object):
             for i, space in enumerate(self.spacesInputs):
                 pm.PyNode('{}.Matrix[0]'.format(space)) >> pm.PyNode('{}.input[{}]'.format(self.choiceNode, i))
 
-        self.matrixConstraint(str(self.choiceNode), self.spaceOutput, mo=self.maintainOffset)
+        self.matrixConstraint(str(self.choiceNode), self.spaceOutput, mo=self.maintainOffset, channels=self.channels)
 
         return self.choiceNode
 
