@@ -48,7 +48,7 @@ import adb_rigModules.adb_biped.Class__LimbShoulder as LimbShoulder
 # reload(adbAttr)
 # reload(NC)
 # reload(moduleBase)
-reload(adbIkStretch)
+# reload(adbIkStretch)
 # reload(Control)
 # reload(locGen)
 # reload(adbPiston)
@@ -203,17 +203,18 @@ class LimbArm(moduleBase.ModuleBase):
                 grp.v.set(0)
 
         buildShoulderStatus, buildShoulderStarter = builderShoulder
+        self.Shoulder = None
         if buildShoulderStatus:
-            Shoulder = LimbShoulder.LimbShoudler(module_name='{Side}__Shoulder'.format(**self.nameStructure), config=self.config)
-            Shoulder.build(buildShoulderStarter)
+            self.Shoulder = LimbShoulder.LimbShoudler(module_name='{Side}__Shoulder'.format(**self.nameStructure), config=self.config)
+            self.Shoulder.build(buildShoulderStarter)
 
-            Shoulder.connect(
+            self.Shoulder.connect(
                             arm_result_joint = self.base_arm_joints[0],
                             arm_ik_joint = self.ik_arm_joints[0],
                             arm_fk_joint_parent = self.fk_arm_joints[0].getParent()
                             )
 
-
+        Transform(self.RIG.MODULES_GRP).pivotPoint = Transform(self.base_arm_joints[0]).worldTrans
         # self.loadSkinClustersWeights()
 
 
@@ -855,14 +856,14 @@ class LimbArm(moduleBase.ModuleBase):
         arm_folli_upper.start(metaDataNode='transform')
         self.RIBBON_MOD.metaDataGRPS += [arm_folli_upper.metaData_GRP]
         arm_folli_upper.build()
-        arm_folli_upper.addControls(shape=sl.circleX_shape, scale=1.5, color=('index', self.col_layer1))
+        arm_folli_upper.addControls(shape=sl.sl[self.config['CONTROLS']['Arm_Macro']['shape']], scale=self.config['CONTROLS']['Arm_Macro']['scale'], color=('index', self.col_layer1))
         arm_folli_upper.getFollicules = _folliculeVis
 
         arm_folli_lower = adbFolli.Folli('{Side}__Lower{Basename}_Folli_Base1'.format(**self.nameStructure), 1, 5, radius=folli_radius, subject = lower_proxy_plane)
         arm_folli_lower.start(metaDataNode='transform')
         self.RIBBON_MOD.metaDataGRPS += [arm_folli_lower.metaData_GRP]
         arm_folli_lower.build()
-        arm_folli_lower.addControls(shape=sl.circleX_shape, scale=1.5, color=('index', self.col_layer1))
+        arm_folli_lower.addControls(shape=sl.sl[self.config['CONTROLS']['Arm_Macro']['shape']], scale=self.config['CONTROLS']['Arm_Macro']['scale'], color=('index', self.col_layer1))
         arm_folli_lower.getFollicules = _folliculeVis
 
         upper_proxy_plane_end = createProxyPlaneUpperPart('{Side}__Upper{Basename}_END__MSH'.format(**self.nameStructure), interval=20)

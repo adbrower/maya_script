@@ -201,18 +201,23 @@ class LimbLeg(moduleBase.ModuleBase):
                 grp.v.set(0)
 
         buildFootStatus, buildFootStarter = buildFoot
+        self.Foot = None
         if buildFootStatus:
-            L_foot = LimbFoot.LimbFoot(module_name='{Side}__Foot'.format(**self.nameStructure), config=self.config)
-            L_foot.build(buildFootStarter)
+            self.Foot = LimbFoot.LimbFoot(module_name='{Side}__Foot'.format(**self.nameStructure), config=self.config)
+            self.Foot.build(buildFootStarter)
 
-            L_foot.connect(leg_ikHandle = self.leg_IkHandle,
+            self.Foot.connect(
+                           leg_ikHandle = self.leg_IkHandle,
                            leg_offset_ik_ctrl = self.leg_IkHandle_ctrl_offset,
                            leg_ankle_fk_ctrl = self.fkControls[-1],
                             )
-            pm.PyNode('{}.{}'.format(self.RIG.SPACES_GRP, self.Ik_FK_attributeName)) >> pm.PyNode('{}.{}'.format(L_foot.RIG.SPACES_GRP, L_foot.all_IKFK_attributes[1]))
+            # connect leg space switch to foot
+            pm.PyNode('{}.{}'.format(self.RIG.SPACES_GRP, self.Ik_FK_attributeName)) >> pm.PyNode('{}.{}'.format(self.Foot.RIG.SPACES_GRP, self.Foot.footSpaceSwitchTrans_attribute))
+            pm.PyNode('{}.{}'.format(self.RIG.SPACES_GRP, self.Ik_FK_attributeName)) >> pm.PyNode('{}.{}'.format(self.Foot.RIG.SPACES_GRP, self.Foot.footSpaceSwitchRot_attribute))
 
+        Transform(self.RIG.MODULES_GRP).pivotPoint = Transform(self.base_leg_joints[0]).worldTrans
+        # # self.loadSkinClustersWeights()
 
-        # self.loadSkinClustersWeights()
     # =========================
     # SOLVERS
     # =========================
@@ -249,7 +254,7 @@ class LimbLeg(moduleBase.ModuleBase):
             mirror_chain_1 = pm.mirrorJoint(self.base_leg_joints[0], mirrorYZ=1)
             Joint.Joint(mirror_chain_1).orientAxis = 'Y'
 
-            mirror_chain_3 = pm.mirrorJoint(mirror_chain_1[0] ,mirrorBehavior=1, mirrorYZ=1)
+            mirror_chain_3 = pm.mirrorJoint(mirror_chain_1[0] , mirrorBehavior=1, mirrorYZ=1)
             pm.delete(mirror_chain_1,mirror_chain_1, self.base_leg_joints)
             self.base_leg_joints = [pm.PyNode(x) for x in mirror_chain_3]
 
@@ -336,7 +341,7 @@ class LimbLeg(moduleBase.ModuleBase):
         @changeColor('index', col = self.col_main )
         def CreateFkcontrols():
             """Creates the FK controls on the Fk joint chain """
-            FkShapeSetup = Control.Control.fkShape(joints=self.fk_leg_joints, 
+            FkShapeSetup = Control.Control.fkShape(joints=self.fk_leg_joints,
                                                     shape=sl.sl[self.config['CONTROLS']['FK_Control']['shape']],
                                                     scale=self.config['CONTROLS']['FK_Control']['scale'],
                                                     )
@@ -372,7 +377,7 @@ class LimbLeg(moduleBase.ModuleBase):
                 _leg_IkHandle_ctrl = Control.Control(name='{Side}__{Basename}_IK__{Suffix}'.format(**self.nameStructure),
                                                  shape=sl.sl[self.config['CONTROLS']['IK_Control']['shape']],
                                                  scale=self.config['CONTROLS']['IK_Control']['scale'],
-                                                 matchTransforms = (self.ik_leg_joints[-1], 1, 0)
+                                                 matchTransforms = (self.base_leg_joints[-1], 1, 0)
                                                  ).control
                 moduleBase.ModuleBase.setupVisRule([_leg_IkHandle_ctrl], self.ikFk_MOD.VISRULE_GRP)
                 return _leg_IkHandle_ctrl
@@ -385,7 +390,7 @@ class LimbLeg(moduleBase.ModuleBase):
                                  shape = sl.sl[self.config['CONTROLS']['IK_Control_Offset']['shape']],
                                  scale = self.config['CONTROLS']['IK_Control_Offset']['scale'],
                                  parent = self.leg_IkHandle_ctrl,
-                                 matchTransforms = (self.ik_leg_joints[-1], 1, 0)
+                                 matchTransforms = (self.base_leg_joints[-1], 1, 0)
                                  ).control
                 moduleBase.ModuleBase.setupVisRule([_leg_IkHandle_ctrl_offset], self.ikFk_MOD.VISRULE_GRP)
                 return _leg_IkHandle_ctrl_offset
@@ -578,7 +583,7 @@ class LimbLeg(moduleBase.ModuleBase):
 
             for jnt in topJoints:
                 adb.matrixConstraint(str(self.base_leg_joints[0]), str(jnt), channels='rs', mo=True)
- 
+
             pm.parent(self.pv_base_jnt, kneeSlidingKnee01_CTL)
             return hipSlidingKnee_CTL, kneeSlidingKnee01_CTL
 

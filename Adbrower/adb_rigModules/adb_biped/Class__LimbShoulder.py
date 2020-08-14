@@ -86,11 +86,11 @@ AUTO_CLAVICULE_CONFIG = {
             3 : (1.0 , 0.82),
             },
 
-    'blue' : {
+    'blue' : { # UP / DOWN
             0 : (0 , 0.45),
             1 : (0.5 , 0.5),
-            2 : (0.7 , 0.8),
-            3 : (1.0 , 1.0),
+            2 : (0.75 , 0.75),
+            3 : (1.0 , 0.8),
                         }
                     }
 
@@ -166,15 +166,20 @@ class LimbShoudler(moduleBase.ModuleBase):
         # =================
         # BUILD
 
-        self.create_clavicule_ctrl()
+        self.shoulder_MOD = moduleBase.ModuleBase()
+        self.BUILD_MODULES += [self.shoulder_MOD]
+        self.shoulder_MOD._start('{Side}__Shoulder'.format(**self.nameStructure) ,_metaDataNode = 'transform')
+        pm.parent(self.shoulder_MOD.metaData_GRP, self.RIG.SETTINGS_GRP)
+        pm.parent(self.shoulder_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+
         self.createJoints()
+        self.create_clavicule_ctrl()
         self.ikSetup()
         self.autoClavicule(
                       arm_ik_joints = ['{Side}__Arm_Ik_Shoulder__JNT'.format(**self.nameStructure), '{Side}__Arm_Ik_Elbow__JNT'.format(**self.nameStructure), '{Side}__Arm_Ik_Wrist__JNT'.format(**self.nameStructure)],
                       poleVector_ctl = '{Side}__Arm_PoleVector__CTRL'.format(**self.nameStructure),
                       arm_ik_offset_ctrl = '{Side}__Arm_IK_offset__CTRL'.format(**self.nameStructure)
                       )
-
 
 
     def connect(self,
@@ -203,7 +208,7 @@ class LimbShoudler(moduleBase.ModuleBase):
                 pm.parent(grp, self.RIG.SETTINGS_GRP)
                 grp.v.set(0)
 
-
+        Transform(self.RIG.MODULES_GRP).pivotPoint = Transform(self.starter_Shoulder[0]).worldTrans
     # =========================
     # SOLVERS
     # =========================
@@ -212,40 +217,7 @@ class LimbShoudler(moduleBase.ModuleBase):
     # BUILD SLOVERS
     # -------------------
 
-    def create_clavicule_ctrl(self):
-        self.shoulder_MOD = moduleBase.ModuleBase()
-        self.BUILD_MODULES += [self.shoulder_MOD]
-        self.shoulder_MOD._start('{Side}__Shoulder'.format(**self.nameStructure) ,_metaDataNode = 'transform')
-        pm.parent(self.shoulder_MOD.metaData_GRP, self.RIG.SETTINGS_GRP)
-        pm.parent(self.shoulder_MOD.MOD_GRP, self.RIG.MODULES_GRP)
-
-        @changeColor('index', col = self.col_main)
-        @lockAttr(['tx', 'ty', 'tz','sx', 'sy', 'sz'])
-        def create_ctrl():
-            self.nameStructure['Suffix'] = NC.CTRL
-            self.clavicule_ctrl_class = Control.Control(name='{Side}__{Basename}_{Parts[0]}__{Suffix}'.format(**self.nameStructure),
-                                                shape = sl.sl[self.config['CONTROLS']['Clavicule']['shape']],
-                                                scale=self.config['CONTROLS']['Clavicule']['scale'],
-                                                matchTransforms = (self.starter_Shoulder[0], 1,0),
-                                                parent=self.shoulder_MOD.INPUT_GRP
-                                                )
-
-            self.clavicule_ctrl = self.clavicule_ctrl_class.control
-
-            self.clavicule_ctrl_class.addRotationOrderAttr()
-            if self.side == 'L':
-                self.clavicule_ctrl.rz.set(self.config['CONTROLS']['Clavicule']['rotation_degree']*-1)
-            elif self.side == 'R':
-                self.clavicule_ctrl.rz.set(self.config['CONTROLS']['Clavicule']['rotation_degree'])
-            pm.makeIdentity(self.clavicule_ctrl, n=0, s=1, r=1, t=1, apply=True, pn=1)
-            adb.makeroot_func(self.clavicule_ctrl, suff='Offset', forceNameConvention=True)
-            return self.clavicule_ctrl
-        create_ctrl()
-
-        moduleBase.ModuleBase.setupVisRule([self.clavicule_ctrl], self.shoulder_MOD.VISRULE_GRP)
-
-
-    # @changeColor('index', 2)
+    @changeColor('index', 2)
     def createJoints(self):
         points = [pm.PyNode(guide).getRotatePivot(space='world') for guide in self.starter_Shoulder]
         self.shoulder_chain = Joint.Joint.point_base(*points, name='{Side}__{Basename}'.format(**self.nameStructure), chain=True, padding=2)
@@ -274,11 +246,35 @@ class LimbShoudler(moduleBase.ModuleBase):
         pm.parent(self.clavicule_joint, self.shoulder_MOD.OUTPUT_GRP)
         self.shoulderOffsetGrp = adb.makeroot_func(self.clavicule_joint, suff='Offset', forceNameConvention=True)
 
-        self.shoulder_chain.radius = 2.0
+        self.shoulder_chain.radius = self.config['JOINTS']["Result_JNT"]['radius']
         self.nameStructure['Suffix'] = NC.VISRULE
         moduleBase.ModuleBase.setupVisRule([self.clavicule_joint], self.shoulder_MOD.VISRULE_GRP, '{Side}__{Basename}_Clavicule_JNT__{Suffix}'.format(**self.nameStructure), True)
 
         return self.shoulder_chain.joints
+
+
+    def create_clavicule_ctrl(self):
+        @changeColor('index', col = self.col_main)
+        @lockAttr(['tx', 'ty', 'tz', 'ry' ,'sx', 'sy', 'sz'])
+        def create_ctrl():
+            self.nameStructure['Suffix'] = NC.CTRL
+            self.clavicule_ctrl_class = Control.Control(name='{Side}__{Basename}_{Parts[0]}__{Suffix}'.format(**self.nameStructure),
+                                                shape = sl.sl[self.config['CONTROLS']['Clavicule']['shape']],
+                                                scale=self.config['CONTROLS']['Clavicule']['scale'],
+                                                matchTransforms = (self.clavicule_joint, 1, 1),
+                                                parent=self.shoulder_MOD.INPUT_GRP
+                                                )
+            self.clavicule_ctrl = self.clavicule_ctrl_class.control
+            if self.side == NC.RIGTH_SIDE_PREFIX:
+                self.clavicule_ctrl.sy.set(-1)
+            adb.makeroot_func(self.clavicule_ctrl, suff='Offset', forceNameConvention=True)
+            self.clavicule_ctrl.rz.set(self.config['CONTROLS']['Clavicule']['rotation_degree'])
+            pm.makeIdentity(self.clavicule_ctrl, n=0, r=1, apply=True, pn=1)
+            self.clavicule_ctrl_class.addRotationOrderAttr()
+            return self.clavicule_ctrl
+        create_ctrl()
+
+        moduleBase.ModuleBase.setupVisRule([self.clavicule_ctrl], self.shoulder_MOD.VISRULE_GRP)
 
 
     def ikSetup(self):
@@ -289,7 +285,7 @@ class LimbShoudler(moduleBase.ModuleBase):
             self.shoulder_ik_ctrl_class = Control.Control(name='{Side}__{Basename}_{Parts[1]}__{Suffix}'.format(**self.nameStructure),
                                                 shape=sl.sl[self.config['CONTROLS']['Shoulder']['shape']],
                                                 scale=self.config['CONTROLS']['Shoulder']['scale'],
-                                                matchTransforms = (self.starter_Shoulder[1], 1,0),
+                                                matchTransforms = (self.shoulder_joint, 1, 0),
                                                 parent=self.shoulder_MOD.INPUT_GRP
                                                 )
 
@@ -322,6 +318,7 @@ class LimbShoudler(moduleBase.ModuleBase):
 
         autoClaviculeGrp = adbAttr.NodeAttr([self.AUTO_CLAVICULE_MOD.metaData_GRP])
         autoClaviculeGrp.addAttr('Toggle', True)
+        autoClaviculeGrp.addAttr('RemapNode', 'message')
 
         def ik_chain_duplicate():
             self.ik_AutoShoulder_joint = [pm.duplicate(joint, parentOnly=True)[0] for joint in arm_ik_joints]
@@ -357,6 +354,7 @@ class LimbShoudler(moduleBase.ModuleBase):
             autoShoulder_toggle  = pm.shadingNode('multiplyDivide', au=True, n='{Side}__Auto{Basename}_toggle__{Suffix}'.format(**self.nameStructure))
             self.nameStructure['Suffix'] = NC.REMAP_COLOR_SUFFIX
             autoShoulder_remapNode  = pm.shadingNode('remapColor', au=True, n='{Side}__Auto{Basename}__{Suffix}'.format(**self.nameStructure))
+            autoShoulder_remapNode.outColorR >> self.AUTO_CLAVICULE_MOD.metaData_GRP.RemapNode
 
             if self.side == 'L':
                 autoShoulder_remapNode.inputMin.set(-90)

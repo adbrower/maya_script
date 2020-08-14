@@ -53,7 +53,7 @@ import adb_rigModules.RigBase as RigBase
 # reload(Locator)
 # reload(adbFolli)
 # reload(adbRibbon)
-# reload(SpaceSwitch)
+reload(SpaceSwitch)
 
 #-----------------------------------
 #  DECORATORS
@@ -145,8 +145,14 @@ class LimbFoot(moduleBase.ModuleBase):
         # =================
         # BUILD
 
-        self.create_foot_ctrl()
+        self.Foot_MOD = moduleBase.ModuleBase()
+        self.BUILD_MODULES += [self.Foot_MOD]
+        self.Foot_MOD._start('{Side}__Foot'.format(**self.nameStructure),_metaDataNode = 'transform')
+        pm.parent(self.Foot_MOD.metaData_GRP, self.RIG.SETTINGS_GRP)
+        pm.parent(self.Foot_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+
         self.footGroupSetup()
+        self.create_foot_ctrl()
 
 
     def connect(self,
@@ -179,7 +185,7 @@ class LimbFoot(moduleBase.ModuleBase):
                 pm.parent(grp, self.RIG.SETTINGS_GRP)
                 grp.v.set(0)
 
-
+        Transform(self.RIG.MODULES_GRP).pivotPoint = Transform(self.foot_ctrl).worldTrans
     # =========================
     # SOLVERS
     # =========================
@@ -190,12 +196,6 @@ class LimbFoot(moduleBase.ModuleBase):
 
 
     def create_foot_ctrl(self):
-        self.Foot_MOD = moduleBase.ModuleBase()
-        self.BUILD_MODULES += [self.Foot_MOD]
-        self.Foot_MOD._start('{Side}__Foot'.format(**self.nameStructure),_metaDataNode = 'transform')
-        pm.parent(self.Foot_MOD.metaData_GRP, self.RIG.SETTINGS_GRP)
-        pm.parent(self.Foot_MOD.MOD_GRP, self.RIG.MODULES_GRP)
-
         @changeColor('index', col = self.col_main)
         @lockAttr(['sx', 'sy', 'sz' ])
         def create_ctrl():
@@ -205,10 +205,12 @@ class LimbFoot(moduleBase.ModuleBase):
                                                 scale=self.config['CONTROLS']['Foot']['scale'],
                                                 matchTransforms = (self.starter_Foot[1], 1,0)
                                                 ).control
-            if self.side == 'L':
+            pm.matchTransform(self.foot_ctrl, self.footAnkle_joint, pos=0, rot=1)
+            if self.side == NC.LEFT_SIDE_PREFIX:
                 pm.PyNode(self.foot_ctrl).sx.set(-1)
                 pm.makeIdentity(self.foot_ctrl, n=0, s=1, apply=True, pn=1)
-            Transform(self.foot_ctrl).pivotPoint = Transform(self.starter_Foot[0]).worldTrans
+
+            Transform(self.foot_ctrl).pivotPoint = Transform(self.footAnkle_joint).worldTrans
             adb.makeroot_func(self.foot_ctrl, suff='Offset', forceNameConvention=True)
             return self.foot_ctrl
         create_ctrl()
@@ -242,9 +244,13 @@ class LimbFoot(moduleBase.ModuleBase):
             pm.PyNode(self.footHeel_joint).rename('{Side}__{Basename}_{Parts[3]}_END'.format(**self.nameStructure))
             adb.AutoSuffix(self.foot_chain.joints)
 
+            pm.parent(self.footAnkle_joint, self.Foot_MOD.OUTPUT_GRP)
+            self.footOffsetGrp = self.createPivotGrps(self.footAnkle_joint, name='{Basename}_Offset'.format(**self.nameStructure))
+
             ## orient joint
             if self.side == NC.RIGTH_SIDE_PREFIX:
                 mirror_chain_1 = pm.mirrorJoint(self.footAnkle_joint, mirrorYZ=1)
+                # Joint.Joint(mirror_chain_1).orientAxis = 'Y'
                 mirror_chain_3 = pm.mirrorJoint(mirror_chain_1[0], mirrorBehavior=1, mirrorYZ=1)
                 pm.delete(self.footAnkle_joint, mirror_chain_1)
                 self.foot_chain =  Joint.Joint(mirror_chain_3)
@@ -255,9 +261,9 @@ class LimbFoot(moduleBase.ModuleBase):
                 pm.PyNode(self.footToes_joint).rename('{Side}__{Basename}_{Parts[2]}_END'.format(**self.nameStructure))
                 pm.PyNode(self.footHeel_joint).rename('{Side}__{Basename}_{Parts[3]}_END'.format(**self.nameStructure))
                 adb.AutoSuffix(self.foot_chain.joints)
+            # else:
+            #     Joint.Joint(self.foot_chain).orientAxis = 'Y'
 
-            pm.parent(self.footAnkle_joint, self.Foot_MOD.OUTPUT_GRP)
-            self.footOffsetGrp = self.createPivotGrps(self.footAnkle_joint, name='{Basename}_Offset'.format(**self.nameStructure))
             pm.makeIdentity(self.footOffsetGrp.getChildren(), n=0, t=1, apply=True, pn=1)
             adb.makeroot_func(self.footOffsetGrp, suff='Output', forceNameConvention=1)
             Transform(self.footOffsetGrp).pivotPoint = Transform(self.footAnkle_joint).worldTrans
@@ -282,15 +288,12 @@ class LimbFoot(moduleBase.ModuleBase):
                  ):
         # TODO: ADD SPACE SWITCH TO PIN THE FOOT WHEN IS ON STRETCHY LIMB OR NOT
         # ik Foot Connect
+
         ikBlendGrp = self.createPivotGrps(leg_ikHandle, name='{Basename}_Pivots'.format(**self.nameStructure))
         Transform(ikBlendGrp).pivotPoint = Transform(self.footAnkle_joint).worldTrans
         adbAttr.NodeAttr.copyAttr(self.Foot_MOD.metaData_GRP, [self.foot_ctrl], forceConnection=True)
         [pm.setAttr('{}.{}'.format(self.foot_ctrl, attr), keyable=False) for attr in pm.listAttr(self.foot_ctrl, k=1, v=1, ud=1)]
 
-        self.all_IKFK_attributes = self.setup_SpaceGRP(self.RIG.SPACES_GRP,
-                            Ik_FK_attributeName =['{Side}_rotation_{Basename}'.format(**self.nameStructure),
-                                                  '{Side}_translation_{Basename}'.format(**self.nameStructure)]
-                                                )
         foot_ctrlBlendGrp = adb.makeroot_func(self.foot_ctrl, suff='blend', forceNameConvention=1)
 
         fk_loc = Locator.Locator.create(name='{Side}__{Basename}_blendFk__LOC'.format(**self.nameStructure)).locators
@@ -303,21 +306,29 @@ class LimbFoot(moduleBase.ModuleBase):
 
         [pm.PyNode(loc[0]).v.set(0) for loc in [ik_loc, fk_loc]]
 
-        self.footBlendSystem(ctrl_name = self.RIG.SPACES_GRP,
-                blend_attribute = self.all_IKFK_attributes[0],
-                result_joints = [foot_ctrlBlendGrp],
-                ik_joints = ik_loc,
-                fk_joints = fk_loc,
-                lenght_blend = 1,
-                )
+        # ==================================================
+        # CREATE SPACE SWITCH
+
+        self.footSpaceSwitchTrans = SpaceSwitch.SpaceSwitch('{Side}__Translation_Foot'.format(**self.nameStructure),
+                                        spacesInputs =[ik_loc[0], fk_loc[0]],
+                                        spaceOutput = foot_ctrlBlendGrp,
+                                        maintainOffset = True,
+                                        attrNames = ['Ik', 'Fk'])
+        self.footSpaceSwitchTrans_attribute = self.footSpaceSwitchTrans.NAME
+        self.Foot_MOD.metaDataGRPS += [self.footSpaceSwitchTrans.metaData_GRP]
+
+        self.footSpaceSwitchRot = SpaceSwitch.SpaceSwitch('{Side}__Rotation_Foot'.format(**self.nameStructure),
+                                        spacesInputs =[ik_loc[0], fk_loc[0]],
+                                        spaceOutput = foot_ctrlBlendGrp,
+                                        maintainOffset = True,
+                                        channels='r',
+                                        attrNames = ['Ik', 'Fk'])
+        self.footSpaceSwitchRot_attribute = self.footSpaceSwitchRot.NAME
+        self.Foot_MOD.metaDataGRPS += [self.footSpaceSwitchRot.metaData_GRP]
 
         pm.parentConstraint(self.foot_ctrl, self.footOffsetGrp, mo=1)
-        const = pm.pointConstraint([fk_loc, ik_loc, foot_ctrlBlendGrp], mo=1)
-        fkWeight, ikWeight = pm.pointConstraint(const, q=1, weightAliasList  =1)
-        pm.PyNode('{}.{}'.format(self.RIG.SPACES_GRP, self.all_IKFK_attributes[1])) >> pm.PyNode('{}.{}'.format(const, fkWeight))
-        reverse=pm.shadingNode('reverse', asUtility=1)
-        pm.PyNode('{}.{}'.format(self.RIG.SPACES_GRP, self.all_IKFK_attributes[1])) >> reverse.inputX
-        reverse.outputX >> pm.PyNode('{}.{}'.format(const, ikWeight))
+        adbAttr.NodeAttr.copyAttr(self.footSpaceSwitchTrans.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.footSpaceSwitchRot.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
 
 
     # -------------------
@@ -334,10 +345,13 @@ class LimbFoot(moduleBase.ModuleBase):
                                 parent=self.Foot_MOD.INPUT_GRP,
                                 color=('index', self.col_layer2)
                                 ).control
+        if self.side == NC.RIGTH_SIDE_PREFIX:
+            ball_CTRL.sx.set(-1)
+            pm.makeIdentity(ball_CTRL, n=0, s=1, apply=True, pn=1)
+
         adb.makeroot_func(ball_CTRL, suff='Offset', forceNameConvention=1)
         adb.matrixConstraint(self.footBall_joint, ball_CTRL.getParent(), mo=1)
         ball_CTRL.rx >> pm.PyNode(self.foot_ctrl.ballRoll)
-
 
         heel_CTRL = Control.Control(name='{Side}__{Basename}_Heel__{Suffix}'.format(**self.nameStructure),
                                 shape = sl.sl[self.config['CONTROLS']['Foot_Heel']['shape']],
@@ -408,76 +422,6 @@ class LimbFoot(moduleBase.ModuleBase):
     # SLOTS
     # =========================
 
-    def footBlendSystem(self,
-                    ctrl_name = '',
-                    blend_attribute = '',
-                    result_joints = [],
-                    ik_joints = [],
-                    fk_joints = [],
-                    lenght_blend = 1,
-                    ):
-            """
-            Function to create an Ik - Fk rotation based script
-
-            @param ctrl_name            : (str) Name of the control having the switch attribute
-            @param blend_attribute      : (sr)  Name of blend attribute
-            @param result_joints        : (list) List of result joints
-            @param ik_joints            : (list) List of ik joints
-            @param fk_joints            : (list) List of fk joints
-
-            example:
-            ik_fk_switch(ctrl_name = 'locator1',
-                        blend_attribute = 'ik_fk_switch',
-                        result_joints = ['result_01', 'result_02', 'result_03'],
-                        ik_joints = ['ik_01', 'ik_02', 'ik_03'],
-                        fk_joints = ['fk_01', 'fk_02', 'fk_03'],
-                       )
-            """
-            ## add attribute message
-            switch_ctrl = adbAttr.NodeAttr([ctrl_name])
-            switch_ctrl.addAttr('lenght_blend', lenght_blend, keyable=False)
-
-            # Creation of the remaps values and blendColor nodes
-            RemapValueColl = [pm.shadingNode('remapValue',asUtility=1, n='{}__{}__{}'.format(self.side, NC.getBasename(x), NC.REMAP_VALUE_SUFFIX)) for x in result_joints]
-            BlendColorColl_Rotate = [pm.shadingNode('blendColors', asUtility=1, n='{}__{}_rotate__{}'.format(self.side, NC.getBasename(x), NC.BLENDCOLOR_SUFFIX)) for x in result_joints]
-            ## Connect the IK in the Color 2
-            for oFK, oBlendColor in zip (fk_joints, BlendColorColl_Rotate):
-                fkDecomp = pm.shadingNode('decomposeMatrix', asUtility=1, n='{}__Footrotate__DCPM'.format(self.side))
-                pm.PyNode(oFK).worldMatrix[0] >> pm.PyNode(fkDecomp).inputMatrix
-                pm.PyNode(fkDecomp).outputRotateX >> pm.PyNode(oBlendColor).color1R
-                pm.PyNode(fkDecomp).outputRotateY>> pm.PyNode(oBlendColor).color1G
-                pm.PyNode(fkDecomp).outputRotateZ >> pm.PyNode(oBlendColor).color1B
-
-            ## Connect the FK in the Color 1
-            for oIK, oBlendColor in zip (ik_joints,BlendColorColl_Rotate):
-                ikDecomp = pm.shadingNode('decomposeMatrix', asUtility=1, n='{}__Footrotate__DCPM'.format(self.side))
-                pm.PyNode(oIK).worldMatrix[0] >> pm.PyNode(ikDecomp).inputMatrix
-                pm.PyNode(ikDecomp).outputRotateX >> pm.PyNode(oBlendColor).color2R
-                pm.PyNode(ikDecomp).outputRotateY>> pm.PyNode(oBlendColor).color2G
-                pm.PyNode(ikDecomp).outputRotateZ >> pm.PyNode(oBlendColor).color2B
-
-            ## Connect the BlendColor node in the Blend joint chain
-            for oBlendColor, oBlendJoint in zip (BlendColorColl_Rotate,result_joints):
-                pm.PyNode(oBlendColor).outputR  >> pm.PyNode(oBlendJoint).rx
-                pm.PyNode(oBlendColor).outputG  >> pm.PyNode(oBlendJoint).ry
-                pm.PyNode(oBlendColor).outputB  >> pm.PyNode(oBlendJoint).rz
-
-            for oBlendColor in BlendColorColl_Rotate:
-                pm.PyNode(oBlendColor).blender.set(1)
-
-            ## Connect the Remap Values to Blend Colors
-            for oRemapValue,oBlendColor in zip (RemapValueColl, BlendColorColl_Rotate):
-                pm.PyNode(oRemapValue).outValue >> pm.PyNode(oBlendColor).blender
-
-
-            #=================================================================================================
-            ## Connect the IK -FK Control to Remap Value
-            blend_switch =  '{}.{}'.format(ctrl_name, blend_attribute)
-
-            for each in RemapValueColl:
-                pm.PyNode(blend_switch) >> pm.PyNode(each).inputValue
-                pm.PyNode('{}.{}'.format(ctrl_name, switch_ctrl.attrName)) >> pm.PyNode(each).inputMax
-
 
     def createPivotGrps(self, joint, name, forceConnection=True):
         toeRoll = adb.makeroot_func(joint, suff='ToeRoll', forceNameConvention=True)
@@ -488,7 +432,7 @@ class LimbFoot(moduleBase.ModuleBase):
         Transform(ballRoll).pivotPoint = Transform(self.footBall_joint).worldTrans
         Transform(toeRoll).pivotPoint = Transform(self.footToes_joint).worldTrans
 
-        if self.side == 'R':
+        if self.side == NC.RIGTH_SIDE_PREFIX:
             pm.makeIdentity(toeRoll, n=0, r=1, apply=True, pn=1)
 
         if forceConnection:
@@ -517,12 +461,6 @@ class LimbFoot(moduleBase.ModuleBase):
         return footOffsetGrp
 
 
-    def setup_SpaceGRP(self, transform, Ik_FK_attributeName=[]):
-        switch_ctrl = adbAttr.NodeAttr([transform])
-        for name in Ik_FK_attributeName:
-            switch_ctrl.addAttr(name, 'enum',  eName = "IK:FK:")
-
-        return Ik_FK_attributeName
 
 # =========================
 # BUILD
