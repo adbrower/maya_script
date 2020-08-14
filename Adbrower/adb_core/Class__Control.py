@@ -108,11 +108,14 @@ class Control(adbAttr.NodeAttr):
         pm.rename(self.control, self.name)
         adb.AutoSuffix([self.control])
         adb.changeColor_func(self.control, *self._color)
-        self.control.scale.set(self._scale, self._scale, self._scale)
+        if isinstance(self.scale, int) or isinstance(self.scale, float):
+            self.control.scale.set(self._scale, self._scale, self._scale)
+        else:
+            self.control.scale.set(*self._scale)
+
         pm.makeIdentity(self.control, n=0, s=1, r=1, t=1, apply=True, pn=1)
         if self.matchTransforms[0] is not False:
             pm.matchTransform(self.control, self.matchTransforms[0], pos =self.matchTransforms[1], rot=self.matchTransforms[2])
-            pm.makeIdentity(self.control, n=0, t=1, s=1, apply=True, pn=1)
 
         if self.parent:
             pm.parent(self.control, self.parent)
