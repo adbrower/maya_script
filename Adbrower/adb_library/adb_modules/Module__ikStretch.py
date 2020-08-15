@@ -16,8 +16,6 @@ import adbrower
 
 adb = adbrower.Adbrower()
 
-reload(NC)
-
 
 class stretchyIKModel(moduleBase.ModuleBaseModel):
     def __init__(self):
