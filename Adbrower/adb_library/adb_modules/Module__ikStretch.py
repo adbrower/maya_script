@@ -7,19 +7,17 @@
 # ------------------------------------------------------
 
 import sys
-import traceback
-from pprint import pprint
-
 import maya.cmds as mc
 import pymel.core as pm
 
 import adb_core.ModuleBase as moduleBase
-reload(moduleBase)
 import adb_core.NameConv_utils as NC
+import adbrower
 
+adb = adbrower.Adbrower()
 
-# self.NAME = 'ik_stretch'
-# METADATA_grp_name = '{}_METADATA'.format(self.NAME)
+reload(NC)
+
 
 class stretchyIKModel(moduleBase.ModuleBaseModel):
     def __init__(self):
@@ -58,6 +56,7 @@ class stretchyIK(moduleBase.ModuleBase):
                  ik_joints=pm.selected(),
                  ik_ctrl=None,
                  stretchAxis='Y',
+                 poleVector_ctrl=None
                  ):
         super(stretchyIK, self).__init__()
 
@@ -71,6 +70,7 @@ class stretchyIK(moduleBase.ModuleBase):
 
         self.stretchAxis = stretchAxis
         self.ik_ctrl = pm.PyNode(ik_ctrl)
+        self.poleVector_ctrl = pm.PyNode(poleVector_ctrl)
 
         self._MODEL.getControls = self.ik_ctrl
 
@@ -152,13 +152,17 @@ class stretchyIK(moduleBase.ModuleBase):
         self.metaData_GRP.addAttr('Stretch_MDV_Node', at='message',  keyable=False)
         self.metaData_GRP.addAttr('Condition_Node', at='message',  keyable=False)
 
+        self.metaData_GRP.addAttr('Maximum_Toggle', at='bool', dv=0,  keyable=True)
+        self.metaData_GRP.addAttr('Maximum_Factor', at='float', dv=1.3, min=1, max=20, keyable=True)
+
 
     def build(self):
         super(stretchyIK, self)._build()
         self.stretchyIKSetUp()
+        self.maximumSetup()
 
         self.setFinalHiearchy(
-                        RIG_GRP_LIST=[self.distanceLoc.getParent(), self.posLoc[0]],
+                        RIG_GRP_LIST=[self.distanceLoc.getParent(), self.posLoc[0], self.posLoc[1].getParent()],
                         INPUT_GRP_LIST=[pm.PyNode(self.ik_ctrl).getParent()],
                         OUTPUT_GRP_LIST=[])
 
@@ -181,7 +185,7 @@ class stretchyIK(moduleBase.ModuleBase):
             """Creates locator at the Pivot of the object selected """
             locs = []
             for sel in sub:
-                loc_align = pm.spaceLocator(n='{}__pos__LOC__'.format(sel))
+                loc_align = pm.spaceLocator(n='{}_Distance__{}'.format(NC.getNameNoSuffix(sel), NC.LOC))
                 locs.append(loc_align)
                 pm.matchTransform(loc_align, sel, rot=True, pos=True)
                 pm.select(locs, add=True)
@@ -202,7 +206,6 @@ class stretchyIK(moduleBase.ModuleBase):
 
         # getMaxdistance
         def getMaxDistance():
-            pm.parent(self.posLoc[1], self.endJnt)
             oriTranslate = self.ik_ctrl.getTranslation()
             pm.move(self.ik_ctrl, -1000, -1000, 0)
             _max_distance = self.distanceLoc.distance.get()
@@ -235,8 +238,7 @@ class stretchyIK(moduleBase.ModuleBase):
         self.md_prp_node = pm.shadingNode('multiplyDivide', asUtility=1, n='{}_proportion__{}'.format(self.NAME, NC.MULTIPLY_DIVIDE_SUFFIX))
         self.md_prp_node.operation.set(2)
 
-        # parenting
-        pm.parent(self.posLoc[1], self.ik_ctrl)
+        adb.makeroot_func(self.posLoc[1], suff='OFFSET', forceNameConvention=1)
 
         # connections
         self.distanceLoc.distance >> self.toggle_node.color1R
@@ -259,6 +261,48 @@ class stretchyIK(moduleBase.ModuleBase):
         self.posLoc[1].v.set(0)
         self.distanceLoc.getParent().v.set(0)
 
+
+    def maximumSetup(self):
+        # DUPLICATED IK JOINT CHAIN
+        self.ik_NonStretch_joint = [pm.duplicate(joint, parentOnly=True)[0] for joint in self.ikJnts]
+        pm.parent(self.ik_NonStretch_joint[-1], self.ik_NonStretch_joint[-2])
+        pm.parent(self.ik_NonStretch_joint[-2], self.ik_NonStretch_joint[0])
+
+        [pm.PyNode(jnt).rename('{}_NonStetch__{}'.format(NC.getNameNoSuffix(jnt), NC.JOINT)) for jnt in self.ik_NonStretch_joint]
+
+        nonStretch_IkHandle, nonStretch_IkHandle_effector = pm.ikHandle(n='{}_NonStetch__{}'.format(self.NAME, NC.IKHANDLE_SUFFIX), sj=self.ik_NonStretch_joint[0], ee=self.ik_NonStretch_joint[-1])
+        nonStretch_IkHandle.v.set(0)
+        self.nonStretch_IkHandle = nonStretch_IkHandle
+        adb.makeroot_func(self.nonStretch_IkHandle)
+        pm.poleVectorConstraint(self.poleVector_ctrl, nonStretch_IkHandle, weight=1)
+        adb.matrixConstraint(self.ik_ctrl, self.nonStretch_IkHandle.getParent())
+        self.setFinalHiearchy(RIG_GRP_LIST = [self.nonStretch_IkHandle.getParent(), self.ik_NonStretch_joint[0]])
+
+        # MAXIMUM NODES
+        self.decompStart_node = pm.shadingNode('decomposeMatrix', asUtility=1, n='{}_startVec__{}'.format(self.NAME, NC.DECOMPOSEMAT_SUFFIX))
+        self.decompEnd_node = pm.shadingNode('decomposeMatrix', asUtility=1, n='{}_endVec__{}'.format(self.NAME, NC.DECOMPOSEMAT_SUFFIX))
+        self.md_max_node = pm.shadingNode('multiplyDivide', asUtility=1, n='{}_maxFactor__{}'.format(self.NAME, NC.MULTIPLY_DIVIDE_SUFFIX))
+        self.clam_node = pm.shadingNode('clamp', asUtility=1, n='{}_max__{}'.format(self.NAME, NC.CLAMP_SUFFIX))
+        self.initialVec_node = pm.shadingNode('plusMinusAverage', asUtility=1, n='{}_initalVec__{}'.format(self.NAME, NC.PLUS_MIN_AVER_SUFFIX))
+        self.initialVec_node.operation.set(2)
+        self.addVec_node = pm.shadingNode('plusMinusAverage', asUtility=1, n='{}_addVect__{}'.format(self.NAME, NC.PLUS_MIN_AVER_SUFFIX))
+        self.maximumToggle_node = pm.shadingNode('blendColors', asUtility=1, n='{}_maximumToggle__{}'.format(self.NAME, NC.PLUS_MIN_AVER_SUFFIX))
+
+        # connections maximum system
+        self.ik_NonStretch_joint[-1].worldMatrix[0] >> self.decompStart_node.inputMatrix
+        self.ik_ctrl.worldMatrix[0] >> self.decompEnd_node.inputMatrix
+        self.decompStart_node.outputTranslate >> self.md_max_node.input1
+        self.decompEnd_node.outputTranslate >> self.initialVec_node.input3D[0]
+        self.decompStart_node.outputTranslate >> self.initialVec_node.input3D[1]
+        self.initialVec_node.output3D >> self.addVec_node.input3D[0]
+        self.decompStart_node.outputTranslate >> self.addVec_node.input3D[1]
+        self.addVec_node.output3D >> self.clam_node.input
+        self.md_max_node.output >> self.clam_node.max
+        self.clam_node.output >> self.maximumToggle_node.color1
+        self.decompEnd_node.outputTranslate >> self.maximumToggle_node.color2
+        self.maximumToggle_node.output >> self.posLoc[1].getParent().translate
+
+
     def set_metaData_GRP(self):
         pm.PyNode(self.ikHandle).translate >> self.metaData_GRP.Ik_Handle
         pm.PyNode(self.distanceNode).distance >> self.metaData_GRP.Ik_Distance
@@ -277,6 +321,14 @@ class stretchyIK(moduleBase.ModuleBase):
         self.metaData_GRP.Joint_Axis.set(self.stretchAxis, lock=True)
         self.metaData_GRP.Original_joint_distance.set(self.originalDistance, lock=True)
 
+        toggle_mult = pm.shadingNode('multDoubleLinear', asUtility=1)
+        self.metaData_GRP.Maximum_Toggle >> toggle_mult.input1
+        self.toggle_node.blender >> toggle_mult.input2
+        toggle_mult.output >> self.maximumToggle_node.blender
+
+        self.metaData_GRP.Maximum_Factor >> self.md_max_node.input2X
+        self.metaData_GRP.Maximum_Factor >> self.md_max_node.input2Y
+        self.metaData_GRP.Maximum_Factor >> self.md_max_node.input2Z
 
 
 # leg = stretchyIK('legIk',
