@@ -520,43 +520,50 @@ class NodeAttr(object):
 
     @staticmethod
     @undo
-    def copyAttr(source, targets, all=True, forceConnection=False):
+    def copyAttr(source, targets, all=True, nicename=None, forceConnection=False):
         """
         Select mesh and the attribute(s) to copy
         Needs to put the targets into a list
         """
         _type = type(targets)
         source = pm.PyNode(source)
+        _nicename = nicename
 
         if _type == str:
             targets = [targets]
         elif _type == list:
             pass
 
-        def copyAttrLoop(attribute, target):
+        def copyAttrLoop(attribute, target, nicename=_nicename):
             source_attr = pm.PyNode(source).name() + '.' + attribute
             attr = attribute
-
             _at = str(mc.addAttr(source_attr, q=True, at=True)) or None
-            _ln = mc.addAttr(source_attr, q=True, ln=True) or None
+            __ln = mc.addAttr(source_attr, q=True, ln=True) or None
+
+            if nicename:
+                _ln = '{}_{}'.format(nicename, __ln)
+            else:
+                _ln = __ln
+
             _min = mc.addAttr(source_attr, q=True, min=True) or None
             _max = mc.addAttr(source_attr, q=True, max=True) or None
             _dv = mc.addAttr(source_attr, q=True, dv=True) or 0
             _parent = mc.addAttr(source_attr, q=True, p=True) or None
+            _locked = pm.getAttr(source_attr, lock=True)
 
             if pm.objExists('{}.{}'.format(target, attribute)):
+                pass
+            if _locked:
                 pass
             else:
                 if _at == 'enum':
                     enList = []
-                    _en = pm.attributeQuery(
-                        str(attr), node=source.name(), listEnum=True)[0]
+                    _en = pm.attributeQuery(str(attr), node=source.name(), listEnum=True)[0]
                     enList.append(_en)
 
-                    pm.addAttr(target, ln=str(_ln), at='enum',
-                            en=str(enList[0]), keyable=True)
+                    pm.addAttr(target, ln=str(_ln), at='enum', en=str(enList[0]), keyable=True)
 
-                elif _parent != _ln:
+                elif _parent != __ln:
                     siblings = pm.attributeQuery(str(attr), node=source.name(), ls=True)
                     parent = pm.attributeQuery(str(attr), node=source.name(), lp=True)[0]
                     pm.addAttr(target, ln=parent, at='compound', nc= 1 + len(siblings), keyable=True)
@@ -566,10 +573,9 @@ class NodeAttr(object):
                         defaultValue = mc.addAttr('{}.{}'.format(source.name(), sib), q=True, dv=True) or 0
                         pm.addAttr(target, ln=str(sib), at=str(_at),  dv=defaultValue, keyable=True, parent=parent)
                 else:
-                    pm.addAttr(target, ln=str(_ln), at=str(
-                        _at),  dv=_dv, keyable=True)
+                    pm.addAttr(target, ln=str(_ln), at=str(_at),  dv=_dv, keyable=True)
 
-                target_attr = target + '.' + attr
+                target_attr = target + '.' + _ln
                 if _min is not None:
                     pm.addAttr(target_attr, e=True, min=_min)
                 elif _max is not None:
@@ -579,7 +585,6 @@ class NodeAttr(object):
 
         if all:
             temp = pm.listAttr(source, k=1, v=1, ud=1)
-
             siblingsToRemove = []
             parentToRemove = []
             for a in temp:
@@ -604,7 +609,14 @@ class NodeAttr(object):
 
         if forceConnection:
             for att in pm.listAttr(source, ud=1):
-                pm.connectAttr('{}.{}'.format(target, att), '{}.{}'.format(source, att))
+                try:
+                    if nicename:
+                        new_att = '{}_{}'.format(nicename, att)
+                        pm.connectAttr('{}.{}'.format(target, new_att), '{}.{}'.format(source, att))
+                    else:
+                        pm.connectAttr('{}.{}'.format(target, att), '{}.{}'.format(source, att))
+                except RuntimeError:
+                    pass
 
 
 

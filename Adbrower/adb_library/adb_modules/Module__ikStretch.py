@@ -7,13 +7,13 @@
 # ------------------------------------------------------
 
 import sys
+
 import maya.cmds as mc
 import pymel.core as pm
 
 import adb_core.ModuleBase as moduleBase
 import adb_core.NameConv_utils as NC
 import adbrower
-
 adb = adbrower.Adbrower()
 
 
@@ -213,7 +213,7 @@ class stretchyIK(moduleBase.ModuleBase):
         max_distance = getMaxDistance()
 
         # condition node
-        self.cond_node = pm.shadingNode('condition', asUtility=1, n='{}__{}'.format(self.NAME, NC.CONDITION_SUFFIX))
+        self.cond_node = pm.shadingNode('condition', asUtility=1, n='{}_cond_{}'.format(self.NAME, NC.CONDITION_SUFFIX))
         self.cond_node.operation.set(3)
         self.cond_node.colorIfFalseR.set(1)
         self.cond_node.secondTerm.set(1)
@@ -336,4 +336,3 @@ class stretchyIK(moduleBase.ModuleBase):
 
 # leg.start()
 # leg.build()
-
