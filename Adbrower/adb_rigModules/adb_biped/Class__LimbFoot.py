@@ -26,14 +26,6 @@ import adb_core.Class__Joint as Joint
 import adb_core.Class__Locator as Locator
 from adb_core.Class__Transforms import Transform
 
-import adb_library.adb_utils.Func__Piston as adbPiston
-import adb_library.adb_utils.Script__LocGenerator as locGen
-import adb_library.adb_utils.Script__ProxyPlane as adbProxy
-import adb_library.adb_utils.Class__FkShapes as adbFKShape
-
-import adb_library.adb_modules.Module__Folli as adbFolli
-import adb_library.adb_modules.Module__IkStretch as adbIkStretch
-import adb_library.adb_modules.Module__SquashStretch_Ribbon as adbRibbon
 import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
 
 import adb_rigModules.RigBase as RigBase
@@ -43,16 +35,10 @@ import adb_rigModules.RigBase as RigBase
 # reload(Joint)
 # reload(RigBase)
 # reload(adbAttr)
-# reload(adbFKShape)
 # reload(NC)
 # reload(moduleBase)
-# reload(adbIkStretch)
 # reload(Control)
-# reload(locGen)
-# reload(adbPiston)
 # reload(Locator)
-# reload(adbFolli)
-# reload(adbRibbon)
 reload(SpaceSwitch)
 
 #-----------------------------------
@@ -250,7 +236,6 @@ class LimbFoot(moduleBase.ModuleBase):
             ## orient joint
             if self.side == NC.RIGTH_SIDE_PREFIX:
                 mirror_chain_1 = pm.mirrorJoint(self.footAnkle_joint, mirrorYZ=1)
-                # Joint.Joint(mirror_chain_1).orientAxis = 'Y'
                 mirror_chain_3 = pm.mirrorJoint(mirror_chain_1[0], mirrorBehavior=1, mirrorYZ=1)
                 pm.delete(self.footAnkle_joint, mirror_chain_1)
                 self.foot_chain =  Joint.Joint(mirror_chain_3)
@@ -261,8 +246,6 @@ class LimbFoot(moduleBase.ModuleBase):
                 pm.PyNode(self.footToes_joint).rename('{Side}__{Basename}_{Parts[2]}_END'.format(**self.nameStructure))
                 pm.PyNode(self.footHeel_joint).rename('{Side}__{Basename}_{Parts[3]}_END'.format(**self.nameStructure))
                 adb.AutoSuffix(self.foot_chain.joints)
-            # else:
-            #     Joint.Joint(self.foot_chain).orientAxis = 'Y'
 
             pm.makeIdentity(self.footOffsetGrp.getChildren(), n=0, t=1, apply=True, pn=1)
             adb.makeroot_func(self.footOffsetGrp, suff='Output', forceNameConvention=1)

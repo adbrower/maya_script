@@ -36,7 +36,6 @@ import adb_library.adb_modules.Module__Folli as adbFolli
 import adb_library.adb_modules.Module__IkStretch as adbIkStretch
 import adb_library.adb_modules.Module__SquashStretch_Ribbon as adbRibbon
 import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
-import adb_core.Class__Skinning as Skinning
 
 import adb_rigModules.RigBase as RigBase
 import adb_rigModules.adb_biped.Class__LimbShoulder as LimbShoulder
@@ -56,8 +55,7 @@ import adb_rigModules.adb_biped.Class__LimbShoulder as LimbShoulder
 # reload(adbFolli)
 # reload(adbRibbon)
 # reload(SpaceSwitch)
-# reload(Skinning)
-reload(LimbShoulder)
+# reload(LimbShoulder)
 # reload(AutoPoleVector)
 
 #-----------------------------------
@@ -188,6 +186,7 @@ class LimbArm(moduleBase.ModuleBase):
         super(LimbArm, self)._connect()
 
         self.setup_VisibilityGRP()
+        self.setup_SettingGRP()
         self.scalingUniform()
         self.cleanUpEmptyGrps()
 
@@ -215,7 +214,7 @@ class LimbArm(moduleBase.ModuleBase):
                             )
 
         Transform(self.RIG.MODULES_GRP).pivotPoint = Transform(self.base_arm_joints[0]).worldTrans
-        # self.loadSkinClustersWeights()
+        # RigBase.loadSkinClustersWeights(DATA_WEIGHT_PATH)
 
 
     # =========================
@@ -344,7 +343,7 @@ class LimbArm(moduleBase.ModuleBase):
         @lockAttr(att_to_lock=['tx', 'ty', 'tz'])
         def CreateFkcontrols():
             """Creates the FK controls on the Fk joint chain """
-            FkShapeSetup = Control.Control.fkShape(joints=self.fk_arm_joints, 
+            FkShapeSetup = Control.Control.fkShape(joints=self.fk_arm_joints,
                                                     shape=sl.sl[self.config['CONTROLS']['FK_Control']['shape']],
                                                     scale=self.config['CONTROLS']['FK_Control']['scale'],
                                                     )
@@ -412,13 +411,13 @@ class LimbArm(moduleBase.ModuleBase):
                                  scale = self.config['CONTROLS']['PoleVector_Control']['scale'],
                                  ).control
                 last_point = pm.PyNode(pv_guide).getCVs()
-                pm.move(self.poleVectorCtrl,last_point[-1])
+                pm.move(self.poleVectorCtrl, last_point[-1])
                 pm.poleVectorConstraint(self.poleVectorCtrl, arm_IkHandle[0], weight=1)
 
                 def curve_setup():
                     pm.select(self.poleVectorCtrl, r=True)
                     pv_tip_jnt = adb.jointAtCenter()[0]
-                    pm.rename(pv_tip_jnt, '{}__pvTip__{}'.format(self.side, NC.JOINT))
+                    pm.rename(pv_tip_jnt, '{Side}__{Basename}pvTip__{Suffix}'.format(**self.nameStructure))
                     pm.parent(pv_tip_jnt, self.poleVectorCtrl)
 
                     _loc = pm.spaceLocator(p= adb.getWorldTrans([self.ik_arm_joints[-2]]))
@@ -426,7 +425,8 @@ class LimbArm(moduleBase.ModuleBase):
                     pm.select(_loc, r=True)
                     self.pv_base_jnt = adb.jointAtCenter()[0]
                     pm.delete(_loc)
-                    pm.rename(self.pv_base_jnt, '{}__pvBase__{}'.format(self.side, NC.JOINT))
+                    self.nameStructure['Suffix'] = NC.JOINT
+                    pm.rename(self.pv_base_jnt, '{Side}__{Basename}pvBase__{Suffix}'.format(**self.nameStructure))
                     pm.skinCluster(self.pv_base_jnt , pv_guide, pv_tip_jnt)
                     pm.parent(self.pv_base_jnt, self.ik_arm_joints[1])
                     pm.setAttr(pv_guide.inheritsTransform, 0)
@@ -454,18 +454,18 @@ class LimbArm(moduleBase.ModuleBase):
                                  poleVectorCTL = self.poleVectorCtrl,
                                  )
             pm.parent(autPoleVectorGrp, self.ikFk_MOD.INPUT_GRP)
-            autPoleVectorGrpEnd = pm.createNode('transform', n='{Side}__{Basename}PV_IK_SPACES_SWITCH_AUTO__GRP'.format(**self.nameStructure))
+            autPoleVectorGrpEnd = pm.createNode('transform', n='{Side}__{Basename}PV_SPACES_SWITCH_AUTO__GRP'.format(**self.nameStructure))
             pm.matchTransform(autPoleVectorGrpEnd, self.poleVectorCtrl)
             pm.parent(autPoleVectorGrpEnd, self.RIG.SPACES_GRP)
             pm.parentConstraint(autPoleVectorSpaceLoc.getChildren()[0], autPoleVectorGrpEnd, mo=True)
 
             # wORLD SPACE
-            ikSpaceSwitchWorldGrp = pm.group(n='{Side}__{Basename}PV_IK_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.WORLD_LOC)
+            ikSpaceSwitchWorldGrp = pm.group(n='{Side}__{Basename}PV_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.WORLD_LOC)
             ikSpaceSwitchWorldGrp.v.set(0)
             pm.matchTransform(ikSpaceSwitchWorldGrp, self.poleVectorCtrl, pos=1, rot=1)
-            
+
             # WRIST SPACE
-            ikSpaceSwitchWristdGrp = pm.group(n='{Side}__{Basename}PV_IK_SPACES_SWITCH_WRIST__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.SPACES_GRP)
+            ikSpaceSwitchWristdGrp = pm.group(n='{Side}__{Basename}PV_SPACES_SWITCH_WRIST__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.SPACES_GRP)
             pm.matchTransform(ikSpaceSwitchWristdGrp, self.poleVectorCtrl, pos=1, rot=1)
             pm.parentConstraint(self.arm_IkHandle_ctrl_offset, ikSpaceSwitchWristdGrp, mo=True)
 
@@ -487,7 +487,7 @@ class LimbArm(moduleBase.ModuleBase):
             # HIPS SPACE
             self.ikSpaceSwitchHipsdGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_HIPS__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.SPACES_GRP)
             pm.matchTransform(self.ikSpaceSwitchHipsdGrp, self.arm_IkHandle_ctrl, pos=1, rot=1)
-            
+
             # CHEST SPACE
             self.ikSpaceSwitchChestdGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_CHEST__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.SPACES_GRP)
             pm.matchTransform(self.ikSpaceSwitchChestdGrp, self.arm_IkHandle_ctrl, pos=1, rot=1)
@@ -528,22 +528,22 @@ class LimbArm(moduleBase.ModuleBase):
         Joint.Joint(self.ik_arm_joints).radius = self.config['JOINTS']["IK_JNT"]['radius']
 
 
-
     def stretchyLimb(self):
-        armIk_MOD = adbIkStretch.stretchyIK('{Side}__StretchyarmIk'.format(**self.nameStructure),
+        self.armIk_MOD = adbIkStretch.stretchyIK('{Side}__StretchyarmIk'.format(**self.nameStructure),
                     ik_joints=self.ik_arm_joints,
                     ik_ctrl=self.arm_IkHandle_ctrl_offset,
+                    poleVector_ctrl=self.poleVectorCtrl,
                     stretchAxis='Y'
                     )
-        armIk_MOD.start(metaDataNode='transform')
-        armIk_MOD.metaDataGRPS += [armIk_MOD.metaData_GRP]
-        armIk_MOD.metaData_GRP.Toggle.set(self.config['ATTRIBUTES']["StretchyLimb"])
-        self.BUILD_MODULES += [armIk_MOD]
+        self.armIk_MOD.start(metaDataNode='transform')
+        self.armIk_MOD.metaDataGRPS += [self.armIk_MOD.metaData_GRP]
+        self.armIk_MOD.metaData_GRP.Toggle.set(self.config['ATTRIBUTES']["StretchyLimb"])
+        self.BUILD_MODULES += [self.armIk_MOD]
 
-        armIk_MOD.build()
-        pm.pointConstraint(self.ik_arm_joints[0], armIk_MOD.posLoc[0], mo=True)
+        self.armIk_MOD.build()
+        pm.pointConstraint(self.ik_arm_joints[0], self.armIk_MOD.posLoc[0], mo=True)
         pm.parent((self.arm_IkHandle_ctrl_offset).getParent(), self.arm_IkHandle_ctrl)
-        pm.parent(armIk_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+        pm.parent(self.armIk_MOD.MOD_GRP, self.RIG.MODULES_GRP)
 
 
     def slidingElbow(self):
@@ -801,7 +801,7 @@ class LimbArm(moduleBase.ModuleBase):
             return lower_proxy_plane
 
         def addVolumePreservation():
-            upper_arm_squash_stretch = adbRibbon.SquashStrech('{Side}__{Basename}Upper_VolumePreservation'.format(**self.nameStructure),
+            self.upper_arm_squash_stretch = adbRibbon.SquashStrech('{Side}__{Basename}Upper_VolumePreservation'.format(**self.nameStructure),
                                                             ExpCtrl=None,
                                                             ribbon_ctrl=self.base_arm_joints[:2],  # Top first, then bottom
 
@@ -811,11 +811,11 @@ class LimbArm(moduleBase.ModuleBase):
                                                             jointListC = ([arm_folli_upper_end.getResetJoints[-1]], 0),
                                                          )
 
-            upper_arm_squash_stretch.start(metaDataNode='transform')
-            self.RIBBON_MOD.metaDataGRPS += [upper_arm_squash_stretch.metaData_GRP]
-            upper_arm_squash_stretch.build()
+            self.upper_arm_squash_stretch.start(metaDataNode='transform')
+            self.RIBBON_MOD.metaDataGRPS += [self.upper_arm_squash_stretch.metaData_GRP]
+            self.upper_arm_squash_stretch.build()
 
-            lower_arm_squash_stretch = adbRibbon.SquashStrech('{Side}__{Basename}Lower_VolumePreservation'.format(**self.nameStructure),
+            self.lower_arm_squash_stretch = adbRibbon.SquashStrech('{Side}__{Basename}Lower_VolumePreservation'.format(**self.nameStructure),
                                                             ExpCtrl=None,
                                                             ribbon_ctrl=self.base_arm_joints[1:],  # Top first, then bottom
 
@@ -825,21 +825,21 @@ class LimbArm(moduleBase.ModuleBase):
                                                             jointListC = ([arm_folli_lower_end.getResetJoints[-1]], 0),
                                                          )
 
-            lower_arm_squash_stretch.start(metaDataNode='transform')
-            self.RIBBON_MOD.metaDataGRPS += [lower_arm_squash_stretch.metaData_GRP]
-            lower_arm_squash_stretch.build()
+            self.lower_arm_squash_stretch.start(metaDataNode='transform')
+            self.RIBBON_MOD.metaDataGRPS += [self.lower_arm_squash_stretch.metaData_GRP]
+            self.lower_arm_squash_stretch.build()
 
-            pm.parent(upper_arm_squash_stretch.MOD_GRP, upperPartGrp)
-            pm.parent(lower_arm_squash_stretch.MOD_GRP, lowerPartGrp)
+            pm.parent(self.upper_arm_squash_stretch.MOD_GRP, upperPartGrp)
+            pm.parent(self.lower_arm_squash_stretch.MOD_GRP, lowerPartGrp)
 
             ## Scaling Connection
-            for grp in [upper_arm_squash_stretch.MOD_GRP, lower_arm_squash_stretch.MOD_GRP]:
+            for grp in [self.upper_arm_squash_stretch.MOD_GRP, self.lower_arm_squash_stretch.MOD_GRP]:
                 adb.unlockAttr_func(grp, ['sx', 'sy', 'sz'])
                 pm.PyNode(self.RIBBON_MOD.MOD_GRP).sx >> grp.sx
                 pm.PyNode(self.RIBBON_MOD.MOD_GRP).sy >> grp.sy
                 pm.PyNode(self.RIBBON_MOD.MOD_GRP).sz >> grp.sz
 
-            return upper_arm_squash_stretch.MOD_GRP, lower_arm_squash_stretch.MOD_GRP
+            return self.upper_arm_squash_stretch.MOD_GRP, self.lower_arm_squash_stretch.MOD_GRP
 
 
         #===========================
@@ -979,14 +979,6 @@ class LimbArm(moduleBase.ModuleBase):
                         pm.connectAttr('{}.{}'.format(visGrp.subject, attr), '{}.vis'.format(grp))
 
 
-    def loadSkinClustersWeights(self):
-        os.chdir(DATA_WEIGHT_PATH)
-        for _file in os.listdir(DATA_WEIGHT_PATH):
-            try:
-                Skinning.Skinning.importWeights(DATA_WEIGHT_PATH, _file)
-            except:
-                pass
-
     # =========================
     # SLOTS
     # =========================
@@ -1019,8 +1011,8 @@ class LimbArm(moduleBase.ModuleBase):
                        )
             """
             ## add attribute message
-            switch_ctrl = adbAttr.NodeAttr([ctrl_name])
-            switch_ctrl.addAttr('lenght_blend', lenght_blend, keyable=False)
+            space_ctrl = adbAttr.NodeAttr([ctrl_name])
+            space_ctrl.addAttr('lenght_blend', lenght_blend, keyable=False)
 
             # Creation of the remaps values and blendColor nodes
             RemapValueColl = [pm.shadingNode('remapValue',asUtility=1, n='{}__{}__{}'.format(self.side, NC.getBasename(x), NC.REMAP_VALUE_SUFFIX)) for x in result_joints]
@@ -1174,17 +1166,26 @@ class LimbArm(moduleBase.ModuleBase):
 
             for each in RemapValueColl:
                 pm.PyNode(blend_switch) >> pm.PyNode(each).inputValue
-                pm.PyNode('{}.{}'.format(ctrl_name, switch_ctrl.attrName)) >> pm.PyNode(each).inputMax
+                pm.PyNode('{}.{}'.format(ctrl_name, space_ctrl.attrName)) >> pm.PyNode(each).inputMax
 
 
     def setup_SpaceGRP(self, transform, Ik_FK_attributeName):
-        switch_ctrl = adbAttr.NodeAttr([transform])
-        switch_ctrl.AddSeparator(transform, 'ARMS')
-        switch_ctrl.addAttr(Ik_FK_attributeName, 'enum',  eName = "IK:FK:")
+        space_ctrl = adbAttr.NodeAttr([transform])
+        space_ctrl.AddSeparator(transform, 'ARMS')
+        space_ctrl.addAttr(Ik_FK_attributeName, 'enum',  eName = "IK:FK:")
         adbAttr.NodeAttr.copyAttr(self.povSpaceSwitch.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
         adbAttr.NodeAttr.copyAttr(self.ikArmpaceSwitch.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
         return Ik_FK_attributeName
 
+
+    def setup_SettingGRP(self):
+        setting_ctrl = adbAttr.NodeAttr([self.RIG.SETTINGS_GRP])
+        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], '{Side}_ARM'.format(**self.nameStructure))
+        adbAttr.NodeAttr.copyAttr(self.armIk_MOD.metaData_GRP, [self.RIG.SETTINGS_GRP],  nicename='{Side}_stretchy'.format(**self.nameStructure), forceConnection=True)
+        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], '{Side}_VolumePreservation'.format(**self.nameStructure))
+        
+        adbAttr.NodeAttr.copyAttr(self.upper_arm_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_upperArm'.format(**self.nameStructure), forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.lower_arm_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_lowerArm'.format(**self.nameStructure), forceConnection=True)
 
 
 

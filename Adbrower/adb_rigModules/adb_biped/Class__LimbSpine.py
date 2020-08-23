@@ -25,16 +25,12 @@ import adb_core.NameConv_utils as NC
 import adb_core.Class__AddAttr as adbAttr
 import adb_core.Class__Joint as Joint
 import adb_core.Class__Locator as Locator
+import adb_core.Class__Skinning as Skinning
 from adb_core.Class__Transforms import Transform
 
-import adb_library.adb_utils.Func__Piston as adbPiston
 import adb_library.adb_utils.Script__LocGenerator as locGen
-import adb_library.adb_utils.Script__PoseReader as PoseReader
 import adb_library.adb_utils.Script__ProxyPlane as adbProxy
-import adb_core.Class__Skinning as Skinning
-
 import adb_library.adb_modules.Module__Folli as adbFolli
-import adb_library.adb_modules.Module__IkStretch as adbIkStretch
 import adb_library.adb_modules.Module__SquashStretch_Ribbon as adbRibbon
 import adb_library.adb_modules.Module__Slide as Slide
 import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
@@ -48,17 +44,15 @@ reload(RigBase)
 # reload(adbAttr)
 # reload(NC)
 # reload(moduleBase)
-# reload(adbIkStretch)
 # reload(Control)
 # reload(locGen)
-# reload(adbPiston)
 # reload(Locator)
 # reload(adbFolli)
 # reload(adbRibbon)
 # reload(SpaceSwitch)
-# reload(PoseReader)
 # reload(Slide)
 # reload(Skinning)
+# reload(adbProxy)
 
 #-----------------------------------
 #  DECORATORS
@@ -552,19 +546,20 @@ class LimbSpine(moduleBase.ModuleBase):
 
 
     def connectSpineToLeg(self,
-                    legSpaceGroup = None,
+                    spaceSwitchLocatorHips = [],
                     leg_Ik_Hips = [],
                     leg_Fk_Offset_Hips = [],
                     ):
         """
         Args:
-            legSpaceGroup (list, optional): [description]. Defaults to None.
+            spaceSwitchLocatorHips (list, optional): Group created from a SpaceSwitch Module. Defaults to None.
             leg_Ik_Hips (list, optional): [description]. ex: ['{Side}__Leg_Ik_Hips__JNT'.format(x) for x in 'LR'].
             leg_Fk_Offset_Hips (list, optional): [description]. ex: ['{Side}__Leg_Fk_Hips_Offset__GRP'.format(x) for x in 'LR'].
         """
-        [pm.parentConstraint(self.SPINEIK_MOD.getJoints[0], jnt, mo=True) for jnt in leg_Ik_Hips]
-        [pm.parentConstraint(self.SPINEIK_MOD.getJoints[0], jnt, mo=True) for jnt in leg_Fk_Offset_Hips]
+        [pm.parentConstraint(self.REVERSE_MOD.getJoints[0], jnt, mo=True) for jnt in leg_Ik_Hips]
+        [pm.parentConstraint(self.REVERSE_MOD.getJoints[0], jnt, mo=True) for jnt in leg_Fk_Offset_Hips]
 
+        [pm.parentConstraint(self.REVERSE_MOD.getJoints[0], loc, mo=True) for loc in spaceSwitchLocatorHips]
 
     def connectSpineToShoulder(self,
                     spaceSwitchLocatorHips = [],
@@ -633,7 +628,6 @@ class LimbSpine(moduleBase.ModuleBase):
         switch_ctrl = adbAttr.NodeAttr([transform])
         for name in Ik_FK_attributeName:
             switch_ctrl.addAttr(name, 'enum',  eName = "IK:FK:")
-
         return Ik_FK_attributeName
 
 

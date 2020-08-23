@@ -210,7 +210,7 @@ class stretchyIK(moduleBase.ModuleBase):
             self.ik_ctrl.setTranslation(oriTranslate)
             return _max_distance
 
-        max_distance = getMaxDistance()
+        max_distance = getMaxDistance() + 0.2
 
         # condition node
         self.cond_node = pm.shadingNode('condition', asUtility=1, n='{}_cond_{}'.format(self.NAME, NC.CONDITION_SUFFIX))
