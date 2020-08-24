@@ -94,25 +94,30 @@ class NodeAttr(object):
         else:
             raise AttributeError('object has no attribute {}'.format(name))
 
+
     @property
     def subject(self):
         """ Returns the subject on which the attributes are added"""
         return str(self.node[0])
+
 
     @property
     def getValue(self):
         """ Returns the value of the attribute"""
         return self.attr
 
+
     @property
     def attrName(self):
         """ Returns the attribute's name"""
         return self.name
 
+
     @property
     def allAttrs(self):
         """ Returns the list of all the new methods / attributes added"""
         return self.list_methods
+
 
     @property
     def getAttrConnection(self):
@@ -126,6 +131,7 @@ class NodeAttr(object):
             all_attr.append(attr)
         return all_attr
 
+
     def convertAttr(self, attrName):
         """  Convert an existing attribute to the module"""
         for attribute in attrName:
@@ -133,10 +139,12 @@ class NodeAttr(object):
                 '{}.{}'.format(pm.selected()[0], attribute))})
             # self.addMethods()
 
+
     def addMethods(self):
         """ Add all the new attributes as methods of the class"""
         for methods in self.list_methods:
             setattr(NodeAttr, methods, self.list_methods[methods])
+
 
     def addAttr(self, name, attr, dv=None, min=None, max=None, eName=None, keyable=True, lock=False, parent=None, nc=None):
         """
@@ -308,6 +316,7 @@ class NodeAttr(object):
             pass
         return(self.node)
 
+
     def set(self, attr, value):
         """
         Function to set a new value of an attribute
@@ -319,6 +328,7 @@ class NodeAttr(object):
         for node in self.node:
             node.setAttr(attr, value)
 
+
     def lockAttribute(self, att_to_lock=['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz'], cb=False):
         """
         Function to lock all default attribute except visibility
@@ -328,6 +338,7 @@ class NodeAttr(object):
                 pm.PyNode(sub).setAttr(att, lock=True,
                                        channelBox=cb, keyable=False)
 
+
     def unlockAttribute(self, att_to_lock=['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz']):
         """
         Function to unlock all default attribute except visibility
@@ -335,6 +346,7 @@ class NodeAttr(object):
         for sub in self.node:
             for att in att_to_lock:
                 pm.PyNode(sub).setAttr(att, lock=False, keyable=True)
+
 
     def unhideAll(self):
         """
@@ -403,6 +415,7 @@ class NodeAttr(object):
                 pm.PyNode(plug).set([0] * pm.polyEvaluate(shape, vertex=True), type='doubleArray')
         return plug
 
+
     @staticmethod
     def rmvPaintAttribute(subName, attrName):
         mc.makePaintable(subName, attrName, rm=1)
@@ -414,8 +427,8 @@ class NodeAttr(object):
         returns: List
         """
         attrLock = pm.listAttr(self.subject, l=True)
-        # print attrLock
         return attrLock
+
 
     @staticmethod
     def ShiftAtt(mode, _obj=mc.channelBox('mainChannelBox', q=True, mol=True), _attr=mc.channelBox('mainChannelBox', q=True, sma=True)):
@@ -474,19 +487,25 @@ class NodeAttr(object):
                         for alck in attrLock:
                             mc.setAttr(eachObj + '.' + alck, lock=1)
 
-    @staticmethod
-    def AddSeparator(_transform, label = False):
+
+    @classmethod
+    def isSeparator(cls, attrName):
+        if '___' in attrName:
+            return True
+        else:
+            return False
+
+
+    @classmethod
+    def AddSeparator(cls, _transform, label = False):
         """
         Add a seperator in the Channel Box
         """
-        if type(_transform) == str:
-            # print('a')
+        if isinstance(_transform, str):
             node = _transform
-        elif type(_transform) == list:
-            # print('b')
+        elif isinstance(_transform, list):
             node = _transform[0]
         else:
-            # print('c')
             node = _transform
         name = "__________"
 
@@ -504,11 +523,11 @@ class NodeAttr(object):
         en = "................................................................:"
 
         if label:
-            pm.addAttr(node, ln=name, keyable=False, en=label, at="enum", nn=en)
+            pm.addAttr(node, ln=name, keyable=True, en=label, at="enum", nn=en)
         else:
-            pm.addAttr(node, ln=name, keyable=False, en=en, at="enum", nn=en)
-        pm.setAttr((node + "." + name), channelBox=True,
-                   keyable=False, lock=True)
+            pm.addAttr(node, ln=name, keyable=True, en=en, at="enum", nn=en)
+        pm.setAttr((node + "." + name), lock=True)
+
 
     @staticmethod
     def enumAttr(_transform, name='name', en="On:Off"):
@@ -518,9 +537,10 @@ class NodeAttr(object):
         pm.PyNode(_transform).addAttr(name, keyable=True,
                                 attributeType='enum', en=en)
 
-    @staticmethod
+
+    @classmethod
     @undo
-    def copyAttr(source, targets, all=True, nicename=None, forceConnection=False):
+    def copyAttr(cls, source, targets, all=True, ignore=[], nicename=None, forceConnection=False):
         """
         Select mesh and the attribute(s) to copy
         Needs to put the targets into a list
@@ -551,17 +571,24 @@ class NodeAttr(object):
             _parent = mc.addAttr(source_attr, q=True, p=True) or None
             _locked = pm.getAttr(source_attr, lock=True)
 
-            if pm.objExists('{}.{}'.format(target, attribute)):
-                pass
-            if _locked:
-                pass
+            if cls.isSeparator(attr):
+                enList = []
+                _en = pm.attributeQuery(str(attr), node=source.name(), listEnum=True)[0]
+                enList.append(_en)
+                cls.AddSeparator(target, label=enList[0])
             else:
-                if _at == 'enum':
+                if pm.objExists('{}.{}'.format(target, attribute)):
+                    pass
+
+                elif _at == 'enum':
                     enList = []
                     _en = pm.attributeQuery(str(attr), node=source.name(), listEnum=True)[0]
                     enList.append(_en)
 
                     pm.addAttr(target, ln=str(_ln), at='enum', en=str(enList[0]), keyable=True)
+
+                elif _locked:
+                    pass
 
                 elif _parent != __ln:
                     siblings = pm.attributeQuery(str(attr), node=source.name(), ls=True)
@@ -595,11 +622,21 @@ class NodeAttr(object):
                     parentToRemove.extend(parent)
 
             def Diff(li1, li2):
+                """
+                Substract li2 from li1
+                Args:
+                    li1 (List)
+                    li2 (List)
+                Returns:
+                    List
+                """
                 li_dif = [i for i in li1 + li2 if i not in li1 or i not in li2]
                 return li_dif
 
             temp2 = (Diff(temp, siblingsToRemove[:-1]))
             all_attr = (Diff(temp2, parentToRemove))
+            if ignore:
+                all_attr = (Diff(all_attr, ignore))
         else:
             all_attr = [x for x in pm.channelBox("mainChannelBox", q=1, selectedMainAttributes=1)]
 
@@ -617,7 +654,6 @@ class NodeAttr(object):
                         pm.connectAttr('{}.{}'.format(target, att), '{}.{}'.format(source, att))
                 except RuntimeError:
                     pass
-
 
 
     @staticmethod
