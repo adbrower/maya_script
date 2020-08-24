@@ -265,7 +265,6 @@ class LimbArm(moduleBase.ModuleBase):
             Joint.Joint(self.base_arm_joints).orientAxis = '-Y'
 
 
-
     def ik_fk_system(self):
         """
         Create an IK-FK blend system
@@ -469,7 +468,7 @@ class LimbArm(moduleBase.ModuleBase):
             pm.matchTransform(ikSpaceSwitchWristdGrp, self.poleVectorCtrl, pos=1, rot=1)
             pm.parentConstraint(self.arm_IkHandle_ctrl_offset, ikSpaceSwitchWristdGrp, mo=True)
 
-            self.povSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__PoleVector'.format(**self.nameStructure),
+            self.povSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}PoleVector'.format(**self.nameStructure),
                                                     spacesInputs =[autPoleVectorGrpEnd, ikSpaceSwitchWristdGrp, ikSpaceSwitchWorldGrp],
                                                     spaceOutput = self.poleVectorCtrl.getParent(),
                                                     maintainOffset = True,
@@ -492,7 +491,7 @@ class LimbArm(moduleBase.ModuleBase):
             self.ikSpaceSwitchChestdGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_CHEST__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.SPACES_GRP)
             pm.matchTransform(self.ikSpaceSwitchChestdGrp, self.arm_IkHandle_ctrl, pos=1, rot=1)
 
-            self.ikArmpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__IK_{Basename}'.format(**self.nameStructure),
+            self.ikArmpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}_IK'.format(**self.nameStructure),
                                                     spacesInputs =[ikSpaceSwitchWorldGrpArm, self.ikSpaceSwitchHipsdGrp, self.ikSpaceSwitchChestdGrp],
                                                     spaceOutput = self.arm_IkHandle_ctrl.getParent(),
                                                     maintainOffset = False,
@@ -504,7 +503,7 @@ class LimbArm(moduleBase.ModuleBase):
 
 
         def makeConnections():
-            self.Ik_FK_attributeName = self.setup_SpaceGRP(self.RIG.SPACES_GRP, Ik_FK_attributeName ='{Side}_IK_FK_{Basename}'.format(**self.nameStructure))
+            self.Ik_FK_attributeName = self.setup_SpaceGRP(self.RIG.SPACES_GRP, Ik_FK_attributeName ='{Side}_{Basename}_IK_FK'.format(**self.nameStructure))
             for index, part in zip(xrange(3), self.nameStructure['Parts']):
                 self.nameStructure['Suffix'] = part
                 armSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}_{Suffix}IKFK'.format(**self.nameStructure),
@@ -1001,11 +1000,11 @@ class LimbArm(moduleBase.ModuleBase):
     def setup_SettingGRP(self):
         setting_ctrl = adbAttr.NodeAttr([self.RIG.SETTINGS_GRP])
         setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], '{Side}_ARM'.format(**self.nameStructure))
-        adbAttr.NodeAttr.copyAttr(self.armIk_MOD.metaData_GRP, [self.RIG.SETTINGS_GRP],  nicename='{Side}_stretchy'.format(**self.nameStructure), forceConnection=True)
-        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], '{Side}_VolumePreservation'.format(**self.nameStructure))
-        
-        adbAttr.NodeAttr.copyAttr(self.upper_arm_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_upperArm'.format(**self.nameStructure), forceConnection=True)
-        adbAttr.NodeAttr.copyAttr(self.lower_arm_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_lowerArm'.format(**self.nameStructure), forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.armIk_MOD.metaData_GRP, [self.RIG.SETTINGS_GRP],  nicename='{Side}_{Basename}Stretchy'.format(**self.nameStructure), forceConnection=True)
+        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], '{Side}_{Basename}VolumePreservation'.format(**self.nameStructure))
+
+        adbAttr.NodeAttr.copyAttr(self.upper_arm_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}UpperArm'.format(**self.nameStructure), forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.lower_arm_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}LowerArm'.format(**self.nameStructure), forceConnection=True)
 
 
 

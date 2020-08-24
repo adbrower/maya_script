@@ -186,6 +186,7 @@ class LimbLeg(moduleBase.ModuleBase):
         super(LimbLeg, self)._connect()
 
         self.setup_VisibilityGRP()
+        self.setup_SettingGRP()
         self.scalingUniform()
         self.cleanUpEmptyGrps()
 
@@ -216,7 +217,7 @@ class LimbLeg(moduleBase.ModuleBase):
             pm.PyNode('{}.{}'.format(self.RIG.SPACES_GRP, self.Ik_FK_attributeName)) >> pm.PyNode('{}.{}'.format(self.Foot.RIG.SPACES_GRP, self.Foot.footSpaceSwitchRot_attribute))
 
         Transform(self.RIG.MODULES_GRP).pivotPoint = Transform(self.base_leg_joints[0]).worldTrans
-        # # self.loadSkinClustersWeights()
+        # RigBase.loadSkinClustersWeights()
 
     # =========================
     # SOLVERS
@@ -487,7 +488,7 @@ class LimbLeg(moduleBase.ModuleBase):
             self.ikSpaceSwitchHipsdGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_HIPS__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.SPACES_GRP)
             pm.matchTransform(self.ikSpaceSwitchHipsdGrp, self.leg_IkHandle_ctrl, pos=1, rot=1)
 
-            self.ikLegSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__IK_{Basename}'.format(**self.nameStructure),
+            self.ikLegSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}_IK'.format(**self.nameStructure),
                                                     spacesInputs =[ikSpaceSwitchWorldGrpLeg, self.ikSpaceSwitchHipsdGrp],
                                                     spaceOutput = self.leg_IkHandle_ctrl.getParent(),
                                                     maintainOffset = False,
@@ -500,7 +501,7 @@ class LimbLeg(moduleBase.ModuleBase):
 
 
         def makeConnections():
-            self.Ik_FK_attributeName = self.setup_SpaceGRP(self.RIG.SPACES_GRP, Ik_FK_attributeName ='{Side}_IK_FK_{Basename}'.format(**self.nameStructure))
+            self.Ik_FK_attributeName = self.setup_SpaceGRP(self.RIG.SPACES_GRP, Ik_FK_attributeName ='{Side}_{Basename}_IK_FK'.format(**self.nameStructure))
             for index, part in zip(xrange(3), self.nameStructure['Parts']):
                 self.nameStructure['Suffix'] = part
                 legSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}_{Suffix}IKFK'.format(**self.nameStructure),
@@ -530,21 +531,21 @@ class LimbLeg(moduleBase.ModuleBase):
 
 
     def stretchyLimb(self):
-        legIk_MOD = adbIkStretch.stretchyIK('{Side}__StretchylegIk'.format(**self.nameStructure),
+        self.legIk_MOD = adbIkStretch.stretchyIK('{Side}__StretchylegIk'.format(**self.nameStructure),
                     ik_joints=self.ik_leg_joints,
                     ik_ctrl=self.leg_IkHandle_ctrl_offset,
                     poleVector_ctrl=self.poleVectorCtrl,
                     stretchAxis='Y'
                     )
-        legIk_MOD.start(metaDataNode='transform')
-        legIk_MOD.metaDataGRPS += [legIk_MOD.metaData_GRP]
-        legIk_MOD.metaData_GRP.Toggle.set(self.config['ATTRIBUTES']["StretchyLimb"])
-        self.BUILD_MODULES += [legIk_MOD]
+        self.legIk_MOD.start(metaDataNode='transform')
+        self.legIk_MOD.metaDataGRPS += [self.legIk_MOD.metaData_GRP]
+        self.legIk_MOD.metaData_GRP.Toggle.set(self.config['ATTRIBUTES']["StretchyLimb"])
+        self.BUILD_MODULES += [self.legIk_MOD]
 
-        legIk_MOD.build()
-        pm.pointConstraint(self.ik_leg_joints[0], legIk_MOD.posLoc[0], mo=True)
+        self.legIk_MOD.build()
+        pm.pointConstraint(self.ik_leg_joints[0], self.legIk_MOD.posLoc[0], mo=True)
         pm.parent((self.leg_IkHandle_ctrl_offset).getParent(), self.leg_IkHandle_ctrl)
-        pm.parent(legIk_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+        pm.parent(self.legIk_MOD.MOD_GRP, self.RIG.MODULES_GRP)
 
 
     def slidingKnee(self):
@@ -812,7 +813,7 @@ class LimbLeg(moduleBase.ModuleBase):
             return lower_proxy_plane
 
         def addVolumePreservation():
-            upper_leg_squash_stretch = adbRibbon.SquashStrech('{Side}__{Basename}Upper_VolumePreservation'.format(**self.nameStructure),
+            self.upper_leg_squash_stretch = adbRibbon.SquashStrech('{Side}__{Basename}Upper_VolumePreservation'.format(**self.nameStructure),
                                                             ExpCtrl=None,
                                                             ribbon_ctrl=self.base_leg_joints[:2],  # Top first, then bottom
 
@@ -822,11 +823,11 @@ class LimbLeg(moduleBase.ModuleBase):
                                                             jointListC = ([leg_folli_upper_end.getResetJoints[-1]], 1.5),
                                                          )
 
-            upper_leg_squash_stretch.start(metaDataNode='transform')
-            self.RIBBON_MOD.metaDataGRPS += [upper_leg_squash_stretch.metaData_GRP]
-            upper_leg_squash_stretch.build()
+            self.upper_leg_squash_stretch.start(metaDataNode='transform')
+            self.RIBBON_MOD.metaDataGRPS += [self.upper_leg_squash_stretch.metaData_GRP]
+            self.upper_leg_squash_stretch.build()
 
-            lower_leg_squash_stretch = adbRibbon.SquashStrech('{Side}__{Basename}Lower_VolumePreservation'.format(**self.nameStructure),
+            self.lower_leg_squash_stretch = adbRibbon.SquashStrech('{Side}__{Basename}Lower_VolumePreservation'.format(**self.nameStructure),
                                                             ExpCtrl=None,
                                                             ribbon_ctrl=self.base_leg_joints[1:],  # Top first, then bottom
 
@@ -836,21 +837,21 @@ class LimbLeg(moduleBase.ModuleBase):
                                                             jointListC = ([leg_folli_lower_end.getResetJoints[-1]], 1),
                                                          )
 
-            lower_leg_squash_stretch.start(metaDataNode='transform')
-            self.RIBBON_MOD.metaDataGRPS += [lower_leg_squash_stretch.metaData_GRP]
-            lower_leg_squash_stretch.build()
+            self.lower_leg_squash_stretch.start(metaDataNode='transform')
+            self.RIBBON_MOD.metaDataGRPS += [self.lower_leg_squash_stretch.metaData_GRP]
+            self.lower_leg_squash_stretch.build()
 
-            pm.parent(upper_leg_squash_stretch.MOD_GRP, upperPartGrp)
-            pm.parent(lower_leg_squash_stretch.MOD_GRP, lowerPartGrp)
+            pm.parent(self.upper_leg_squash_stretch.MOD_GRP, upperPartGrp)
+            pm.parent(self.lower_leg_squash_stretch.MOD_GRP, lowerPartGrp)
 
             ## Scaling Connection
-            for grp in [upper_leg_squash_stretch.MOD_GRP, lower_leg_squash_stretch.MOD_GRP]:
+            for grp in [self.upper_leg_squash_stretch.MOD_GRP, self.lower_leg_squash_stretch.MOD_GRP]:
                 adb.unlockAttr_func(grp, ['sx', 'sy', 'sz'])
                 pm.PyNode(self.RIBBON_MOD.MOD_GRP).sx >> grp.sx
                 pm.PyNode(self.RIBBON_MOD.MOD_GRP).sy >> grp.sy
                 pm.PyNode(self.RIBBON_MOD.MOD_GRP).sz >> grp.sz
 
-            return upper_leg_squash_stretch.MOD_GRP, lower_leg_squash_stretch.MOD_GRP
+            return self.upper_leg_squash_stretch.MOD_GRP, self.lower_leg_squash_stretch.MOD_GRP
 
 
         #===========================
@@ -992,14 +993,6 @@ class LimbLeg(moduleBase.ModuleBase):
                         pm.connectAttr('{}.{}'.format(visGrp.subject, attr), '{}.vis'.format(grp))
 
 
-    def loadSkinClustersWeights(self):
-        os.chdir(DATA_WEIGHT_PATH)
-        for _file in os.listdir(DATA_WEIGHT_PATH):
-            try:
-                Skinning.Skinning.importWeights(DATA_WEIGHT_PATH, _file)
-            except:
-                pass
-
 
     # =========================
     # SLOTS
@@ -1014,30 +1007,17 @@ class LimbLeg(moduleBase.ModuleBase):
         adbAttr.NodeAttr.copyAttr(self.ikLegSpaceSwitch.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
         return Ik_FK_attributeName
 
-    def setupVisRule(self, tansformList, parent, name=False, defaultValue=True):
-            """
-            Edit : for setting up the visrule for Fk shapes ctrl
-            Original one from ModuleBase
-            """
-            if name:
-                visRuleGrp = pm.group(n=name, em=1, parent=parent)
-            else:
-                visRuleGrp = pm.group(n='{}_{}__{}'.format(NC.getNameNoSuffix(tansformList[0]), NC.getSuffix(tansformList[0]), NC.VISRULE),  em=1, parent=parent)
-            visRuleGrp.v.set(0)
-            visRuleAttr = adbAttr.NodeAttr([visRuleGrp])
-            visRuleAttr.addAttr('vis', 'enum',  eName = "2:0")
 
-            self.nameStructure['Suffix'] = NC.ADDLINEAR_SUFFIX
-            addDouble = pm.shadingNode('addDoubleLinear', asUtility=1, n='{Side}__{Basename}_visrule__{Suffix}'.format(**self.nameStructure))
-            self.nameStructure['Suffix'] = NC.REVERSE_SUFFIX
-            reverse = pm.shadingNode('reverse', asUtility=1, n='{Side}__{Basename}_visrule__{Suffix}'.format(**self.nameStructure))
-            addDouble.input2.set(1)
-            pm.connectAttr('{}.{}'.format(visRuleGrp, visRuleAttr.name), '{}.inputX'.format(reverse), f=1)
-            pm.connectAttr('{}.outputX'.format(reverse), '{}.input1'.format(addDouble), f=1)
-            for transform in tansformList:
-                pm.connectAttr('{}.output'.format(addDouble), '{}.drawStyle'.format(transform))
-            adb.lockAttr_func(visRuleGrp, ['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz','v'])
-            return visRuleGrp, visRuleAttr.name
+    def setup_SettingGRP(self):
+        setting_ctrl = adbAttr.NodeAttr([self.RIG.SETTINGS_GRP])
+        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], '{Side}_LEG'.format(**self.nameStructure))
+        adbAttr.NodeAttr.copyAttr(self.legIk_MOD.metaData_GRP, [self.RIG.SETTINGS_GRP],  nicename='{Side}_{Basename}Stretchy'.format(**self.nameStructure), forceConnection=True)
+        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], '{Side}_{Basename}VolumePreservation'.format(**self.nameStructure))
+
+        adbAttr.NodeAttr.copyAttr(self.upper_leg_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}Upper{Basename}'.format(**self.nameStructure), forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.lower_leg_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}Lower{Basename}'.format(**self.nameStructure), forceConnection=True)
+
+
 
 # =========================
 # BUILD
