@@ -47,7 +47,7 @@ import adb_rigModules.adb_biped.Class__LimbShoulder as LimbShoulder
 # reload(adbAttr)
 # reload(NC)
 # reload(moduleBase)
-# reload(adbIkStretch)
+reload(adbIkStretch)
 # reload(Control)
 # reload(locGen)
 # reload(adbPiston)
@@ -505,13 +505,17 @@ class LimbArm(moduleBase.ModuleBase):
 
         def makeConnections():
             self.Ik_FK_attributeName = self.setup_SpaceGRP(self.RIG.SPACES_GRP, Ik_FK_attributeName ='{Side}_IK_FK_{Basename}'.format(**self.nameStructure))
-            self.blendSystem(ctrl_name = self.RIG.SPACES_GRP,
-                            blend_attribute = self.Ik_FK_attributeName,
-                            result_joints = self.base_arm_joints,
-                            ik_joints = self.ik_arm_joints,
-                            fk_joints = self.fk_arm_joints,
-                            lenght_blend = 1,
-                            )
+            for index, part in zip(xrange(3), self.nameStructure['Parts']):
+                self.nameStructure['Suffix'] = part
+                armSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}_{Suffix}IKFK'.format(**self.nameStructure),
+                                 spacesInputs =[self.ik_arm_joints[index], self.fk_arm_joints[index]],
+                                 spaceOutput = self.base_arm_joints[index],
+                                 maintainOffset = True,
+                                 channels='trs',
+                                 attrNames = ['Ik', 'Fk'])
+
+                pm.connectAttr('{}.{}'.format(self.RIG.SPACES_GRP, self.Ik_FK_attributeName), '{}.{}'.format(armSpaceSwitch.metaData_GRP, armSpaceSwitch.NAME))
+                self.ikFk_MOD.metaDataGRPS += [armSpaceSwitch.metaData_GRP]
             pm.parent(self.base_arm_joints[0], self.ikFk_MOD.OUTPUT_GRP)
 
         IkJointChain()
@@ -983,190 +987,6 @@ class LimbArm(moduleBase.ModuleBase):
     # SLOTS
     # =========================
 
-    def blendSystem(self,
-                    ctrl_name = '',
-                    blend_attribute = '',
-                    result_joints = [],
-                    ik_joints = [],
-                    fk_joints = [],
-                    lenght_blend = 1,
-                    translate = False,
-                    scale = True
-                    ):
-            """
-            Function to create an Ik - Fk rotation based script
-
-            @param ctrl_name            : (str) Name of the control having the switch attribute
-            @param blend_attribute      : (sr)  Name of blend attribute
-            @param result_joints        : (list) List of result joints
-            @param ik_joints            : (list) List of ik joints
-            @param fk_joints            : (list) List of fk joints
-
-            example:
-            ik_fk_switch(ctrl_name = 'locator1',
-                        blend_attribute = 'ik_fk_switch',
-                        result_joints = ['result_01', 'result_02', 'result_03'],
-                        ik_joints = ['ik_01', 'ik_02', 'ik_03'],
-                        fk_joints = ['fk_01', 'fk_02', 'fk_03'],
-                       )
-            """
-            ## add attribute message
-            space_ctrl = adbAttr.NodeAttr([ctrl_name])
-            space_ctrl.addAttr('lenght_blend', lenght_blend, keyable=False)
-
-            # Creation of the remaps values and blendColor nodes
-            RemapValueColl = [pm.shadingNode('remapValue',asUtility=1, n='{}__{}__{}'.format(self.side, NC.getBasename(x), NC.REMAP_VALUE_SUFFIX)) for x in result_joints]
-
-            BlendColorColl_Rotate = [pm.shadingNode('blendColors', asUtility=1, n='{}__{}_rotate__{}'.format(self.side, NC.getBasename(x), NC.BLENDCOLOR_SUFFIX)) for x in result_joints]
-            ## Connect the IK in the Color 2
-            for oFK, oBlendColor in zip (fk_joints,BlendColorColl_Rotate):
-                pm.PyNode(oFK).rx >> pm.PyNode(oBlendColor).color1R
-                pm.PyNode(oFK).ry >> pm.PyNode(oBlendColor).color1G
-                pm.PyNode(oFK).rz >> pm.PyNode(oBlendColor).color1B
-
-            ## Connect the FK in the Color 1
-            for oIK, oBlendColor in zip (ik_joints,BlendColorColl_Rotate):
-                pm.PyNode(oIK).rx >> pm.PyNode(oBlendColor).color2R
-                pm.PyNode(oIK).ry >> pm.PyNode(oBlendColor).color2G
-                pm.PyNode(oIK).rz >> pm.PyNode(oBlendColor).color2B
-
-            ## Connect the BlendColor node in the Blend joint chain
-            for oBlendColor, oBlendJoint in zip (BlendColorColl_Rotate,result_joints):
-                pm.PyNode(oBlendColor).outputR  >> pm.PyNode(oBlendJoint).rx
-                pm.PyNode(oBlendColor).outputG  >> pm.PyNode(oBlendJoint).ry
-                pm.PyNode(oBlendColor).outputB  >> pm.PyNode(oBlendJoint).rz
-
-            for oBlendColor in BlendColorColl_Rotate:
-                pm.PyNode(oBlendColor).blender.set(1)
-
-            ## Connect the Remap Values to Blend Colors
-            for oRemapValue,oBlendColor in zip (RemapValueColl, BlendColorColl_Rotate):
-                pm.PyNode(oRemapValue).outValue >> pm.PyNode(oBlendColor).blender
-
-            ## SCALE
-            if scale:
-                BlendColorColl_Scale = [pm.shadingNode('blendColors', asUtility=1, n='{}__{}_scale__{}'.format(self.side, NC.getBasename(x), NC.BLENDCOLOR_SUFFIX)) for x in result_joints]
-                ## Connect the IK in the Color 2
-                for oFK, oBlendColor in zip (fk_joints, BlendColorColl_Scale):
-                    pm.PyNode(oFK).sx >> pm.PyNode(oBlendColor).color1R
-                    pm.PyNode(oFK).sy >> pm.PyNode(oBlendColor).color1G
-                    pm.PyNode(oFK).sz >> pm.PyNode(oBlendColor).color1B
-
-                ## Connect the FK in the Color 1
-                for oIK, oBlendColor in zip (ik_joints, BlendColorColl_Scale):
-                    pm.PyNode(oIK).sx >> pm.PyNode(oBlendColor).color2R
-                    pm.PyNode(oIK).sy >> pm.PyNode(oBlendColor).color2G
-                    pm.PyNode(oIK).sz >> pm.PyNode(oBlendColor).color2B
-
-                ## Connect the BlendColor node in the Blend joint chain
-                for oBlendColor, oBlendJoint in zip (BlendColorColl_Scale, result_joints):
-                    pm.PyNode(oBlendColor).outputR  >> pm.PyNode(oBlendJoint).sx
-                    pm.PyNode(oBlendColor).outputG  >> pm.PyNode(oBlendJoint).sy
-                    pm.PyNode(oBlendColor).outputB  >> pm.PyNode(oBlendJoint).sz
-
-                for oBlendColor in BlendColorColl_Scale:
-                    pm.PyNode(oBlendColor).blender.set(1)
-                ## Connect the Remap Values to Blend Colors
-                for oRemapValue,oBlendColor in zip (RemapValueColl, BlendColorColl_Scale):
-                    pm.PyNode(oRemapValue).outValue >> pm.PyNode(oBlendColor).blender
-
-                ## Calculate Scale
-                MDColl_Scale = [pm.shadingNode('multiplyDivide', asUtility=1, n='{}__{}_scale__{}'.format(self.side, NC.getBasename(x), NC.BLENDCOLOR_SUFFIX)) for x in result_joints]
-
-                pm.PyNode(fk_joints[1]).sx >> pm.PyNode(MDColl_Scale[0]).input2X
-                pm.PyNode(fk_joints[1]).sy >> pm.PyNode(MDColl_Scale[0]).input2Y
-                pm.PyNode(fk_joints[1]).sz >> pm.PyNode(MDColl_Scale[0]).input2Z
-
-                pm.PyNode(MDColl_Scale[0]).outputX >> pm.PyNode(BlendColorColl_Scale[1]).color1R
-                pm.PyNode(MDColl_Scale[0]).outputY >> pm.PyNode(BlendColorColl_Scale[1]).color1G
-                pm.PyNode(MDColl_Scale[0]).outputZ >> pm.PyNode(BlendColorColl_Scale[1]).color1B
-
-                # ---
-                pm.PyNode(fk_joints[0]).sx >> pm.PyNode(MDColl_Scale[0]).input1X
-                pm.PyNode(fk_joints[0]).sy >> pm.PyNode(MDColl_Scale[0]).input1Y
-                pm.PyNode(fk_joints[0]).sz >> pm.PyNode(MDColl_Scale[0]).input1Z
-
-                pm.PyNode(fk_joints[1]).sx >> pm.PyNode(MDColl_Scale[1]).input1X
-                pm.PyNode(fk_joints[1]).sy >> pm.PyNode(MDColl_Scale[1]).input1Y
-                pm.PyNode(fk_joints[1]).sz >> pm.PyNode(MDColl_Scale[1]).input1Z
-
-                pm.PyNode(fk_joints[2]).sx >> pm.PyNode(MDColl_Scale[1]).input2X
-                pm.PyNode(fk_joints[2]).sy >> pm.PyNode(MDColl_Scale[1]).input2Y
-                pm.PyNode(fk_joints[2]).sz >> pm.PyNode(MDColl_Scale[1]).input2Z
-
-                pm.PyNode(MDColl_Scale[1]).outputX >> pm.PyNode(MDColl_Scale[0]).input2X
-                pm.PyNode(MDColl_Scale[1]).outputY >> pm.PyNode(MDColl_Scale[0]).input2Y
-                pm.PyNode(MDColl_Scale[1]).outputZ >> pm.PyNode(MDColl_Scale[0]).input2Z
-
-                pm.PyNode(MDColl_Scale[0]).outputX >> pm.PyNode(BlendColorColl_Scale[2]).color1R
-                pm.PyNode(MDColl_Scale[0]).outputY >> pm.PyNode(BlendColorColl_Scale[2]).color1G
-                pm.PyNode(MDColl_Scale[0]).outputZ >> pm.PyNode(BlendColorColl_Scale[2]).color1B
-
-        #    ## TRANSLATE
-            if translate:
-                BlendColorColl_Translate = [pm.shadingNode('blendColors', asUtility=1,
-                n='{}__{}_translate__{}'.format(self.side, NC.getBasename(x), NC.BLENDCOLOR_SUFFIX))
-                for x in result_joints]
-
-                # Connect the IK in the Color 2
-                all_adbmath_node = []
-                for oFK, oBlendColor in zip (fk_joints, BlendColorColl_Translate):
-                    adbmath_node = pm.shadingNode('adbMath', asUtility=1, n='{}__{}_translate__MATH'.format(self.side, NC.getBasename(oFK)))
-                    all_adbmath_node.append(adbmath_node)
-                    pm.PyNode(adbmath_node).operation.set(2)
-
-                    pm.PyNode(oFK.getParent()).tx >> pm.PyNode(adbmath_node).input1[0]
-                    pm.PyNode(oFK.getParent()).ty >> pm.PyNode(adbmath_node).input1[1]
-                    pm.PyNode(oFK.getParent()).tz >> pm.PyNode(adbmath_node).input1[2]
-
-                    pm.PyNode(oFK).tx >> pm.PyNode(adbmath_node).input2[0]
-                    pm.PyNode(oFK).ty >> pm.PyNode(adbmath_node).input2[1]
-                    pm.PyNode(oFK).tz >> pm.PyNode(adbmath_node).input2[2]
-
-                    pm.PyNode(adbmath_node).output[0] >> pm.PyNode(oBlendColor).color1R
-                    pm.PyNode(adbmath_node).output[1] >> pm.PyNode(oBlendColor).color1G
-                    pm.PyNode(adbmath_node).output[2] >> pm.PyNode(oBlendColor).color1B
-
-                multuplyDivide_node = pm.shadingNode('multiplyDivide', asUtility=1,  n='{}__reverse__{}'.format(self.side, NC.MULTIPLY_DIVIDE_SUFFIX))
-                multuplyDivide_node.operation.set(1)
-                multuplyDivide_node.input2X.set(1)
-                multuplyDivide_node.input2Y.set(-1)
-                multuplyDivide_node.input2Z.set(1)
-
-                fk_joints[0].tx >> multuplyDivide_node.input1Y
-                fk_joints[0].ty >> multuplyDivide_node.input1X
-                fk_joints[0].tz >> multuplyDivide_node.input1Z
-
-                multuplyDivide_node.outputX >> all_adbmath_node[0].input2[0]
-                multuplyDivide_node.outputY >> all_adbmath_node[0].input2[1]
-                multuplyDivide_node.outputZ >> all_adbmath_node[0].input2[2]
-
-                ## Connect the FK in the Color 1
-                for oIK, oBlendColor in zip (ik_joints, BlendColorColl_Translate):
-                    pm.PyNode(oIK).tx >> pm.PyNode(oBlendColor).color2R
-                    pm.PyNode(oIK).ty >> pm.PyNode(oBlendColor).color2G
-                    pm.PyNode(oIK).tz >> pm.PyNode(oBlendColor).color2B
-
-                ## Connect the BlendColor node in the Blend joint chain
-                for oBlendColor, oBlendJoint in zip (BlendColorColl_Translate, result_joints):
-                    pm.PyNode(oBlendColor).outputR  >> pm.PyNode(oBlendJoint).tx
-                    pm.PyNode(oBlendColor).outputG  >> pm.PyNode(oBlendJoint).ty
-                    pm.PyNode(oBlendColor).outputB  >> pm.PyNode(oBlendJoint).tz
-
-                for oBlendColor in BlendColorColl_Translate:
-                    pm.PyNode(oBlendColor).blender.set(1)
-
-                ## Connect the Remap Values to Blend Colors
-                for oRemapValue,oBlendColor in zip (RemapValueColl, BlendColorColl_Translate):
-                    pm.PyNode(oRemapValue).outValue >> pm.PyNode(oBlendColor).blender
-
-            #=================================================================================================
-            ## Connect the IK -FK Control to Remap Value
-            blend_switch =  '{}.{}'.format(ctrl_name, blend_attribute)
-
-            for each in RemapValueColl:
-                pm.PyNode(blend_switch) >> pm.PyNode(each).inputValue
-                pm.PyNode('{}.{}'.format(ctrl_name, space_ctrl.attrName)) >> pm.PyNode(each).inputMax
 
 
     def setup_SpaceGRP(self, transform, Ik_FK_attributeName):

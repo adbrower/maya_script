@@ -238,6 +238,8 @@ PLUS_MIN_AVER_SUFFIX          = 'PMA'
 BLENDCOLOR_SUFFIX             = 'BC'
 NETWORK                       = 'NETWORK'
 IKHANDLE_SUFFIX               = 'IKHDL'
+CLAMP_SUFFIX                  = 'CLMP'
+DECOMPOSEMAT_SUFFIX           = 'DCPM'
 
 
 # NOMENCLATURE

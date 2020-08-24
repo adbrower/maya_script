@@ -5,7 +5,6 @@ import adb_core.Class__AddAttr as adbAttr
 from adbrower import lockAttr
 
 import adbrower
-
 adb = adbrower.Adbrower()
 
 # ====================================
@@ -39,8 +38,6 @@ class ModuleBase(object):
         self.hiearchy_setup(self.NAME, is_module=True)
 
         self.metaDataGRPS.append(self.metaData_GRP)
-
-
 
     def _guides(self):
         """
@@ -131,7 +128,6 @@ class ModuleBase(object):
         pm.parent(self.VISRULE_GRP, self.MOD_GRP)
 
         return self.MOD_GRP, self.RIG_GRP, self.INPUT_GRP, self.OUTPUT_GRP, self.VISRULE_GRP
-
 
     def setFinalHiearchy(self,
                          RIG_GRP_LIST = [],

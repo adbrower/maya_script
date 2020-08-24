@@ -351,9 +351,8 @@ class LimbShoudler(moduleBase.ModuleBase):
             elif self.side == 'R':
                 autoShoulder_remapNode.inputMin.set(90)
                 autoShoulder_remapNode.inputMax.set(-90)
-                autoShoulder_remapNode.outputMin.set(45)
-                autoShoulder_remapNode.outputMax.set(-45)
-
+                autoShoulder_remapNode.outputMin.set(-45)
+                autoShoulder_remapNode.outputMax.set(45)
 
             for color in AUTO_CLAVICULE_CONFIG.keys():
                 for points in AUTO_CLAVICULE_CONFIG[color].keys():

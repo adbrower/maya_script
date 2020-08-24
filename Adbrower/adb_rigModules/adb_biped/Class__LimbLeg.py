@@ -56,7 +56,7 @@ reload(adbIkStretch)
 # reload(adbFolli)
 # reload(adbRibbon)
 # reload(SpaceSwitch)
-reload(LimbFoot)
+# reload(LimbFoot)
 # reload(Skinning)
 # reload(AutoPoleVector)
 
@@ -501,7 +501,6 @@ class LimbLeg(moduleBase.ModuleBase):
 
         def makeConnections():
             self.Ik_FK_attributeName = self.setup_SpaceGRP(self.RIG.SPACES_GRP, Ik_FK_attributeName ='{Side}_IK_FK_{Basename}'.format(**self.nameStructure))
-
             for index, part in zip(xrange(3), self.nameStructure['Parts']):
                 self.nameStructure['Suffix'] = part
                 legSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}_{Suffix}IKFK'.format(**self.nameStructure),

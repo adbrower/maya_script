@@ -162,6 +162,7 @@ class LimbSpine(moduleBase.ModuleBase):
         super(LimbSpine, self)._connect()
 
         self.setup_VisibilityGRP()
+        self.scalingUniform()
         self.cleanUpEmptyGrps()
 
         # Hiearchy
@@ -602,6 +603,33 @@ class LimbSpine(moduleBase.ModuleBase):
                             pm.connectAttr('{}.{}'.format(visGrp.subject, attr), '{}.vis'.format(grp))
                         except:
                             pass
+
+
+    def scalingUniform(self):
+                all_groups = [self.RIG.MODULES_GRP, self.RIG.MAIN_RIG_GRP]
+                all_groups += self.RIG.MODULES_GRP.getChildren()
+                for grp in all_groups:
+                    adb.unlockAttr_func(grp, ['sx', 'sy', 'sz'])
+
+                for module in self.RIG.MODULES_GRP.getChildren():
+                    self.RIG.MAIN_RIG_GRP.sx >> module.sx
+                    self.RIG.MAIN_RIG_GRP.sy >> module.sy
+                    self.RIG.MAIN_RIG_GRP.sz >> module.sz
+
+                ## negate Module__GRP scaling
+                md_scaling = pm.shadingNode('multiplyDivide', asUtility=1,  n='{}__Scaling__{}'.format(self.side, NC.MULTIPLY_DIVIDE_SUFFIX))
+                md_scaling.input1X.set(1)
+                md_scaling.input1Y.set(1)
+                md_scaling.input1Z.set(1)
+                md_scaling.operation.set(2)
+
+                self.RIG.MAIN_RIG_GRP.sx >> md_scaling.input2X
+                self.RIG.MAIN_RIG_GRP.sy >> md_scaling.input2Y
+                self.RIG.MAIN_RIG_GRP.sz >> md_scaling.input2Z
+
+                md_scaling.outputX >> self.RIG.MODULES_GRP.sx
+                md_scaling.outputY >> self.RIG.MODULES_GRP.sy
+                md_scaling.outputZ >> self.RIG.MODULES_GRP.sz
 
 
     def cleanUpEmptyGrps(self):

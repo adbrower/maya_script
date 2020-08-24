@@ -160,7 +160,7 @@ class stretchyIK(moduleBase.ModuleBase):
         self.maximumSetup()
 
         self.setFinalHiearchy(
-                        RIG_GRP_LIST=[self.distanceLoc.getParent(), self.posLoc[0], self.posLoc[1].getParent()],
+                        RIG_GRP_LIST=[self.distanceLoc.getParent(), self.posLoc[0], self.posLoc[1].getParent(), self.outputLoc],
                         INPUT_GRP_LIST=[pm.PyNode(self.ik_ctrl).getParent()],
                         OUTPUT_GRP_LIST=[])
 
@@ -298,7 +298,11 @@ class stretchyIK(moduleBase.ModuleBase):
         self.md_max_node.output >> self.clam_node.max
         self.clam_node.output >> self.maximumToggle_node.color1
         self.decompEnd_node.outputTranslate >> self.maximumToggle_node.color2
-        self.maximumToggle_node.output >> self.posLoc[1].getParent().translate
+        self.outputLoc = pm.spaceLocator(n='{}_Ouput__{}'.format(self.NAME, NC.LOC))
+        self.maximumToggle_node.output >> self.outputLoc.translate
+        self.outputLoc.inheritsTransform.set(0)
+        self.outputLoc.v.set(0)
+        pm.parentConstraint(self.outputLoc, self.posLoc[1].getParent(), mo=1)
 
 
     def set_metaData_GRP(self):
