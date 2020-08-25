@@ -47,7 +47,7 @@ import adb_rigModules.adb_biped.Class__LimbShoulder as LimbShoulder
 # reload(adbAttr)
 # reload(NC)
 # reload(moduleBase)
-reload(adbIkStretch)
+# reload(adbIkStretch)
 # reload(Control)
 # reload(locGen)
 # reload(adbPiston)
@@ -55,8 +55,8 @@ reload(adbIkStretch)
 # reload(adbFolli)
 # reload(adbRibbon)
 # reload(SpaceSwitch)
-# reload(LimbShoulder)
 # reload(AutoPoleVector)
+reload(LimbShoulder)
 
 #-----------------------------------
 #  DECORATORS
@@ -109,7 +109,7 @@ class LimbArm(moduleBase.ModuleBase):
 
 
     # =========================
-    # METHOD
+    # METHOD0.5
     # =========================
 
     def start(self, metaDataNode = 'transform'):
@@ -809,9 +809,9 @@ class LimbArm(moduleBase.ModuleBase):
                                                             ribbon_ctrl=self.base_arm_joints[:2],  # Top first, then bottom
 
                                                             jointList = arm_folli_upper_end.getResetJoints,
-                                                            jointListA = ([arm_folli_upper_end.getResetJoints[0]], 0),
-                                                            jointListB = (arm_folli_upper_end.getResetJoints[1:-1],  1.5),
-                                                            jointListC = ([arm_folli_upper_end.getResetJoints[-1]], 0),
+                                                            jointListA = ([arm_folli_upper_end.getResetJoints[0]], self.config["ATTRIBUTES"]['StretchyArmUpperExp'][0]),
+                                                            jointListB = (arm_folli_upper_end.getResetJoints[1:-1],  self.config["ATTRIBUTES"]['StretchyArmUpperExp'][1]),
+                                                            jointListC = ([arm_folli_upper_end.getResetJoints[-1]], self.config["ATTRIBUTES"]['StretchyArmUpperExp'][2]),
                                                          )
 
             self.upper_arm_squash_stretch.start(metaDataNode='transform')
@@ -823,9 +823,9 @@ class LimbArm(moduleBase.ModuleBase):
                                                             ribbon_ctrl=self.base_arm_joints[1:],  # Top first, then bottom
 
                                                             jointList = arm_folli_lower_end.getResetJoints,
-                                                            jointListA = ([arm_folli_lower_end.getResetJoints[0]], 1),
-                                                            jointListB = (arm_folli_lower_end.getResetJoints[1:-1],  1.5),
-                                                            jointListC = ([arm_folli_lower_end.getResetJoints[-1]], 0),
+                                                            jointListA = ([arm_folli_lower_end.getResetJoints[0]], self.config["ATTRIBUTES"]['StretchyArmLowerExp'][0]),
+                                                            jointListB = (arm_folli_lower_end.getResetJoints[1:-1],  self.config["ATTRIBUTES"]['StretchyArmLowerExp'][1]),
+                                                            jointListC = ([arm_folli_lower_end.getResetJoints[-1]], self.config["ATTRIBUTES"]['StretchyArmLowerExp'][2]),
                                                          )
 
             self.lower_arm_squash_stretch.start(metaDataNode='transform')
@@ -973,6 +973,7 @@ class LimbArm(moduleBase.ModuleBase):
         visGrp.addAttr('{Side}_{Basename}_FK_CTRL'.format(**self.nameStructure), self.config['VISRULES']['FK_CTRL'])
         visGrp.addAttr('{Side}_{Basename}_DoubleElbow_CTRL'.format(**self.nameStructure), self.config['VISRULES']['DoubleElbow_CTRL'])
         visGrp.addAttr('{Side}_{Basename}_Macro_CTRL'.format(**self.nameStructure), self.config['VISRULES']['Macro_CTRL'])
+
         for attr in visGrp.allAttrs.keys():
             for module in self.BUILD_MODULES:
                 for grp in module.VISRULE_GRP.getChildren():
@@ -990,7 +991,6 @@ class LimbArm(moduleBase.ModuleBase):
 
     def setup_SpaceGRP(self, transform, Ik_FK_attributeName):
         space_ctrl = adbAttr.NodeAttr([transform])
-        space_ctrl.AddSeparator(transform, 'ARMS')
         space_ctrl.addAttr(Ik_FK_attributeName, 'enum',  eName = "IK:FK:")
         adbAttr.NodeAttr.copyAttr(self.povSpaceSwitch.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
         adbAttr.NodeAttr.copyAttr(self.ikArmpaceSwitch.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
@@ -999,12 +999,11 @@ class LimbArm(moduleBase.ModuleBase):
 
     def setup_SettingGRP(self):
         setting_ctrl = adbAttr.NodeAttr([self.RIG.SETTINGS_GRP])
-        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], '{Side}_ARM'.format(**self.nameStructure))
         adbAttr.NodeAttr.copyAttr(self.armIk_MOD.metaData_GRP, [self.RIG.SETTINGS_GRP],  nicename='{Side}_{Basename}Stretchy'.format(**self.nameStructure), forceConnection=True)
-        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], '{Side}_{Basename}VolumePreservation'.format(**self.nameStructure))
+        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], 'VolumePreservation')
 
-        adbAttr.NodeAttr.copyAttr(self.upper_arm_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}UpperArm'.format(**self.nameStructure), forceConnection=True)
-        adbAttr.NodeAttr.copyAttr(self.lower_arm_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}LowerArm'.format(**self.nameStructure), forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.upper_arm_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}Upper'.format(**self.nameStructure), forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.lower_arm_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}Lower'.format(**self.nameStructure), forceConnection=True)
 
 
 

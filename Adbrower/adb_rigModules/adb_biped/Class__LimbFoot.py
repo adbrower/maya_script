@@ -39,7 +39,7 @@ import adb_rigModules.RigBase as RigBase
 # reload(moduleBase)
 # reload(Control)
 # reload(Locator)
-reload(SpaceSwitch)
+# reload(SpaceSwitch)
 
 #-----------------------------------
 #  DECORATORS
@@ -81,7 +81,6 @@ class LimbFoot(moduleBase.ModuleBase):
         self._MODEL = LimbFootModel()
         self.NAME = module_name
         self.config = config
-
 
     def __repr__(self):
         return str('{} : {} \n {}'.format(self.__class__.__name__, self.subject, self.__class__))
@@ -140,7 +139,6 @@ class LimbFoot(moduleBase.ModuleBase):
         self.footGroupSetup()
         self.create_foot_ctrl()
 
-
     def connect(self,
                 legSpaceGroup = None,
                 leg_ikHandle = [],
@@ -172,6 +170,8 @@ class LimbFoot(moduleBase.ModuleBase):
                 grp.v.set(0)
 
         Transform(self.RIG.MODULES_GRP).pivotPoint = Transform(self.foot_ctrl).worldTrans
+
+
     # =========================
     # SOLVERS
     # =========================
@@ -375,8 +375,10 @@ class LimbFoot(moduleBase.ModuleBase):
         toeBend_CTRL.rx >> pm.PyNode(self.foot_ctrl.toeBend)
         toeBend_CTRL.ry >> pm.PyNode(self.footBall_joint).ry
 
-
+        self.nameStructure['Suffix'] = NC.VISRULE
+        moduleBase.ModuleBase.setupVisRule([ball_CTRL, heel_CTRL, toe_CTRL, toeBend_CTRL], self.Foot_MOD.VISRULE_GRP, '{Side}__{Basename}_Extras_CTRL__{Suffix}'.format(**self.nameStructure), True)
         return ball_CTRL, heel_CTRL, toe_CTRL, toeBend_CTRL
+
 
     def setup_VisibilityGRP(self):
         visGrp = adbAttr.NodeAttr([self.RIG.VISIBILITY_GRP])
@@ -385,6 +387,7 @@ class LimbFoot(moduleBase.ModuleBase):
 
         visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Controls')
         visGrp.addAttr('{Side}_{Basename}_Main_CTRL'.format(**self.nameStructure), True)
+        visGrp.addAttr('{Side}_{Basename}_Extras_CTRL'.format(**self.nameStructure), True)
 
         for attr in visGrp.allAttrs.keys():
             for module in self.BUILD_MODULES:
@@ -393,6 +396,7 @@ class LimbFoot(moduleBase.ModuleBase):
                     # print shortName.lower(), '-------------',  attr.lower()
                     if shortName.lower() in attr.lower():
                         pm.connectAttr('{}.{}'.format(visGrp.subject, attr), '{}.vis'.format(grp))
+
 
     def cleanUpEmptyGrps(self):
         for ModGrp in self.RIG.MODULES_GRP.getChildren():

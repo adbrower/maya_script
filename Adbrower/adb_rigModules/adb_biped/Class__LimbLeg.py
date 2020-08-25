@@ -48,7 +48,7 @@ import adb_rigModules.adb_biped.Class__LimbFoot as LimbFoot
 # reload(adbAttr)
 # reload(NC)
 # reload(moduleBase)
-reload(adbIkStretch)
+# reload(adbIkStretch)
 # reload(Control)
 # reload(locGen)
 # reload(adbPiston)
@@ -56,9 +56,9 @@ reload(adbIkStretch)
 # reload(adbFolli)
 # reload(adbRibbon)
 # reload(SpaceSwitch)
-# reload(LimbFoot)
 # reload(Skinning)
 # reload(AutoPoleVector)
+reload(LimbFoot)
 
 #-----------------------------------
 #  DECORATORS
@@ -75,6 +75,7 @@ from adbrower import lockAttr
 #-----------------------------------
 
 #TODO : Add rotationOrder attribute
+#TODO : Add Twist rotation on joints
 
 class LimbLegModel(moduleBase.ModuleBaseModel):
     def __init__(self):
@@ -818,9 +819,9 @@ class LimbLeg(moduleBase.ModuleBase):
                                                             ribbon_ctrl=self.base_leg_joints[:2],  # Top first, then bottom
 
                                                             jointList = leg_folli_upper_end.getResetJoints,
-                                                            jointListA = (leg_folli_upper_end.getResetJoints[0:2], 1),
-                                                            jointListB = (leg_folli_upper_end.getResetJoints[2:-1],  1.5),
-                                                            jointListC = ([leg_folli_upper_end.getResetJoints[-1]], 1.5),
+                                                            jointListA = (leg_folli_upper_end.getResetJoints[0:2], self.config["ATTRIBUTES"]['StretchyLegUpperExp'][0]),
+                                                            jointListB = (leg_folli_upper_end.getResetJoints[2:-1], self.config["ATTRIBUTES"]['StretchyLegUpperExp'][1]),
+                                                            jointListC = ([leg_folli_upper_end.getResetJoints[-1]], self.config["ATTRIBUTES"]['StretchyLegUpperExp'][2]),
                                                          )
 
             self.upper_leg_squash_stretch.start(metaDataNode='transform')
@@ -832,9 +833,9 @@ class LimbLeg(moduleBase.ModuleBase):
                                                             ribbon_ctrl=self.base_leg_joints[1:],  # Top first, then bottom
 
                                                             jointList = leg_folli_lower_end.getResetJoints,
-                                                            jointListA = ([leg_folli_lower_end.getResetJoints[0]], 1.2),
-                                                            jointListB = (leg_folli_lower_end.getResetJoints[1:-1],  1.5),
-                                                            jointListC = ([leg_folli_lower_end.getResetJoints[-1]], 1),
+                                                            jointListA = ([leg_folli_lower_end.getResetJoints[0]], self.config["ATTRIBUTES"]['StretchyLegLowerExp'][0]),
+                                                            jointListB = (leg_folli_lower_end.getResetJoints[1:-1], self.config["ATTRIBUTES"]['StretchyLegLowerExp'][1]),
+                                                            jointListC = ([leg_folli_lower_end.getResetJoints[-1]], self.config["ATTRIBUTES"]['StretchyLegLowerExp'][2]),
                                                          )
 
             self.lower_leg_squash_stretch.start(metaDataNode='transform')
@@ -1001,7 +1002,6 @@ class LimbLeg(moduleBase.ModuleBase):
 
     def setup_SpaceGRP(self, transform, Ik_FK_attributeName):
         space_ctrl = adbAttr.NodeAttr([transform])
-        space_ctrl.AddSeparator(transform, 'LEGS')
         space_ctrl.addAttr(Ik_FK_attributeName, 'enum',  eName = "IK:FK:")
         adbAttr.NodeAttr.copyAttr(self.povSpaceSwitch.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
         adbAttr.NodeAttr.copyAttr(self.ikLegSpaceSwitch.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
@@ -1010,12 +1010,11 @@ class LimbLeg(moduleBase.ModuleBase):
 
     def setup_SettingGRP(self):
         setting_ctrl = adbAttr.NodeAttr([self.RIG.SETTINGS_GRP])
-        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], '{Side}_LEG'.format(**self.nameStructure))
         adbAttr.NodeAttr.copyAttr(self.legIk_MOD.metaData_GRP, [self.RIG.SETTINGS_GRP],  nicename='{Side}_{Basename}Stretchy'.format(**self.nameStructure), forceConnection=True)
-        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], '{Side}_{Basename}VolumePreservation'.format(**self.nameStructure))
+        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], 'VolumePreservation')
 
-        adbAttr.NodeAttr.copyAttr(self.upper_leg_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}Upper{Basename}'.format(**self.nameStructure), forceConnection=True)
-        adbAttr.NodeAttr.copyAttr(self.lower_leg_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}Lower{Basename}'.format(**self.nameStructure), forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.upper_leg_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}Upper'.format(**self.nameStructure), forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.lower_leg_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}Lower'.format(**self.nameStructure), forceConnection=True)
 
 
 

@@ -38,9 +38,9 @@ import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
 import adb_rigModules.RigBase as RigBase
 
 # reload(adbrower)
-reload(sl)
+# reload(sl)
 # reload(Joint)
-reload(RigBase)
+# reload(RigBase)
 # reload(adbAttr)
 # reload(NC)
 # reload(moduleBase)
@@ -162,6 +162,7 @@ class LimbSpine(moduleBase.ModuleBase):
         super(LimbSpine, self)._connect()
 
         self.setup_VisibilityGRP()
+        self.setup_SettingGRP()
         self.scalingUniform()
         self.cleanUpEmptyGrps()
 
@@ -211,6 +212,7 @@ class LimbSpine(moduleBase.ModuleBase):
         createResultJoints()
         self.RESULT_MOD.setFinalHiearchy(INPUT_GRP_LIST=[self.spine_chain_joints[0]])
 
+
     def createFkRegularCTRLS(self):
         self.RESULT_MOD.getJoints = []
         for joint in self.spine_chain_joints:
@@ -237,6 +239,7 @@ class LimbSpine(moduleBase.ModuleBase):
         self.setupVisRule(self.spine_chain_joints, self.RESULT_MOD.VISRULE_GRP, '{Side}__{Basename}_FK_JNT__{Suffix}'.format(**self.nameStructure), False)
 
         return self.RESULT_MOD.getJoints
+
 
     def createReverseSystem(self, spine_joint_connect):
         self.REVERSE_MOD = moduleBase.ModuleBase()
@@ -340,6 +343,7 @@ class LimbSpine(moduleBase.ModuleBase):
         self.REVERSE_MOD.setFinalHiearchy(OUTPUT_GRP_LIST=[self.reverse_spine_chain_joints[-1].getParent().getParent()])
         connectReverseToResult(spine_joint_connect)
 
+
     def createVariableFkSystem(self):
         """
         Create an Fk Variable system based on a Bend Attribute
@@ -356,6 +360,7 @@ class LimbSpine(moduleBase.ModuleBase):
 
         pm.parent(fkV.metaData_GRP, self.RIG.SETTINGS_GRP)
         return fkV
+
 
     def createIkSystem(self):
         self.SPINEIK_MOD = moduleBase.ModuleBase()
@@ -434,7 +439,7 @@ class LimbSpine(moduleBase.ModuleBase):
                 return proxy_plane
 
             def addVolumePreservation():
-                spine_squash_stretch = adbRibbon.SquashStrech('{Side}__{Basename}_VolumePreservation'.format(**self.nameStructure),
+                self.spine_squash_stretch = adbRibbon.SquashStrech('{Side}__{Basename}_VolumePreservation'.format(**self.nameStructure),
                                                                 usingCurve = True,
                                                                 ExpCtrl=None,
                                                                 ribbon_ctrl= [self.spine_ik_joints[0] , self.spine_ik_joints[-1]],  # Top first, then bottom
@@ -444,10 +449,10 @@ class LimbSpine(moduleBase.ModuleBase):
                                                                 jointListC = (spine_folli.getResetJoints[-1:-3], 0),
                                                             )
 
-                spine_squash_stretch.start(metaDataNode='transform')
-                self.RIBBON_MOD.metaDataGRPS += [spine_squash_stretch.metaData_GRP]
-                spine_squash_stretch.build()
-                return spine_squash_stretch
+                self.spine_squash_stretch.start(metaDataNode='transform')
+                self.RIBBON_MOD.metaDataGRPS += [self.spine_squash_stretch.metaData_GRP]
+                self.spine_squash_stretch.build()
+                return self.spine_squash_stretch
 
             spine_proxy_plane = createProxyPlane('{Side}__{Basename}_Plane__MSH'.format(**self.nameStructure), interval=4)
             _folliculeVis = 0
@@ -500,6 +505,7 @@ class LimbSpine(moduleBase.ModuleBase):
 
         self.SPINEIK_MOD.setFinalHiearchy(OUTPUT_GRP_LIST=[x.getParent() for x in self.spine_ik_joints])
         createRibbon()
+
 
     @makeroot()
     def createHipsMainCTRL(self):
@@ -561,6 +567,7 @@ class LimbSpine(moduleBase.ModuleBase):
         [pm.parentConstraint(self.REVERSE_MOD.getJoints[0], jnt, mo=True) for jnt in leg_Fk_Offset_Hips]
 
         [pm.parentConstraint(self.REVERSE_MOD.getJoints[0], loc, mo=True) for loc in spaceSwitchLocatorHips]
+
 
     def connectSpineToShoulder(self,
                     spaceSwitchLocatorHips = [],
@@ -657,6 +664,12 @@ class LimbSpine(moduleBase.ModuleBase):
         for name in Ik_FK_attributeName:
             switch_ctrl.addAttr(name, 'enum',  eName = "IK:FK:")
         return Ik_FK_attributeName
+
+
+    def setup_SettingGRP(self):
+        setting_ctrl = adbAttr.NodeAttr([self.RIG.SETTINGS_GRP])
+        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], 'VolumePreservation')
+        adbAttr.NodeAttr.copyAttr(self.spine_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}'.format(**self.nameStructure), forceConnection=True)
 
 
     def setupVisRule(self, tansformList, parent, name=False, defaultValue=True):

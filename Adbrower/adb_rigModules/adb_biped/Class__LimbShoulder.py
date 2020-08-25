@@ -168,7 +168,6 @@ class LimbShoudler(moduleBase.ModuleBase):
                       arm_ik_offset_ctrl = '{Side}__Arm_IK_offset__CTRL'.format(**self.nameStructure)
                       )
 
-
     def connect(self,
                  arm_result_joint = [],
                  arm_ik_joint = [] ,
@@ -183,6 +182,7 @@ class LimbShoudler(moduleBase.ModuleBase):
 
 
         self.setup_VisibilityGRP()
+        self.setup_SettingGRP()
         self.cleanUpEmptyGrps()
 
         # Hiearchy
@@ -196,6 +196,7 @@ class LimbShoudler(moduleBase.ModuleBase):
                 grp.v.set(0)
 
         Transform(self.RIG.MODULES_GRP).pivotPoint = Transform(self.starter_Shoulder[0]).worldTrans
+
     # =========================
     # SOLVERS
     # =========================
@@ -438,13 +439,18 @@ class LimbShoudler(moduleBase.ModuleBase):
     # =========================
 
 
-
     def setup_SpaceGRP(self, transform, Ik_FK_attributeName=[]):
         switch_ctrl = adbAttr.NodeAttr([transform])
         for name in Ik_FK_attributeName:
             switch_ctrl.addAttr(name, 'enum',  eName = "IK:FK:")
 
         return Ik_FK_attributeName
+
+
+    def setup_SettingGRP(self):
+        setting_ctrl = adbAttr.NodeAttr([self.RIG.SETTINGS_GRP])
+        adbAttr.NodeAttr.copyAttr(self.AUTO_CLAVICULE_MOD.metaData_GRP, [self.RIG.SETTINGS_GRP],  nicename='{Side}_AutoClavicule'.format(**self.nameStructure), forceConnection=True)
+
 
 # =========================
 # BUILD
