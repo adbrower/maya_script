@@ -333,9 +333,11 @@ class Adbrower(object):
     # 3. FUNCTIONS IMPORT RAPIDE
     # ===============================
 
+
     class FUNCTIONS_REUTILISABLES():
         def __init__():
             pass
+
 
     @undo
     def ChainParent(self, sel=pm.selected()):
@@ -350,6 +352,7 @@ class Adbrower(object):
                 except:
                     continue
         chain_parent(pm.selected(type='transform'))
+
 
     @undo
     def makeroot_func(self, subject=pm.selected(), suff='root', forceNameConvention=False):
@@ -395,6 +398,7 @@ class Adbrower(object):
         def __init__():
             pass
 
+
     @staticmethod
     def loadPlugin(plugin):
         if not mc.pluginInfo(plugin, query=True, loaded=True):
@@ -402,6 +406,7 @@ class Adbrower(object):
                 mc.loadPlugin(plugin)
             except RuntimeError:
                 pm.warning('could not load plugin {}'.format(plugin))
+
 
     @undo
     def List(self):
@@ -414,6 +419,7 @@ class Adbrower(object):
             mylist = [x.getTransform().name() for x in pm.selected()]
         mylist_string = [str(x) for x in mylist]  # Remove u'
         print(mylist_string)
+
 
     @undo
     def Type(self, sel=pm.selected()):
@@ -430,6 +436,7 @@ class Adbrower(object):
             all_types.append(_type)
         return all_types
 
+
     @undo
     def TypePymel(self):
         sel = pm.selected()
@@ -443,6 +450,7 @@ class Adbrower(object):
             # print(_type)
         return all_types
 
+
     def getWorldTrans(self, subject=pm.selected()):
         """
         Get the world Position of something
@@ -451,6 +459,7 @@ class Adbrower(object):
         for sel in subject:
             pos = pm.PyNode(sel).getRotatePivot(space='world')
         return pos
+
 
     def changePivotPoint(self, target, new_pivot_position):
         """
@@ -461,6 +470,7 @@ class Adbrower(object):
         pm.PyNode(target).setScalePivot(
             [pm.PyNode(new_pivot_position).getScalePivot()])
         return pm.PyNode(new_pivot_position).getScalePivot()
+
 
     @undo
     def ConsTarget(self, subject=pm.selected()):
@@ -485,6 +495,7 @@ class Adbrower(object):
             return targets
         else:
             sys.stdout.write('No Constraints \n ')
+
 
     @undo
     def ConsDriver(self, subject=pm.selected()):
@@ -644,6 +655,7 @@ class Adbrower(object):
                 pm.blendShape(bs, e=1, target=(mesh, index + 1, shape, 1))
                 pm.setAttr('{}.weight[{}]'.format(bs, index + 1), 1)
 
+
     def getObjectDeformerList(self, _transform):
         """
         Returns all the deformers from a transform
@@ -661,6 +673,7 @@ class Adbrower(object):
                 if elem not in result:
                     result.append(elem)
         return result
+
 
     def makeCloth(self, selection=pm.selected()):
         """
@@ -683,6 +696,7 @@ class Adbrower(object):
             pm.reorder(cloth, back=True)
         return all_cloth
 
+
     def blend2grps(self, origin='world'):
         """
         Source function: connect_bls function(). Blendshape the children of two groups together
@@ -693,6 +707,7 @@ class Adbrower(object):
         outputs = pm.listRelatives(pm.selected()[1], children=True, path=True)
         self.connect_bls(inputs, outputs, origin=origin)
 
+
     def findBlendShapes(self, subject=pm.selected()):
         """
         Source function: findBlendShape()
@@ -701,6 +716,7 @@ class Adbrower(object):
         """
         result = flatList([self.findBlendShape(x) for x in subject])
         return result
+
 
     def deleteBLS(self, subject=pm.selected(), suffix='BLS'):
         """
@@ -712,6 +728,7 @@ class Adbrower(object):
         blendShp = flatList([self.findBlendShape(str(x)) for x in subject])
         blendShpBLS = [x for x in blendShp if x.endswith(suffix)]
         pm.delete(blendShpBLS)
+
 
     def findSkinCluster(self, _tranformToCheck):
         """
@@ -729,10 +746,12 @@ class Adbrower(object):
                 result.append(elem)
         return result
 
+
     def quickMirrorWeights(self):
         test = [" -mirrorMode YZ -surfaceAssociation " + 'closestPoint' +
                 "-influenceAssociation " + 'oneToOne' + " -influenceAssociation " + 'oneToOne']
         pm.mel.doMirrorSkinWeightsArgList(2, test)
+
 
     def resetSkin(self):
         """Reset the skinning after moving a controller """
@@ -771,6 +790,7 @@ class Adbrower(object):
         types_list = [x for x in pm.selected() if _type_func(x) == type_name]
         pm.select(types_list, r=True)
 
+
     def selectInt(self, type=0, interval=2):
         """ Selection par Invertal"""
         if type == 0:
@@ -778,6 +798,7 @@ class Adbrower(object):
         elif type == 1:
             new_selection = pm.selected()[1::interval]
         pm.select(new_selection, r=True)
+
 
     def hiearchyBuilder(self, subject=pm.selected(), offset_type='ctrl'):
         """
@@ -805,6 +826,7 @@ class Adbrower(object):
             for each in subject:
                 self.makeroot_func(each)
                 self.makeroot_func(each, suff='orient')
+
 
     def distanceNode(self, distObjs_LIST_QDT=pm.selected()):
         """
@@ -837,6 +859,7 @@ class Adbrower(object):
             pm.parent(end_point_loc, 'dist_GRP')
         return distanceNode
 
+
     def connect_sameAttr(self, driver, target, att_to_connect=['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz']):
         """
         Connect multiples attributes between two object
@@ -844,6 +867,7 @@ class Adbrower(object):
         for att in att_to_connect:
             pm.PyNode('{}.{}'.format(driver, att)) >> pm.PyNode(
                 '{}.{}'.format(target, att))
+
 
     def connect_axesAttr(self, driver, target, outputs=['translate', 'rotate'], inputs=[]):
         if inputs == []:
@@ -854,6 +878,7 @@ class Adbrower(object):
                 axe = xyz[j]
                 pm.PyNode('{}.{}{}'.format(driver, outputs[i], axe)) >> pm.PyNode(
                     '{}.{}{}'.format(target, inputs[i], axe))
+
 
     def jointAtCenter(self):
         selected = pm.selected()
@@ -869,6 +894,7 @@ class Adbrower(object):
             all_jnts.append(oJoints)
         self.AutoSuffix(all_jnts)
         return all_jnts
+
 
     def jointAtCenter_(self):
         """
@@ -895,6 +921,7 @@ class Adbrower(object):
             sys.stdout.write(
                 '// Result : Nothing selected. Please select at least one object //')
 
+
     def createLoc(self, subject):
         """
         creates a locator matching position and rotation with the subject
@@ -902,6 +929,7 @@ class Adbrower(object):
         loc_align = pm.spaceLocator()
         pm.matchTransform(loc_align, subject, rot=True, pos=True)
         return loc_align
+
 
     def find_and_replace_lattices(self):
         """
@@ -949,6 +977,7 @@ class Adbrower(object):
                 for each in pm.ls('pasted__*'):
                     each.rename(each.name().replace('pasted__', ''))
 
+
     @undo
     def find_and_replace_deformer(self, modelGroup=pm.ls(type='transform'), cleanUp=False):
         """
@@ -991,6 +1020,7 @@ class Adbrower(object):
 
             for each in pm.ls('pasted__*'):
                 each.rename(each.name().replace('pasted__', ''))
+
 
     @undo
     def DkToRv(self, nodeType):
@@ -1039,6 +1069,7 @@ class Adbrower(object):
             oMap.outValue.connect(paramDriven, force=True)
         pm.delete(eachKey)
 
+
     @undo
     def PvGuide(self, ikHandle, elbowJoint, exposant=10):
         """
@@ -1082,6 +1113,7 @@ class Adbrower(object):
             return curve
         except IndexError:
             pm.warning('Nothing to Delete')
+
 
     @undo
     def LocOnVertex(self, ):
@@ -1169,6 +1201,7 @@ class Adbrower(object):
             pm.select(ctrlLoc, add=True)
             return ctrlLoc
 
+
     @undo
     def removeCons(self, subject=pm.selected(), constraint_type=['parentConstraint', 'scaleConstraint', 'orientConstraint', 'pointConstraint', 'aimConstraint']):
         for each in subject:
@@ -1176,6 +1209,7 @@ class Adbrower(object):
                 all_Constraints = (
                     set([x for x in each.inputs() if pm.nodeType(x) == cons]))
                 pm.delete(all_Constraints)
+
 
     def copyUVsFrom2Groups(self):
         sources_list = pm.listRelatives(
@@ -1185,6 +1219,7 @@ class Adbrower(object):
 
         for source, target in zip(sources_list, targets_list):
             pm.polyTransfer(target, vc=0, uv=1, ao=source, v=0)
+
 
     def matrixConstraint(self,
                          parent_transform,
@@ -1290,6 +1325,7 @@ class Adbrower(object):
         def __init__():
             pass
 
+
     @changeColor(col=(1, 0.944, 0.156))
     def createCurveFrom(self, selection=pm.selected(), curve_name='curve'):
         """
@@ -1309,6 +1345,7 @@ class Adbrower(object):
             selection), kcp=0, tol=0.1, kt=0, rpo=1, kep=1)
         pm.delete(starting_locs)
         return(_curve)
+
 
     @staticmethod
     def changeColor_func(subject, type='rgb', col=(0.8, 0.5, 0.2)):
@@ -1340,6 +1377,7 @@ class Adbrower(object):
                         pm.PyNode(ctrl).overrideColor.set(col)
             return subject
 
+
     def getShapeOrig(self, _transformName=''):
         """
         Get Original node
@@ -1355,12 +1393,14 @@ class Adbrower(object):
             # print("No 'Orig' Node for: {}".format(_transformName))
             return None
 
+
     def freezeCvs(self, selection=pm.selected()):
         """ Freeze all the cvs of a curve """
         mc.DeleteHistory(selection)
         cluster = pm.cluster(selection)
         pm.delete(cluster)
         return selection
+
 
     def resetCvs(self, subject=pm.selected()):
         curve_name = subject[0].name()
@@ -1374,6 +1414,7 @@ class Adbrower(object):
                     shape, number, axis), 0)
         pm.rename(subject, curve_name)
 
+
     def selectNurbsVertx(self, subject=pm.selected()):
         """ Select All cvs of selected nurbs curve """
         for each in subject:
@@ -1381,6 +1422,7 @@ class Adbrower(object):
             pm.select('{}.cv[:]'.format(_shapes[0]), add=True)
             for x in range(1, (len(_shapes))):
                 pm.select('{}.cv[:]'.format(_shapes[x]), add=True)
+
 
     def _rotateVertex(self, axis, subject=pm.selected()):
         if len(subject) == 1:
@@ -1402,6 +1444,7 @@ class Adbrower(object):
             pm.rotate(0, 0, 90, r=1, os=1, fo=1)
         pm.select(subject, r=True)
 
+
     def rotateVertex(self, axis, subject=pm.selected()):
         """
         Calls _rotateVertex function
@@ -1410,6 +1453,7 @@ class Adbrower(object):
         for each in sel:
             self._rotateVertex(axis, [each])
         pm.select(sel, r=True)
+
 
     def _scaleVertex(self, scale, subject=pm.selected(), valuePos=1.2, valueNeg=0.8):
         if len(subject) == 1:
@@ -1429,6 +1473,7 @@ class Adbrower(object):
             pm.scale(valueNeg, valueNeg, valueNeg, r=True)
         pm.select(subject, r=True)
 
+
     def scaleVertex(self, scale, subject=pm.selected()):
         """
         @param scale : '+' / '-'
@@ -1438,6 +1483,7 @@ class Adbrower(object):
             self._scaleVertex(scale, [each])
         pm.select(sel, r=True)
 
+
     @makeroot()
     def clusterCvs(self, curve=pm.selected()):
         pm.select(curve, r=True)
@@ -1446,6 +1492,7 @@ class Adbrower(object):
         nbCvs = len(cvs)
         oCollClusters = [pm.cluster(cvs[x])[-1] for x in range(0, nbCvs)]
         return(oCollClusters)
+
 
     @changeColor()
     @makeroot()
@@ -1493,6 +1540,7 @@ class Adbrower(object):
             for joint in ctrls:
                 pm.PyNode(joint).rename(str(joint).replace('_fk__ctrl__', ''))
 
+
     @undo
     def ReplaceShape(self):
         """
@@ -1524,6 +1572,7 @@ class Adbrower(object):
         pm.delete(old_shape_getShape)
         pm.delete(new_shape)
 
+
     @undo
     def CombineShape(self, oNurbs=pm.selected()):
         """
@@ -1542,6 +1591,7 @@ class Adbrower(object):
         pm.parent(r=True, s=True)
         pm.delete(transforms)
         return oDriver
+
 
     @undo
     def GetCurveShape(self):
@@ -1570,6 +1620,7 @@ class Adbrower(object):
         print('    knots : ' + str(crvShapeDict["knots"]) + '\n')
         print('    degree : ' + str(crvShapeDict["degree"]))
         # mc.curve(p=crvShapeDict["points"], k=crvShapeDict["knots"], d=crvShapeDict["degree"])
+
 
     @undo
     @changeColor()
@@ -1625,6 +1676,7 @@ class Adbrower(object):
         def __init__():
             pass
 
+
     def hideAllJoint(self):
         """
         Hide all bones in a scene.
@@ -1639,6 +1691,7 @@ class Adbrower(object):
 
         oColl = pm.ls('*', type='joint')
         hide_and_show_all_bones(oColl, 2)
+
 
     def switchDrawStyle(self, oJoints=pm.selected()):
         """
@@ -1656,6 +1709,7 @@ class Adbrower(object):
         for each in oJoints:
             pm.PyNode(each).drawStyle.set(nextIndex)
 
+
     # ===============================
     # 9. ATTRIBUTE EDITOR
     # ===============================
@@ -1663,6 +1717,7 @@ class Adbrower(object):
     class ATTRIBUTE_EDITOR():
         def __init__():
             pass
+
 
     @staticmethod
     @undo
@@ -1688,6 +1743,7 @@ class Adbrower(object):
                 pm.disconnectAttr(srcAttr, attr)
 
                 ## mel.eval("source channelBoxCommand; CBdeleteConnection \"{}\"".format(attr))
+
 
     @staticmethod
     @undo
@@ -1742,6 +1798,16 @@ class Adbrower(object):
         for each in pm.selected():
             pm.deleteAttr(each, attribute=attribute)
 
+
+    def unhideAll(self, transform):
+        """
+        Unhide and Unlock all channelBox attributes
+        """
+        for sub in transform:
+            att_to_lock = ['tx', 'ty', 'tz', 'rx',
+                        'ry', 'rz', 'sx', 'sy', 'sz', 'v']
+            for att in att_to_lock:
+                pm.PyNode(sub).setAttr(att, lock=False, keyable=True)
 
     @staticmethod
     @undo
@@ -1842,6 +1908,7 @@ class Adbrower(object):
             pm.rename(output, '{}{}'.format(sel, suffix))
         return _output
 
+
     def copyName(self, original_name=[]):
         """
         Copy the names to all selected
@@ -1849,6 +1916,7 @@ class Adbrower(object):
         targets = pm.selected()
         for ori, targ in zip(original_name, targets):
             pm.rename(targ, ori)
+
 
     def editName(self,
                  symbol='__',
@@ -1868,6 +1936,7 @@ class Adbrower(object):
             print(new_name)
             each.rename(new_name)
 
+
     def replaceIndex(self,
                      symbol='__',
                      index_to_split=1,
@@ -1886,6 +1955,7 @@ class Adbrower(object):
                 symbol)[index_to_split], replacement)
             printnew_name
             each.rename(new_name)
+
 
     def removeNamespaces(self):
         """

@@ -107,7 +107,7 @@ class AudreyToolBox():
 
         pm.rowLayout(columnWidth3=(0, 0, 0), numberOfColumns=2)
         pm.button(l="Lock and Hide", h=25, w=99, backgroundColor=colordic['grey1'], command=lambda * args: [pm.mel.channelBoxCommand('-lockUnkeyable') for x in pm.selected()])
-        pm.button(l="Unhide All", h=25, w=99, backgroundColor=colordic['grey1'], command=lambda * args: adbAttr.unhideAll(pm.selected()))
+        pm.button(l="Unhide All", h=25, w=99, backgroundColor=colordic['grey1'], command=lambda * args: adb.unhideAll(pm.selected()))
         pm.setParent('..')
 
         pm.rowLayout(columnWidth3=(0, 0, 0),  numberOfColumns=2)
@@ -141,7 +141,7 @@ class AudreyToolBox():
         pm.menuItem(l="mesh",   command=lambda *args: adb.selectType('mesh'))
         self.select_by = pm.textField(w=138, tx='joint')
         pm.setParent('..')
-        
+
 
 ## ------------ SECTION TOOLS ###
 
@@ -315,7 +315,7 @@ class AudreyToolBox():
         pm.iconTextButton(l="R. Hiearchy", i='outliner.png', style='iconAndTextVertical',   command=lambda * args: [pm.reorder(x, back=True) for x in pm.selected()])
         pm.popupMenu()
         pm.menuItem(l='Hiearchy Builder', c=lambda * args: adb.hiearchyBuilder(pm.selected(), 'ctrl'))
-        
+
         pm.separator(vis=0, w=10)
         pm.iconTextButton(l="Material",  style='iconAndTextVertical', i=imageColorLambert, c=lambda*args: mc.hyperShade(assign="lambert1"), ann='popup meunu available')
         pm.popupMenu()
@@ -454,7 +454,6 @@ class AudreyToolBox():
             elif shape == "Square" and mc.checkBox(ChBx4, q=True, v=True,) == 1:
                 sl.square_prop_shape()
 
-
 #====================================
 
             elif shape == "Circle" and mc.checkBox("myChBx3", q=True, v=True,) == 0 and mc.checkBox(ChBx4, q=True, v=True,) == 0:
@@ -485,7 +484,6 @@ class AudreyToolBox():
                     adb.makeCtrl_Prop(sl.circleY_shape)
                 elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
                     adb.makeCtrl_Prop(sl.circleZ_shape)
-
 
 #====================================
 
@@ -559,7 +557,6 @@ class AudreyToolBox():
             elif shape == "Fleches" and mc.checkBox(ChBx4, q=True, v=True,) == 1:
                 adb.makeCtrl_Prop(sl.fleches_shape)
 
-
 #====================================
 
             elif shape == "Arrow" and mc.checkBox("myChBx3", q=True, v=True,) == 0 and mc.checkBox(ChBx4, q=True, v=True,) == 0:
@@ -590,7 +587,6 @@ class AudreyToolBox():
                     adb.makeCtrl_Prop(sl.Yarrow_shape)
                 elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
                     adb.makeCtrl_Prop(sl.Zarrow_shape)
-
 
 #====================================
 
@@ -707,7 +703,6 @@ class AudreyToolBox():
                 elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
                     adb.makeCtrl_Prop(sl.double_pin_shape)
 
-
 #=====================================
 
             elif shape == "Pin" and mc.checkBox("myChBx3", q=True, v=True,) == 0 and mc.checkBox(ChBx4, q=True, v=True,) == 0:
@@ -769,7 +764,6 @@ class AudreyToolBox():
                     pm.select(_ctrl, r=True)
                     mc.FreezeTransformations()
 
-
 #====================================
 
             elif shape == "Circle_Cross" and mc.checkBox("myChBx3", q=True, v=True,) == 0 and mc.checkBox(ChBx4, q=True, v=True,) == 0:
@@ -806,7 +800,6 @@ class AudreyToolBox():
             elif shape == "Cog" and mc.checkBox(ChBx4, q=True, v=True,) == 1:
                 adb.makeCtrl_Prop(sl.cog_shape)
 
-
 #====================================
 
             elif shape == "Cylinder" and mc.checkBox("myChBx3", q=True, v=True,) == 0 and mc.checkBox(ChBx4, q=True, v=True,) == 0:
@@ -825,7 +818,6 @@ class AudreyToolBox():
                     mc.FreezeTransformations()
 
             elif shape == "Cylinder" and mc.checkBox("myChBx3", q=True, v=True,) == 1:
-
                 try:
                     if mc.checkBox('myChBxX', q=True, v=True,) == 1:
                         self.shape_replacement(sl.cylinder_shape)
@@ -857,6 +849,155 @@ class AudreyToolBox():
                     pm.PyNode(_ctrl).ry.set(-90)
                     mc.FreezeTransformations()
 
+#====================================
+
+            elif shape == "Hips" and mc.checkBox("myChBx3", q=True, v=True,) == 0 and mc.checkBox(ChBx4, q=True, v=True,) == 0:
+
+                if mc.checkBox('myChBxX', q=True, v=True,) == 1:
+                    flatList(adb.makeCtrl(sl.hips_shape))
+                elif mc.checkBox('myChBxY', q=True, v=True,) == 1:
+                    _ctrl = flatList(adb.makeCtrl(sl.hips_shape))[0]
+                    pm.PyNode(_ctrl).rz.set(-90)
+                    pm.select(_ctrl, r=True)
+                    mc.FreezeTransformations()
+                elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
+                    _ctrl = flatList(adb.makeCtrl(sl.hips_shape))[0]
+                    pm.PyNode(_ctrl).ry.set(-90)
+                    pm.select(_ctrl, r=True)
+                    mc.FreezeTransformations()
+
+            elif shape == "Hips" and mc.checkBox("myChBx3", q=True, v=True,) == 1:
+                try:
+                    if mc.checkBox('myChBxX', q=True, v=True,) == 1:
+                        self.shape_replacement(sl.hips_shape)
+
+                    elif mc.checkBox('myChBxY', q=True, v=True,) == 1:
+                        _ctrl = self.shape_replacement(sl.hips_shape)[0]
+                        pm.PyNode(_ctrl).rz.set(-90)
+                        mc.FreezeTransformations()
+
+                    elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
+                        _ctrl = self.shape_replacement(sl.hips_shape)[0]
+                        pm.PyNode(_ctrl).ry.set(-90)
+                        mc.FreezeTransformations()
+
+                except IndexError:
+                    print("// Warning: Nothing Selected! //")
+                    pm.delete(pm.selected())
+
+            elif shape == "Hips" and mc.checkBox(ChBx4, q=True, v=True,) == 1:
+                if mc.checkBox('myChBxX', q=True, v=True,) == 1:
+                    _ctrl = adb.makeCtrl_Prop(sl.hips_shape)
+                elif mc.checkBox('myChBxY', q=True, v=True,) == 1:
+                    _ctrl = adb.makeCtrl_Prop(sl.hips_shape)[0]
+                    pm.PyNode(_ctrl).rz.set(-90)
+                    mc.FreezeTransformations()
+
+                elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
+                    _ctrl = adb.makeCtrl_Prop(sl.hips_shape)[0]
+                    pm.PyNode(_ctrl).ry.set(-90)
+                    mc.FreezeTransformations()
+
+#====================================
+
+            elif shape == "Chest" and mc.checkBox("myChBx3", q=True, v=True,) == 0 and mc.checkBox(ChBx4, q=True, v=True,) == 0:
+
+                if mc.checkBox('myChBxX', q=True, v=True,) == 1:
+                    flatList(adb.makeCtrl(sl.chest_shape))
+                elif mc.checkBox('myChBxY', q=True, v=True,) == 1:
+                    _ctrl = flatList(adb.makeCtrl(sl.chest_shape))[0]
+                    pm.PyNode(_ctrl).rz.set(-90)
+                    pm.select(_ctrl, r=True)
+                    mc.FreezeTransformations()
+                elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
+                    _ctrl = flatList(adb.makeCtrl(sl.chest_shape))[0]
+                    pm.PyNode(_ctrl).ry.set(-90)
+                    pm.select(_ctrl, r=True)
+                    mc.FreezeTransformations()
+
+            elif shape == "Chest" and mc.checkBox("myChBx3", q=True, v=True,) == 1:
+                try:
+                    if mc.checkBox('myChBxX', q=True, v=True,) == 1:
+                        self.shape_replacement(sl.chest_shape)
+
+                    elif mc.checkBox('myChBxY', q=True, v=True,) == 1:
+                        _ctrl = self.shape_replacement(sl.chest_shape)[0]
+                        pm.PyNode(_ctrl).rz.set(-90)
+                        mc.FreezeTransformations()
+
+                    elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
+                        _ctrl = self.shape_replacement(sl.chest_shape)[0]
+                        pm.PyNode(_ctrl).ry.set(-90)
+                        mc.FreezeTransformations()
+
+                except IndexError:
+                    print("// Warning: Nothing Selected! //")
+                    pm.delete(pm.selected())
+
+            elif shape == "Chest" and mc.checkBox(ChBx4, q=True, v=True,) == 1:
+                if mc.checkBox('myChBxX', q=True, v=True,) == 1:
+                    _ctrl = adb.makeCtrl_Prop(sl.chest_shape)
+                elif mc.checkBox('myChBxY', q=True, v=True,) == 1:
+                    _ctrl = adb.makeCtrl_Prop(sl.chest_shape)[0]
+                    pm.PyNode(_ctrl).rz.set(-90)
+                    mc.FreezeTransformations()
+
+                elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
+                    _ctrl = adb.makeCtrl_Prop(sl.chest_shape)[0]
+                    pm.PyNode(_ctrl).ry.set(-90)
+                    mc.FreezeTransformations()
+
+#====================================
+
+            elif shape == "VSO" and mc.checkBox("myChBx3", q=True, v=True,) == 0 and mc.checkBox(ChBx4, q=True, v=True,) == 0:
+
+                if mc.checkBox('myChBxX', q=True, v=True,) == 1:
+                    flatList(adb.makeCtrl(sl.VSO_shape))
+                elif mc.checkBox('myChBxY', q=True, v=True,) == 1:
+                    _ctrl = flatList(adb.makeCtrl(sl.VSO_shape))[0]
+                    pm.PyNode(_ctrl).rz.set(-90)
+                    pm.select(_ctrl, r=True)
+                    mc.FreezeTransformations()
+                elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
+                    _ctrl = flatList(adb.makeCtrl(sl.VSO_shape))[0]
+                    pm.PyNode(_ctrl).ry.set(-90)
+                    pm.select(_ctrl, r=True)
+                    mc.FreezeTransformations()
+
+            elif shape == "VSO" and mc.checkBox("myChBx3", q=True, v=True,) == 1:
+                try:
+                    if mc.checkBox('myChBxX', q=True, v=True,) == 1:
+                        self.shape_replacement(sl.VSO_shape)
+
+                    elif mc.checkBox('myChBxY', q=True, v=True,) == 1:
+                        _ctrl = self.shape_replacement(sl.VSO_shape)[0]
+                        pm.PyNode(_ctrl).rz.set(-90)
+                        mc.FreezeTransformations()
+
+                    elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
+                        _ctrl = self.shape_replacement(sl.VSO_shape)[0]
+                        pm.PyNode(_ctrl).ry.set(-90)
+                        mc.FreezeTransformations()
+
+                except IndexError:
+                    print("// Warning: Nothing Selected! //")
+                    pm.delete(pm.selected())
+
+            elif shape == "VSO" and mc.checkBox(ChBx4, q=True, v=True,) == 1:
+                if mc.checkBox('myChBxX', q=True, v=True,) == 1:
+                    _ctrl = adb.makeCtrl_Prop(sl.VSO_shape)
+                elif mc.checkBox('myChBxY', q=True, v=True,) == 1:
+                    _ctrl = adb.makeCtrl_Prop(sl.VSO_shape)[0]
+                    pm.PyNode(_ctrl).rz.set(-90)
+                    mc.FreezeTransformations()
+
+                elif mc.checkBox('myChBxZ', q=True, v=True,) == 1:
+                    _ctrl = adb.makeCtrl_Prop(sl.VSO_shape)[0]
+                    pm.PyNode(_ctrl).ry.set(-90)
+                    mc.FreezeTransformations()
+
+#====================================
+
         ##choisir la forme des ctrl####
 
         pm.frameLayout(cll=True, w=200, bgc=(.12, .12, .12), cl=True, label="CONTROLS")
@@ -887,6 +1028,9 @@ class AudreyToolBox():
         pm.menuItem(label="Arc_fleches_ctrl")
         pm.menuItem(label="Fleches")
         pm.menuItem(label="Locator_shape")
+        pm.menuItem(label="Hips")
+        pm.menuItem(label="Chest")
+        pm.menuItem(label="VSO")
 
         pm.formLayout()
         tabs = pm.tabLayout('indexRGBTab', innerMarginWidth=5, innerMarginHeight=5)
@@ -1181,9 +1325,8 @@ class AudreyToolBox():
                 break
 
         en = "..................................................................................:"
-        pm.addAttr(node, ln=name, keyable=False, en=en, at="enum", nn=en)
-        pm.setAttr((node + "." + name),
-            channelBox=True, keyable=False)
+        pm.addAttr(node, ln=name, keyable=True, en=en, at="enum", nn=en)
+        pm.setAttr((node + "." + name), lock=True)
 
     @undo
     def lock_unlockAB(self, type):
@@ -1300,7 +1443,7 @@ class AudreyToolBox():
                 import Exterior_scripts.arShake_v012
                 Exterior_scripts.arShake_v012.GUI()
             except ImportError as error:
-                print(error)        
+                print(error)
 
         elif tool == "CFX ToolBox":
             Tool__adbCFX.dockUI()
@@ -1311,7 +1454,7 @@ class AudreyToolBox():
                 switchSetup.show()
             except ImportError as error:
                 print(error)
-            
+
         elif tool == "Skin Wrangler Tool":
             try:
                 from Exterior_scripts.skinWrangler_master import skinWrangler
@@ -1793,7 +1936,7 @@ class AudreyToolBox():
         (pm.colorInputWidgetGrp('RGB', e = True, rgbValue=(rbgV[0], rbgV[1], rbgV[2])))
 
         if rbgV != [0.16099999845027924, 0.16099999845027924, 0.16099999845027924]:
-            print('(' + str('{:.3f}'.format(rbgV[0])) + ', ' + str('{:.3f}'.format(rbgV[1])) + ', ' + str('{:.3f}'.format(rbgV[2])) + ')')  
+            print('(' + str('{:.3f}'.format(rbgV[0])) + ', ' + str('{:.3f}'.format(rbgV[1])) + ', ' + str('{:.3f}'.format(rbgV[2])) + ')')
         else:
             pass
         self.allgrey()
