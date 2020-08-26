@@ -76,11 +76,11 @@ class RigBase(object):
 
         Returns: RIG_GRP, INPUT_GRP, OUTPUT_GRP
         """
-        self.MAIN_RIG_GRP = pm.group(n='{}_Rig__GRP'.format(rigName), em=1)
+        self.MAIN_RIG_GRP   = pm.group(n='{}_Rig__GRP'.format(rigName), em=1)
         self.VISIBILITY_GRP = pm.group(n='{}_Visibility__GRP'.format(rigName), em=1, parent=self.MAIN_RIG_GRP)
-        self.SETTINGS_GRP = pm.group(n='{}_Settings__GRP'.format(rigName), em=1, parent=self.MAIN_RIG_GRP)
-        self.SPACES_GRP = pm.group(n='{}_Space__GRP'.format(rigName), em=1, parent=self.MAIN_RIG_GRP)
-        self.MODULES_GRP = pm.group(n='{}_Module__GRP'.format(rigName), em=1, parent=self.MAIN_RIG_GRP)
+        self.SETTINGS_GRP   = pm.group(n='{}_Settings__GRP'.format(rigName), em=1, parent=self.MAIN_RIG_GRP)
+        self.SPACES_GRP     = pm.group(n='{}_Space__GRP'.format(rigName), em=1, parent=self.MAIN_RIG_GRP)
+        self.MODULES_GRP    = pm.group(n='{}_Module__GRP'.format(rigName), em=1, parent=self.MAIN_RIG_GRP)
 
         [grp.v.set(0) for grp in [self.VISIBILITY_GRP, self.SETTINGS_GRP, self.SPACES_GRP]]
         for grp in [self.VISIBILITY_GRP, self.SETTINGS_GRP, self.SPACES_GRP]:
@@ -91,18 +91,48 @@ class RigBase(object):
 
 
     @classmethod
+    @lockAttr()
+    def createVSOGrp(cls, mainRigName):
+        cls.VIS_VSO_GRP     = pm.group(n='Visibility__GRP', empty=True, parent=cls.CONTROL_BASERIG_GRP)
+        cls.SPACES_VSO_GRP  = pm.group(n='Spaces__GRP', empty=True, parent=cls.CONTROL_BASERIG_GRP) 
+        cls.OPTIONS_VSO_GRP = pm.group(n='Options__GRP', empty=True, parent=cls.CONTROL_BASERIG_GRP) 
+
+        return cls.VIS_VSO_GRP, cls.SPACES_VSO_GRP, cls.OPTIONS_VSO_GRP
+
+
+    @classmethod
+    @lockAttr()
     @changeColor('index', col = indexColor['lightGrey'])
-    def createVOSCtrl(cls, mainRigName):
-        VOS_GRP = pm.group(n='{}_VOS_GRP'.format(mainRigName), empty=True, parent=cls.mainOffset_CTRL.control)
-        cls.VIS_CTRL, cls.SPACES_CTRL, cls.OPTIONS_CTRL = sl.VSO_shape()
+    def createVSOCtrl(cls, mainRigName):
+        VSO_GRP = pm.group(n='{}_VSO_GRP'.format(mainRigName), empty=True, parent=cls.mainOffset_CTRL.control)
+        cls.VIS_VSO_CTRL, cls.SPACES_VSO_CTRL, cls.OPTIONS_VSO_CTRL = sl.VSO_shape()
 
-        for ctrl in [cls.VIS_CTRL, cls.SPACES_CTRL, cls.OPTIONS_CTRL]:
-            pm.parent(ctrl, VOS_GRP)
-            for att in ['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz','v']:
-                    pm.PyNode(ctrl).setAttr(att, lock=True, channelBox=False, keyable=False)
-
+        for ctrl in [cls.VIS_VSO_CTRL, cls.SPACES_VSO_CTRL, cls.OPTIONS_VSO_CTRL]:
+            pm.parent(ctrl, VSO_GRP)
+            pm.rename(ctrl, ctrl.replace('_ctrl', '__CTRL'))
         pm.select(None)
-        return cls.VIS_CTRL, cls.SPACES_CTRL, cls.OPTIONS_CTRL
+        return cls.VIS_VSO_CTRL, cls.SPACES_VSO_CTRL, cls.OPTIONS_VSO_CTRL
+
+
+    @classmethod
+    def vsoGrpTovsoCtrl(cls):
+        vsoGrps = [ cls.VIS_VSO_GRP, cls.SPACES_VSO_GRP, cls.OPTIONS_VSO_GRP]
+        vsoCtrls = [cls.VIS_VSO_CTRL, cls.SPACES_VSO_CTRL, cls.OPTIONS_VSO_CTRL]
+        for vso_grp, vso_crl in zip(vsoGrps, vsoCtrls):
+            all_attr = pm.listAttr(vso_grp, k=1, v=1, ud=1)
+            allSeparator = [x for x in all_attr if  adbAttr.NodeAttr.isSeparator(x)]
+
+            separatorToIgnore = []
+            for separator in allSeparator:
+                enum = pm.attributeQuery(str(separator), node=vso_grp, listEnum=True)[0]
+                if enum == 'Joints':
+                    separatorToIgnore.append(separator)
+                elif enum == 'Controls':
+                    separatorToIgnore.append(separator)
+
+            attrJNT_toIgnore = [x for x in all_attr if x.endswith('JNT')]
+            attr_toIgnore = separatorToIgnore + attrJNT_toIgnore
+            adbAttr.NodeAttr.copyAttr(vso_grp, [vso_crl], ignore=attr_toIgnore, forceConnection=True)
 
 
     @lockAttr()
