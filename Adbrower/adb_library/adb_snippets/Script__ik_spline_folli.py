@@ -8,7 +8,7 @@ adb = adbrower.Adbrower()
 from adbrower import lprint
 from adbrower import flatList
 
-import adb_library.adb_utils.Script__WrapDeformer as adbWrap
+import adb_library.adb_snippets.Script__WrapDeformer as adbWrap
 import adb_core.Class__AddAttr as adbAttr
 import adb_library.adb_utils.Script__ProxyPlane as adbProxy
 

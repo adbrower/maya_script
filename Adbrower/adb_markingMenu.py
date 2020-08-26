@@ -29,7 +29,7 @@ import adb_tools.Tool__Match_IkFK_PySide as Tool__Match_IkFK_PySide
 import adb_tools.Tool__Tilt as Tool__Tilt
 import adb_tools.Tool__MultiSkin as Tool__MultiSkin
 import adb_library.adb_utils.Functions__Rivet as adbRivet
-import adb_library.adb_utils.Script__WrapDeformer as adbWrap
+import adb_library.adb_snippets.Script__WrapDeformer as adbWrap
 import adb_core.Class__Transforms as adbTransform
 import adb_core.Class__Skinning as skin
 import adb_tools.Tool__Topology as adbTopoTool

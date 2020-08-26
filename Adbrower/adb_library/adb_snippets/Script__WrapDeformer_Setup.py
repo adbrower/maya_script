@@ -3,7 +3,7 @@ import maya.cmds as mc
 import pymel.core as pm
 import sys 
 
-import adb_library.adb_utils.Script__WrapDeformer as adbWrap
+import adb_library.adb_snippets.Script__WrapDeformer as adbWrap
 import adb_core.Class__AddAttr as adbAttr
 
 
