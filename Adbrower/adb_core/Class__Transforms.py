@@ -252,51 +252,53 @@ class Transform(adbAttr.NodeAttr):
         """
         Mirror a transform according to given axis.
         """
-        subject = self.transform[0]
-        # get the name
-        if (pm.PyNode(subject).name()).startswith('r__'):
-            _name = '{}'.format(str(subject).replace('r__', 'l__'))
+        for subject in self.transform:
+            # get the name
+            if (pm.PyNode(subject).name()).startswith('r__'):
+                _name = '{}'.format(str(subject).replace('r__', 'l__'))
 
-        elif (pm.PyNode(subject).name()).startswith('l__'):
-            _name = '{}'.format(str(pm.PyNode(subject)).replace('l__', 'r__'))
+            elif (pm.PyNode(subject).name()).startswith('l__'):
+                _name = '{}'.format(str(pm.PyNode(subject)).replace('l__', 'r__'))
 
-        else:
-            _name = None
+            else:
+                _name = None
 
-        # temp unlock all user defined attributes
-        locks_attr_list = adbAttr.NodeAttr(self.transform).getLock_attr()
-        # Unlock all
-        att_to_unlock = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz', 'v']
-        for att in att_to_unlock:
-            pm.PyNode(subject).setAttr(att, lock=False, keyable=True)
+            # temp unlock all user defined attributes
+            locks_attr_list = adbAttr.NodeAttr(self.transform).getLock_attr()
+            # Unlock all
+            att_to_unlock = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz', 'v']
+            for att in att_to_unlock:
+                pm.PyNode(subject).setAttr(att, lock=False, keyable=True)
 
-        # mirror function
-        dup = pm.duplicate(subject, rr=True, name=_name)[0]
-        offset_grp = pm.group(name='dup_grp', em=True)
-        pm.makeIdentity(dup, n=0, s=1, r=1, t=1, apply=True, pn=1)
-        pm.parent(dup, offset_grp)
+            # mirror function
+            dup = pm.duplicate(subject, rr=True, name=_name)[0]
+            offset_grp = pm.group(name='dup_grp', em=True)
+            pm.makeIdentity(dup, n=0, s=1, r=1, t=1, apply=True, pn=1)
+            pm.parent(dup, offset_grp)
 
-        if axis == 'x':
-            pm.PyNode(offset_grp).scaleX.set(-1)
-        elif axis == 'y':
-            pm.PyNode(offset_grp).scaleY.set(-1)
-        elif axis == 'z':
-            pm.PyNode(offset_grp).scaleZ.set(-1)
-        elif axis == 'X':
-            pm.PyNode(offset_grp).scaleX.set(-1)
-        elif axis == 'Y':
-            pm.PyNode(offset_grp).scaleY.set(-1)
-        elif axis == 'Z':
-            pm.PyNode(offset_grp).scaleZ.set(-1)
+            if axis == 'x':
+                pm.PyNode(offset_grp).scaleX.set(-1)
+            elif axis == 'y':
+                pm.PyNode(offset_grp).scaleY.set(-1)
+            elif axis == 'z':
+                pm.PyNode(offset_grp).scaleZ.set(-1)
+            elif axis == 'X':
+                pm.PyNode(offset_grp).scaleX.set(-1)
+            elif axis == 'Y':
+                pm.PyNode(offset_grp).scaleY.set(-1)
+            elif axis == 'Z':
+                pm.PyNode(offset_grp).scaleZ.set(-1)
 
-        pm.parent(dup, world=True)
-        pm.makeIdentity(dup, n=0, s=1, r=1, t=1, apply=True, pn=1)
-        pm.delete(offset_grp)
+            pm.parent(dup, world=True)
+            pm.makeIdentity(dup, n=0, s=1, r=1, t=1, apply=True, pn=1)
+            pm.delete(offset_grp)
 
-        # relock attribute
-        for att in locks_attr_list:
-            pm.PyNode(subject).setAttr(att, lock=True, channelBox=True, keyable=False)
-            pm.PyNode(dup).setAttr(att, lock=True, channelBox=True, keyable=False)
+            # relock attribute
+            for attrs in locks_attr_list:
+                if attrs:
+                    for att in attrs:
+                        pm.PyNode(subject).setAttr(att, lock=True, channelBox=True, keyable=False)
+                        pm.PyNode(dup).setAttr(att, lock=True, channelBox=True, keyable=False)
 
     @staticmethod
     def get_closest_u_v_point_on_mesh(obj, target_mesh):

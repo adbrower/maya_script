@@ -14,21 +14,6 @@ import maya.cmds as mc
 
 from adbrower import undo
 
-# -----------------------------------
-# FUNCTIONS
-# -----------------------------------
-
-
-def unhideAll(transform):
-    """
-    Unhide and Unlock all channelBox attributes
-    """
-    for sub in transform:
-        att_to_lock = ['tx', 'ty', 'tz', 'rx',
-                       'ry', 'rz', 'sx', 'sy', 'sz', 'v']
-        for att in att_to_lock:
-            pm.PyNode(sub).setAttr(att, lock=False, keyable=True)
-
 
 # -----------------------------------
 # CLASS
@@ -57,14 +42,10 @@ class NodeAttr(object):
     def __init__(self,
                  _node=pm.selected(),
                  ):
-
-        self._nodeType = _node
-
-
-        if isinstance(self._nodeType, str):
+        if isinstance(_node , str):
             self.node = [pm.PyNode(_node)]
 
-        elif isinstance(self._nodeType, list):
+        elif isinstance(_node , list):
             self.node = [pm.PyNode(x) for x in _node]
 
         else:
@@ -88,17 +69,204 @@ class NodeAttr(object):
         if hasattr(self, name):
             object.__setattr__(self, name, value)  # inital setAttr
             try:
-                pm.setAttr(self.subject + '.' + name, value)
+                for node in self.node:
+                    pm.setAttr(node + '.' + name, value)
             except:
                 pass
         else:
             raise AttributeError('object has no attribute {}'.format(name))
 
 
+# -----------------------------------
+# CLASS METHODS
+# -----------------------------------
+
+
+    @classmethod
+    def convertFromAttr(cls,  attrList=[], _transform=pm.selected()):
+        """
+        Convert an existing attribute to the module
+
+        Args:
+            attrList (list, optional): [description]. Defaults to [].
+            _transform (tranform, optional): Defaults to pm.selected().
+
+        Returns:
+            instance of the class
+        """
+        instance = cls(_transform)
+        for node in instance.node:
+            for attribute in attrList:
+                instance.list_methods.update({attribute: pm.getAttr(
+                    '{}.{}'.format(node, attribute))})
+        return cls(_transform)
+
+
+    @classmethod
+    @undo
+    def copyAttr(cls, source, targets, all=True, ignore=[], nicename=None, forceConnection=False):
+        """
+        Select mesh and the attribute(s) to copy
+        Needs to put the targets into a list
+        """
+        cls = cls(source)
+        _type = type(targets)
+        source = pm.PyNode(source)
+        _nicename = nicename
+
+        if _type == str:
+            targets = [targets]
+        elif _type == list:
+            pass
+
+        def copyAttrLoop(attribute, target, nicename=_nicename):
+            source_attr = pm.PyNode(source).name() + '.' + attribute
+            attr = attribute
+            _at = str(mc.addAttr(source_attr, q=True, at=True)) or None
+            __ln = mc.addAttr(source_attr, q=True, ln=True) or None
+
+            if nicename:
+                _ln = '{}_{}'.format(nicename, __ln)
+            else:
+                _ln = __ln
+
+            _min = mc.addAttr(source_attr, q=True, min=True) or None
+            _max = mc.addAttr(source_attr, q=True, max=True) or None
+            _dv = mc.addAttr(source_attr, q=True, dv=True) or 0
+            _parent = mc.addAttr(source_attr, q=True, p=True) or None
+            _locked = pm.getAttr(source_attr, lock=True)
+
+            if cls.isSeparator(attr):
+                enList = []
+                _en = pm.attributeQuery(str(attr), node=source.name(), listEnum=True)[0]
+                enList.append(_en)
+                cls.AddSeparator(target, label=enList[0])
+            else:
+                if pm.objExists('{}.{}'.format(target, attribute)):
+                    pass
+
+                elif _at == 'enum':
+                    enList = []
+                    _en = pm.attributeQuery(str(attr), node=source.name(), listEnum=True)[0]
+                    enList.append(_en)
+
+                    pm.addAttr(target, ln=str(_ln), at='enum', en=str(enList[0]), keyable=True)
+
+                elif _locked:
+                    pass
+
+                elif _parent != __ln:
+                    siblings = pm.attributeQuery(str(attr), node=source.name(), ls=True)
+                    parent = pm.attributeQuery(str(attr), node=source.name(), lp=True)[0]
+                    pm.addAttr(target, ln=parent, at='compound', nc= 1 + len(siblings), keyable=True)
+                    pm.addAttr(target, ln=str(_ln), at=str(_at),  dv=_dv, keyable=True, parent=parent)
+
+                    for sib in siblings:
+                        defaultValue = mc.addAttr('{}.{}'.format(source.name(), sib), q=True, dv=True) or 0
+                        pm.addAttr(target, ln=str(sib), at=str(_at),  dv=defaultValue, keyable=True, parent=parent)
+                else:
+                    pm.addAttr(target, ln=str(_ln), at=str(_at),  dv=_dv, keyable=True)
+
+                target_attr = target + '.' + _ln
+                if _min is not None:
+                    pm.addAttr(target_attr, e=True, min=_min)
+                elif _max is not None:
+                    pm.addAttr(target_attr, e=True, max=_max)
+                else:
+                    pass
+
+        if all:
+            temp = pm.listAttr(source, k=1, v=1, ud=1)
+            siblingsToRemove = []
+            parentToRemove = []
+            for a in temp:
+                siblings = pm.attributeQuery(a, node=source, ls=1)
+                if siblings:
+                    siblingsToRemove.extend(siblings)
+                    parent = pm.attributeQuery(a, node=source, lp=1)
+                    parentToRemove.extend(parent)
+
+            def Diff(li1, li2):
+                """
+                Substract li2 from li1
+                Args:
+                    li1 (List)
+                    li2 (List)
+                Returns:
+                    List
+                """
+                li_dif = [i for i in li1 + li2 if i not in li1 or i not in li2]
+                return li_dif
+
+            temp2 = (Diff(temp, siblingsToRemove[:-1]))
+            all_attr = (Diff(temp2, parentToRemove))
+            if ignore:
+                all_attr = (Diff(all_attr, ignore))
+        else:
+            all_attr = [x for x in pm.channelBox("mainChannelBox", q=1, selectedMainAttributes=1)]
+
+        for att in all_attr:
+            for target in targets:
+                copyAttrLoop(att, target)
+
+        if forceConnection:
+            for att in pm.listAttr(source, ud=1):
+                try:
+                    if nicename:
+                        new_att = '{}_{}'.format(nicename, att)
+                        pm.connectAttr('{}.{}'.format(target, new_att), '{}.{}'.format(source, att))
+                    else:
+                        pm.connectAttr('{}.{}'.format(target, att), '{}.{}'.format(source, att))
+                except RuntimeError:
+                    pass
+
+
+    @classmethod
+    def AddSeparator(cls, _transform, label = False):
+        """
+        Add a seperator in the Channel Box
+        """
+        if isinstance(_transform, str):
+            node = _transform
+        elif isinstance(_transform, list):
+            node = _transform[0]
+        else:
+            node = _transform
+        name = "__________"
+
+        i = 0
+        for i in range(0, 100):
+            if i == 100:
+                pm.pm.mel.error(
+                    "There are more than 20 seperators. Why would you even need that many.")
+
+            if pm.mel.attributeExists(name, node):
+                name = str(pm.mel.stringAddPrefix("_", name))
+            else:
+                break
+
+        en = "................................................................:"
+
+        if label:
+            pm.addAttr(node, ln=name, keyable=True, en=label, at="enum", nn=en)
+        else:
+            pm.addAttr(node, ln=name, keyable=True, en=en, at="enum", nn=en)
+        pm.setAttr((node + "." + name), lock=True)
+        return cls(_transform)
+
+
+# -----------------------------------
+# PROPERTIES
+# -----------------------------------
+
+
     @property
     def subject(self):
         """ Returns the subject on which the attributes are added"""
-        return str(self.node[0])
+        if len(self.node) == 1:
+            return str(self.node[0])
+        else:
+            return [str(x) for x in self.node]
 
 
     @property
@@ -126,24 +294,21 @@ class NodeAttr(object):
         Returns: List
         """
         all_attr = []
-        for each in self.subject:
+        for each in self.node:
             attr = '{}.{}'.format(each, self.attrName)
             all_attr.append(attr)
         return all_attr
-
-
-    def convertAttr(self, attrName):
-        """  Convert an existing attribute to the module"""
-        for attribute in attrName:
-            self.list_methods.update({attribute: pm.getAttr(
-                '{}.{}'.format(pm.selected()[0], attribute))})
-            # self.addMethods()
 
 
     def addMethods(self):
         """ Add all the new attributes as methods of the class"""
         for methods in self.list_methods:
             setattr(NodeAttr, methods, self.list_methods[methods])
+
+
+# -----------------------------------
+# METHODS
+# -----------------------------------
 
 
     def addAttr(self, name, attr, dv=None, min=None, max=None, eName=None, keyable=True, lock=False, parent=None, nc=None):
@@ -311,7 +476,8 @@ class NodeAttr(object):
         self.list_methods.update(
             {self.attrName: self.getValue})  # self.addMethods()
         if lock is True:
-            pm.setAttr('{}.{}'.format(self.subject, self.attrName), lock=True)
+            for node in self.node:
+                pm.setAttr('{}.{}'.format(node, self.attrName), lock=True)
         else:
             pass
         return(self.node)
@@ -352,23 +518,24 @@ class NodeAttr(object):
         """
         Unhide and Unlock all channelBox attributes
         """
-        for sub in self.node:
-            att_to_lock = ['tx', 'ty', 'tz', 'rx',
-                           'ry', 'rz', 'sx', 'sy', 'sz', 'v']
+        att_to_lock = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz', 'v']
+        transform = cls(_transform)
+        for transform in transform.node:
             for att in att_to_lock:
-                pm.PyNode(sub).setAttr(att, lock=False, keyable=True)
+                pm.PyNode(transform).setAttr(att, lock=False, keyable=True)
+        return cls(_transform)
 
 
-    @undo
     def addRotationOrderAttr(self):
-        pm.addAttr(self.subject, ln="rotationOrder",
-                    en="xyz:yzx:zxy:xzy:yxz:zyx:", at="enum")
-        pm.setAttr((str(self.subject) + ".rotationOrder"),
-                    e=1, keyable=True)
-        pm.connectAttr((str(self.subject) + ".rotationOrder"),
-                        (str(self.subject) + ".rotateOrder"))
+        for node in self.node:
+            pm.addAttr(node, ln="rotationOrder",
+                        en="xyz:yzx:zxy:xzy:yxz:zyx:", at="enum")
+            pm.setAttr((str(node) + ".rotationOrder"),
+                        e=1, keyable=True)
+            pm.connectAttr((str(node) + ".rotationOrder"),
+                            (str(node) + ".rotateOrder"))
 
-    @undo
+
     def breakConnection(self, attributes=['v']):
         """
         Break Connection
@@ -378,17 +545,30 @@ class NodeAttr(object):
         """
 
         for att in attributes:
-            attr = self.subject + '.' + att
+            for node in self.node:
+                attr = node + '.' + att
 
-            destinationAttrs = pm.listConnections(
-                attr, plugs=True, source=False) or []
-            sourceAttrs = pm.listConnections(
-                attr, plugs=True, destination=False) or []
+                destinationAttrs = pm.listConnections(
+                    attr, plugs=True, source=False) or []
+                sourceAttrs = pm.listConnections(
+                    attr, plugs=True, destination=False) or []
 
-            for destAttr in destinationAttrs:
-                pm.disconnectAttr(attr, destAttr)
-            for srcAttr in sourceAttrs:
-                pm.disconnectAttr(srcAttr, attr)
+                for destAttr in destinationAttrs:
+                    pm.disconnectAttr(attr, destAttr)
+                for srcAttr in sourceAttrs:
+                    pm.disconnectAttr(srcAttr, attr)
+
+
+    def getLock_attr(self):
+            """
+            Get Current list of channel box attributes which are unlock
+            returns: List
+            """
+            attrLock = []
+            for node in self.node:
+                _attrLock = pm.listAttr(node, l=True) or []
+                attrLock.append(_attrLock)
+            return attrLock
 
 
     @staticmethod
@@ -419,15 +599,6 @@ class NodeAttr(object):
     @staticmethod
     def rmvPaintAttribute(subName, attrName):
         mc.makePaintable(subName, attrName, rm=1)
-
-
-    def getLock_attr(self):
-        """
-        Get Current list of channel box attributes which are unlock
-        returns: List
-        """
-        attrLock = pm.listAttr(self.subject, l=True)
-        return attrLock
 
 
     @staticmethod
@@ -488,45 +659,12 @@ class NodeAttr(object):
                             mc.setAttr(eachObj + '.' + alck, lock=1)
 
 
-    @classmethod
-    def isSeparator(cls, attrName):
+    @staticmethod
+    def isSeparator(attrName):
         if '___' in attrName:
             return True
         else:
             return False
-
-
-    @classmethod
-    def AddSeparator(cls, _transform, label = False):
-        """
-        Add a seperator in the Channel Box
-        """
-        if isinstance(_transform, str):
-            node = _transform
-        elif isinstance(_transform, list):
-            node = _transform[0]
-        else:
-            node = _transform
-        name = "__________"
-
-        i = 0
-        for i in range(0, 100):
-            if i == 100:
-                pm.pm.mel.error(
-                    "There are more than 20 seperators. Why would you even need that many.")
-
-            if pm.mel.attributeExists(name, node):
-                name = str(pm.mel.stringAddPrefix("_", name))
-            else:
-                break
-
-        en = "................................................................:"
-
-        if label:
-            pm.addAttr(node, ln=name, keyable=True, en=label, at="enum", nn=en)
-        else:
-            pm.addAttr(node, ln=name, keyable=True, en=en, at="enum", nn=en)
-        pm.setAttr((node + "." + name), lock=True)
 
 
     @staticmethod
@@ -536,124 +674,6 @@ class NodeAttr(object):
         """
         pm.PyNode(_transform).addAttr(name, keyable=True,
                                 attributeType='enum', en=en)
-
-
-    @classmethod
-    @undo
-    def copyAttr(cls, source, targets, all=True, ignore=[], nicename=None, forceConnection=False):
-        """
-        Select mesh and the attribute(s) to copy
-        Needs to put the targets into a list
-        """
-        _type = type(targets)
-        source = pm.PyNode(source)
-        _nicename = nicename
-
-        if _type == str:
-            targets = [targets]
-        elif _type == list:
-            pass
-
-        def copyAttrLoop(attribute, target, nicename=_nicename):
-            source_attr = pm.PyNode(source).name() + '.' + attribute
-            attr = attribute
-            _at = str(mc.addAttr(source_attr, q=True, at=True)) or None
-            __ln = mc.addAttr(source_attr, q=True, ln=True) or None
-
-            if nicename:
-                _ln = '{}_{}'.format(nicename, __ln)
-            else:
-                _ln = __ln
-
-            _min = mc.addAttr(source_attr, q=True, min=True) or None
-            _max = mc.addAttr(source_attr, q=True, max=True) or None
-            _dv = mc.addAttr(source_attr, q=True, dv=True) or 0
-            _parent = mc.addAttr(source_attr, q=True, p=True) or None
-            _locked = pm.getAttr(source_attr, lock=True)
-
-            if cls.isSeparator(attr):
-                enList = []
-                _en = pm.attributeQuery(str(attr), node=source.name(), listEnum=True)[0]
-                enList.append(_en)
-                cls.AddSeparator(target, label=enList[0])
-            else:
-                if pm.objExists('{}.{}'.format(target, attribute)):
-                    pass
-
-                elif _at == 'enum':
-                    enList = []
-                    _en = pm.attributeQuery(str(attr), node=source.name(), listEnum=True)[0]
-                    enList.append(_en)
-
-                    pm.addAttr(target, ln=str(_ln), at='enum', en=str(enList[0]), keyable=True)
-
-                elif _locked:
-                    pass
-
-                elif _parent != __ln:
-                    siblings = pm.attributeQuery(str(attr), node=source.name(), ls=True)
-                    parent = pm.attributeQuery(str(attr), node=source.name(), lp=True)[0]
-                    pm.addAttr(target, ln=parent, at='compound', nc= 1 + len(siblings), keyable=True)
-                    pm.addAttr(target, ln=str(_ln), at=str(_at),  dv=_dv, keyable=True, parent=parent)
-
-                    for sib in siblings:
-                        defaultValue = mc.addAttr('{}.{}'.format(source.name(), sib), q=True, dv=True) or 0
-                        pm.addAttr(target, ln=str(sib), at=str(_at),  dv=defaultValue, keyable=True, parent=parent)
-                else:
-                    pm.addAttr(target, ln=str(_ln), at=str(_at),  dv=_dv, keyable=True)
-
-                target_attr = target + '.' + _ln
-                if _min is not None:
-                    pm.addAttr(target_attr, e=True, min=_min)
-                elif _max is not None:
-                    pm.addAttr(target_attr, e=True, max=_max)
-                else:
-                    pass
-
-        if all:
-            temp = pm.listAttr(source, k=1, v=1, ud=1)
-            siblingsToRemove = []
-            parentToRemove = []
-            for a in temp:
-                siblings = pm.attributeQuery(a, node=source, ls=1)
-                if siblings:
-                    siblingsToRemove.extend(siblings)
-                    parent = pm.attributeQuery(a, node=source, lp=1)
-                    parentToRemove.extend(parent)
-
-            def Diff(li1, li2):
-                """
-                Substract li2 from li1
-                Args:
-                    li1 (List)
-                    li2 (List)
-                Returns:
-                    List
-                """
-                li_dif = [i for i in li1 + li2 if i not in li1 or i not in li2]
-                return li_dif
-
-            temp2 = (Diff(temp, siblingsToRemove[:-1]))
-            all_attr = (Diff(temp2, parentToRemove))
-            if ignore:
-                all_attr = (Diff(all_attr, ignore))
-        else:
-            all_attr = [x for x in pm.channelBox("mainChannelBox", q=1, selectedMainAttributes=1)]
-
-        for att in all_attr:
-            for target in targets:
-                copyAttrLoop(att, target)
-
-        if forceConnection:
-            for att in pm.listAttr(source, ud=1):
-                try:
-                    if nicename:
-                        new_att = '{}_{}'.format(nicename, att)
-                        pm.connectAttr('{}.{}'.format(target, new_att), '{}.{}'.format(source, att))
-                    else:
-                        pm.connectAttr('{}.{}'.format(target, att), '{}.{}'.format(source, att))
-                except RuntimeError:
-                    pass
 
 
     @staticmethod
