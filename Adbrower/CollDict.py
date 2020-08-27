@@ -1,3 +1,4 @@
+from collections import OrderedDict
 
 
 suffixDic = {
@@ -24,40 +25,40 @@ attrDic = {
     'All': ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ', 'scaleX', 'scaleY', 'scaleZ', 'visibility']
 }
 
-indexColor = {
-    'grey' : 0,
-    'black' : 1,
-    'darkGrey' : 2,
-    'lightGrey' : 3,
-    'darkRed' : 4,
-    'darkBlue' : 5,
-    'fluoBlue' : 6,
-    'darkGreen' : 7,
-    'darkPurple' : 8,
-    'fluoPurple' : 9,
-    'brown' : 10,
-    'darkBrown' : 11,
-    'red' : 12,
-    'fluoRed' : 13,
-    'fluoGreen' : 14,
-    'blue' : 15,
-    'white' : 16,
-    'yellow' : 17,
-    'lightBlue' : 18,
-    'lightGreen' : 19,
-    'lightRed' : 20,
-    'lightBrown' : 21,
-    'lightYellow' : 22,
-    'green' : 23,
-    'pastelBrown' : 24,
-    'pastelYellow' : 25,
-    'yellowGreen' : 26,
-    'pastelGreen' : 27,
-    'blueGrey' : 28,
-    'pastelBlue' : 29,
-    'purple' : 30,
-    'pastelRed' : 31,
-}
+indexColor = OrderedDict()
+indexColor['grey'] = 0
+indexColor['black'] = 1
+indexColor['darkGrey'] = 2
+indexColor['lightGrey'] = 3
+indexColor['darkRed'] = 4
+indexColor['darkBlue'] = 5
+indexColor['fluoBlue'] = 6
+indexColor['darkGreen'] = 7
+indexColor['darkPurple'] = 8
+indexColor['fluoPurple'] = 9
+indexColor['brown'] = 10
+indexColor['darkBrown'] = 11
+indexColor['red'] = 12
+indexColor['fluoRed'] = 13
+indexColor['fluoGreen'] = 14
+indexColor['blue'] = 15
+indexColor['white'] = 16
+indexColor['yellow'] = 17
+indexColor['lightBlue'] = 18
+indexColor['lightGreen'] = 19
+indexColor['lightRed'] = 20
+indexColor['lightBrown'] = 21
+indexColor['lightYellow'] = 22
+indexColor['green'] = 23
+indexColor['pastelBrown'] = 24
+indexColor['pastelYellow'] = 25
+indexColor['yellowGreen'] = 26
+indexColor['pastelGreen'] = 27
+indexColor['blueGrey'] = 28
+indexColor['pastelBlue'] = 29
+indexColor['purple'] = 30
+indexColor['pastelRed'] = 31
+
 
 
 

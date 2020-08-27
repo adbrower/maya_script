@@ -1,6 +1,7 @@
 import maya.cmds as mc
 import pymel.core as pm
 from functools import wraps
+from collections import OrderedDict
 
 import adb_core.NameConv_utils as NC
 
@@ -614,38 +615,37 @@ def makeCtrls(shape_name):
     return Ctrls
 
 
-sl = {
-    "Xarrow_shape" : Xarrow_shape,
-    "Yarrow_shape" : Yarrow_shape,
-    "Zarrow_shape" : Zarrow_shape,
-    "main_shape" : main_shape,
-    "cube_shape" : cube_shape,
-    "rectangle_shape" : rectangle_shape,
-    "circleY_shape" : circleY_shape,
-    "circleX_shape" : circleX_shape,
-    "circleZ_shape" : circleZ_shape,
-    "ball_shape" : ball_shape,
-    "diamond_shape" : diamond_shape,
-    "fleches_shape" : fleches_shape,
-    "double_fleches_shape" : double_fleches_shape,
-    "arc_fleches_shape" : arc_fleches_shape,
-    "halfSpherePin_shape" : halfSpherePin_shape,
-    "pinX_shape" : pinX_shape,
-    "pinY_shape" : pinY_shape,
-    "pinZ_shape" : pinZ_shape,
-    "double_pin_shape" : double_pin_shape,
-    "circleCross_shape" : circleCross_shape,
-    "ball2_shape" : ball2_shape,
-    "square_shape" : square_shape,
-    "cog_shape" : cog_shape,
-    "locator_shape" : locator_shape,
-    "ik_shape" : ik_shape,
-    "fk_shape" : fk_shape,
-    "ik_fk_shape" : ik_fk_shape,
-    "cylinder_shape" : cylinder_shape,
-    "foot_shape" : foot_shape,
-    "hips_shape" : hips_shape,
-    "hips2_shape" : hips_shape,
-    "chest_shape" : chest_shape,
-    "VSO_shape" : VSO_shape,
-}
+sl = OrderedDict()
+sl["Xarrow_shape"] = Xarrow_shape
+sl["Yarrow_shape"] = Yarrow_shape
+sl["Zarrow_shape"] = Zarrow_shape
+sl["main_shape"] = main_shape
+sl["cube_shape"] = cube_shape
+sl["rectangle_shape"] = rectangle_shape
+sl["circleY_shape"] = circleY_shape
+sl["circleX_shape"] = circleX_shape
+sl["circleZ_shape"] = circleZ_shape
+sl["ball_shape"] = ball_shape
+sl["diamond_shape"] = diamond_shape
+sl["fleches_shape"] = fleches_shape
+sl["double_fleches_shape"] = double_fleches_shape
+sl["arc_fleches_shape"] = arc_fleches_shape
+sl["halfSpherePin_shape"] = halfSpherePin_shape
+sl["pinX_shape"] = pinX_shape
+sl["pinY_shape"] = pinY_shape
+sl["pinZ_shape"] = pinZ_shape
+sl["double_pin_shape"] = double_pin_shape
+sl["circleCross_shape"] = circleCross_shape
+sl["ball2_shape"] = ball2_shape
+sl["square_shape"] = square_shape
+sl["cog_shape"] = cog_shape
+sl["locator_shape"] = locator_shape
+sl["ik_shape"] = ik_shape
+sl["fk_shape"] = fk_shape
+sl["ik_fk_shape"] = ik_fk_shape
+sl["cylinder_shape"] = cylinder_shape
+sl["foot_shape"] = foot_shape
+sl["hips_shape"] = hips_shape
+sl["hips2_shape"] = hips_shape
+sl["chest_shape"] = chest_shape
+sl["VSO_shape"] = VSO_shape
