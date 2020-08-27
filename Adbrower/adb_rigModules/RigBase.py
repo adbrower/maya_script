@@ -1,5 +1,7 @@
 import sys
 import os
+import ConfigParser
+import ast
 import pymel.core as pm
 
 from CollDict import indexColor
@@ -12,10 +14,152 @@ import adb_core.Class__Locator as Locator
 import adb_core.Class__Control as Control
 import adb_core.Class__Skinning as Skinning
 
+import adb_rigModules.ModuleGuides as ModuleGuides
+
+reload(ModuleGuides)
+
 import adbrower
 adb = adbrower.Adbrower()
 
-DATA_WEIGHT_PATH = 'C:/Users/Audrey/Documents/maya/projects/Roller_Rigging_Project/data/skinWeights/'
+DATA_WEIGHT_PATH = '/'.join(pm.sceneName().split('/')[:-2]) + '/data/' + 'skinWeights/'
+PROJECT_DATA_PATH = '/'.join(pm.sceneName().split('/')[:-2]) + '/data/'
+
+
+# ====================================
+# CLASS
+# ===================================
+
+
+class MainRigBase(object):
+    def __init__(self, rigName = 'Audrey', data_path=None):
+        self.RIG_NAME = rigName
+        self.DATA_PATH = None 
+        if data_path is None:
+            self.DATA_PATH = self.initDataPath()
+        else:
+            self.DATA_PATH = data_path
+
+        self.start()
+
+
+    def start(self):
+        self.createMainRigCtrl()
+        self.vosGuide = self.createGuides()
+
+        readPath = self.DATA_PATH + '{}_DATA/'.format(self.vosGuide.RIG_NAME) + self.vosGuide.RIG_NAME + '__GLOC.ini'
+        if os.path.exists(readPath):
+            self.readData = self.vosGuide.readData(readPath)
+            _registeredAttributes = ast.literal_eval(self.readData.get(str(self.vosGuide.guides[0]), 'registeredAttributes'))
+            for attribute in _registeredAttributes:
+                pm.setAttr('{}.{}'.format(self.vosGuide.guides[0], attribute), ast.literal_eval(self.readData.get(str(self.vosGuide.guides[0]), str(attribute))))
+        else:
+            pass
+
+
+    def build(self):
+        self.createVSOGrp()
+        self.createVSOCtrl()
+        pm.matchTransform(self.VIS_VSO_CTRL.getParent(), self.vosGuide.guides, pos=1)
+        pm.select(None)
+
+
+    def connect(self):
+        self.STARTER_BASERIG_GRP.v.set(0)
+        self.vsoGrpTovsoCtrl()
+
+
+    def initDataPath(self):
+        PROJECT_DATA_PATH = '/'.join(pm.sceneName().split('/')[:-2]) + '/data/'
+        if os.path.exists(PROJECT_DATA_PATH  + 'Guides/'):
+            os.chdir(PROJECT_DATA_PATH  + 'Guides/')
+            return PROJECT_DATA_PATH  + 'Guides/'
+        else:
+            os.mkdir(PROJECT_DATA_PATH  + 'Guides/')
+            os.chdir(PROJECT_DATA_PATH  + 'Guides/')
+            return PROJECT_DATA_PATH  + 'Guides/'
+
+
+    def createMainRigCtrl(self):
+        self.MAIN_BASERIG_GRP = pm.group(n='{}_MainRig__GRP'.format(self.RIG_NAME), em=1)
+        self.STARTER_BASERIG_GRP = pm.group(n='{}_Starters__GRP'.format(self.RIG_NAME), em=1, parent=self.MAIN_BASERIG_GRP)
+        self.GEO_BASERIG_GRP = pm.group(n='{}_Geometry__GRP'.format(self.RIG_NAME), em=1, parent=self.MAIN_BASERIG_GRP)
+        self.MODULES_BASERIG_GRP = pm.group(n='{}_Modules__GRP'.format(self.RIG_NAME), em=1, parent=self.MAIN_BASERIG_GRP)
+        self.CONTROL_BASERIG_GRP = pm.group(n='{}_Control__GRP'.format(self.RIG_NAME), em=1, parent=self.MAIN_BASERIG_GRP)
+
+        self.main_CTRL = Control.Control(name='{}_Main__{}'.format(self.RIG_NAME, NC.CTRL),
+                                    shape=sl.main_shape,
+                                    scale=3,
+                                    color = ('index', indexColor["lightYellow"]),
+                                    parent=self.CONTROL_BASERIG_GRP,
+                                        )
+
+        self.mainOffset_CTRL = Control.Control(name='{}_MainOffset__{}'.format(self.RIG_NAME, NC.CTRL),
+                                    shape=sl.circleY_shape,
+                                    scale=4,
+                                    color = ('index', indexColor["lightBlue"]),
+                                    parent=self.main_CTRL.control
+                                        )
+
+        [adb.makeroot_func(grp, 'Offset', forceNameConvention=True) for grp in [self.main_CTRL.control, self.mainOffset_CTRL.control]]
+
+
+    @lockAttr()
+    def createVSOGrp(self, ):
+        self.VIS_VSO_GRP     = pm.group(n='Visibility__GRP', empty=True, parent=self.CONTROL_BASERIG_GRP)
+        self.SPACES_VSO_GRP  = pm.group(n='Spaces__GRP', empty=True, parent=self.CONTROL_BASERIG_GRP)
+        self.OPTIONS_VSO_GRP = pm.group(n='Options__GRP', empty=True, parent=self.CONTROL_BASERIG_GRP)
+
+        return self.VIS_VSO_GRP, self.SPACES_VSO_GRP, self.OPTIONS_VSO_GRP
+
+
+    @lockAttr()
+    @changeColor('index', col = indexColor['lightGrey'])
+    def createVSOCtrl(self):
+        VSO_GRP = pm.group(n='{}_VSO_GRP'.format(self.RIG_NAME), empty=True, parent=self.mainOffset_CTRL.control)
+        self.VIS_VSO_CTRL, self.SPACES_VSO_CTRL, self.OPTIONS_VSO_CTRL = sl.VSO_shape()
+
+        for ctrl in [self.VIS_VSO_CTRL, self.SPACES_VSO_CTRL, self.OPTIONS_VSO_CTRL]:
+            pm.parent(ctrl, VSO_GRP)
+            pm.rename(ctrl, ctrl.replace('_ctrl', '__CTRL'))
+        pm.select(None)
+        return self.VIS_VSO_CTRL, self.SPACES_VSO_CTRL, self.OPTIONS_VSO_CTRL
+
+
+    def vsoGrpTovsoCtrl(self):
+        vsoGrps = [ self.VIS_VSO_GRP, self.SPACES_VSO_GRP, self.OPTIONS_VSO_GRP]
+        vsoCtrls = [self.VIS_VSO_CTRL, self.SPACES_VSO_CTRL, self.OPTIONS_VSO_CTRL]
+        for vso_grp, vso_crl in zip(vsoGrps, vsoCtrls):
+            all_attr = pm.listAttr(vso_grp, k=1, v=1, ud=1)
+            allSeparator = [x for x in all_attr if  adbAttr.NodeAttr.isSeparator(x)]
+
+            separatorToIgnore = []
+            for separator in allSeparator:
+                enum = pm.attributeQuery(str(separator), node=vso_grp, listEnum=True)[0]
+                if enum == 'Joints':
+                    separatorToIgnore.append(separator)
+                elif enum == 'Controls':
+                    separatorToIgnore.append(separator)
+
+            attrJNT_toIgnore = [x for x in all_attr if x.endswith('JNT')]
+            attr_toIgnore = separatorToIgnore + attrJNT_toIgnore
+            adbAttr.NodeAttr.copyAttr(vso_grp, [vso_crl], ignore=attr_toIgnore, forceConnection=True)
+
+
+    def createGuides(self):
+        vsoGuide = ModuleGuides.ModuleGuides.createFkGuide('{}_VSO'.format(self.RIG_NAME))
+        [pm.parent(guide, self.STARTER_BASERIG_GRP) for guide in vsoGuide.guides]
+        return vsoGuide
+
+
+    @staticmethod
+    def loadSkinClustersWeights(path=DATA_WEIGHT_PATH):
+        os.chdir(path)
+        for _file in os.listdir(path):
+            try:
+                Skinning.Skinning.importWeights(path, _file)
+            except:
+                pass
+
 
 # ====================================
 # CLASS
@@ -35,33 +179,6 @@ class RigBase(object):
         """
         self.createRigGroups(self.RIG_NAME)
         self.createRigLocators(self.RIG_NAME)
-
-
-    @classmethod
-    def createMainRigCtrl(cls, mainRigName):
-        cls.RIG_NAME = mainRigName
-        cls.MAIN_BASERIG_GRP = pm.group(n='{}_MainRig__GRP'.format(mainRigName), em=1)
-        cls.GEO_BASERIG_GRP = pm.group(n='{}_Geometry__GRP'.format(mainRigName), em=1, parent=cls.MAIN_BASERIG_GRP)
-        cls.MODULES_BASERIG_GRP = pm.group(n='{}_Modules__GRP'.format(mainRigName), em=1, parent=cls.MAIN_BASERIG_GRP)
-        cls.CONTROL_BASERIG_GRP = pm.group(n='{}_Control__GRP'.format(mainRigName), em=1, parent=cls.MAIN_BASERIG_GRP)
-
-        cls.main_CTRL = Control.Control(name='{}_Main__{}'.format(mainRigName, NC.CTRL),
-                                    shape=sl.main_shape,
-                                    scale=3,
-                                    color = ('index', indexColor["lightYellow"]),
-                                    parent=cls.CONTROL_BASERIG_GRP,
-                                        )
-
-        cls.mainOffset_CTRL = Control.Control(name='{}_MainOffset__{}'.format(mainRigName, NC.CTRL),
-                                    shape=sl.circleY_shape,
-                                    scale=4,
-                                    color = ('index', indexColor["lightBlue"]),
-                                    parent=cls.main_CTRL.control
-                                        )
-
-        [adb.makeroot_func(grp, 'Offset', forceNameConvention=True) for grp in [cls.main_CTRL.control, cls.mainOffset_CTRL.control]]
-        return cls
-
 
 
     def createRigGroups(self, rigName):
@@ -90,51 +207,6 @@ class RigBase(object):
         return self.VISIBILITY_GRP, self.SETTINGS_GRP, self.SPACES_GRP, self.MODULES_GRP,
 
 
-    @classmethod
-    @lockAttr()
-    def createVSOGrp(cls, mainRigName):
-        cls.VIS_VSO_GRP     = pm.group(n='Visibility__GRP', empty=True, parent=cls.CONTROL_BASERIG_GRP)
-        cls.SPACES_VSO_GRP  = pm.group(n='Spaces__GRP', empty=True, parent=cls.CONTROL_BASERIG_GRP) 
-        cls.OPTIONS_VSO_GRP = pm.group(n='Options__GRP', empty=True, parent=cls.CONTROL_BASERIG_GRP) 
-
-        return cls.VIS_VSO_GRP, cls.SPACES_VSO_GRP, cls.OPTIONS_VSO_GRP
-
-
-    @classmethod
-    @lockAttr()
-    @changeColor('index', col = indexColor['lightGrey'])
-    def createVSOCtrl(cls, mainRigName):
-        VSO_GRP = pm.group(n='{}_VSO_GRP'.format(mainRigName), empty=True, parent=cls.mainOffset_CTRL.control)
-        cls.VIS_VSO_CTRL, cls.SPACES_VSO_CTRL, cls.OPTIONS_VSO_CTRL = sl.VSO_shape()
-
-        for ctrl in [cls.VIS_VSO_CTRL, cls.SPACES_VSO_CTRL, cls.OPTIONS_VSO_CTRL]:
-            pm.parent(ctrl, VSO_GRP)
-            pm.rename(ctrl, ctrl.replace('_ctrl', '__CTRL'))
-        pm.select(None)
-        return cls.VIS_VSO_CTRL, cls.SPACES_VSO_CTRL, cls.OPTIONS_VSO_CTRL
-
-
-    @classmethod
-    def vsoGrpTovsoCtrl(cls):
-        vsoGrps = [ cls.VIS_VSO_GRP, cls.SPACES_VSO_GRP, cls.OPTIONS_VSO_GRP]
-        vsoCtrls = [cls.VIS_VSO_CTRL, cls.SPACES_VSO_CTRL, cls.OPTIONS_VSO_CTRL]
-        for vso_grp, vso_crl in zip(vsoGrps, vsoCtrls):
-            all_attr = pm.listAttr(vso_grp, k=1, v=1, ud=1)
-            allSeparator = [x for x in all_attr if  adbAttr.NodeAttr.isSeparator(x)]
-
-            separatorToIgnore = []
-            for separator in allSeparator:
-                enum = pm.attributeQuery(str(separator), node=vso_grp, listEnum=True)[0]
-                if enum == 'Joints':
-                    separatorToIgnore.append(separator)
-                elif enum == 'Controls':
-                    separatorToIgnore.append(separator)
-
-            attrJNT_toIgnore = [x for x in all_attr if x.endswith('JNT')]
-            attr_toIgnore = separatorToIgnore + attrJNT_toIgnore
-            adbAttr.NodeAttr.copyAttr(vso_grp, [vso_crl], ignore=attr_toIgnore, forceConnection=True)
-
-
     @lockAttr()
     def createRigLocators(self, rigName):
         self.WORLD_LOC = Locator.Locator.create(name='{}_WorldTransform__LOC'.format(rigName)).locators[0]
@@ -151,3 +223,15 @@ class RigBase(object):
                 Skinning.Skinning.importWeights(path, _file)
             except:
                 pass
+
+
+
+# =========================
+# BUILD
+# =========================
+
+# rig = MainRigBase('test')
+# rig.build()
+# rig.connect()
+
+# rig.vosGuide.exportData()
