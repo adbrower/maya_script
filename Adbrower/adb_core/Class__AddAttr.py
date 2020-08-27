@@ -60,7 +60,16 @@ class NodeAttr(object):
 
     def __getattr__(self, name):
         try:
-            return self.list_methods[name]
+            currentValue = []
+            for node in self.node:
+                _currentValue = pm.getAttr('{}.{}'.format(node, name))
+                currentValue.append(_currentValue)
+                self.list_methods[name] = currentValue
+            
+            if len(currentValue) == 1:
+                return currentValue[0]
+            else:
+                return currentValue
         except:
             raise AttributeError('object has no attribute {}'.format(name))
 
@@ -71,6 +80,7 @@ class NodeAttr(object):
             try:
                 for node in self.node:
                     pm.setAttr(node + '.' + name, value)
+                    self.list_methods[name] = value
             except:
                 pass
         else:
@@ -471,10 +481,14 @@ class NodeAttr(object):
             'float2': addParent_Attr,
         }
 
-        addAttrDic[_type]()  # runs the dictionnary
+        try:
+            addAttrDic[_type]()  # runs the dictionnary
+        except Exception as e:
+            pass
         # add the methods to the dictionnary
+        currentValue = pm.getAttr('{}.{}'.format(self.subject, self.attrName))
         self.list_methods.update(
-            {self.attrName: self.getValue})  # self.addMethods()
+            {self.attrName: currentValue})  # self.addMethods()
         if lock is True:
             for node in self.node:
                 pm.setAttr('{}.{}'.format(node, self.attrName), lock=True)
@@ -493,6 +507,19 @@ class NodeAttr(object):
         """
         for node in self.node:
             node.setAttr(attr, value)
+
+
+    def setDefault(self, attr, value):
+        """
+        Function to set a new value of an attribute
+
+        @param attr: String returning the name of the attribute you want to change
+        @param value: The new value you want to give to the attribute
+
+        """
+        for node in self.node:
+            node.setAttr(attr, value)
+            pm.addAttr('{}.{}'.format(node, attr), e=True,  dv=value)
 
 
     def lockAttribute(self, att_to_lock=['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz'], cb=False):
