@@ -33,7 +33,7 @@ PROJECT_DATA_PATH = '/'.join(pm.sceneName().split('/')[:-2]) + '/data/'
 class MainRigBase(object):
     def __init__(self, rigName = 'Audrey', data_path=None):
         self.RIG_NAME = rigName
-        self.DATA_PATH = None 
+        self.DATA_PATH = None
         if data_path is None:
             self.DATA_PATH = self.initDataPath()
         else:
@@ -171,7 +171,7 @@ class RigBase(object):
     def __init__(self, rigName = 'Audrey', data_path=None, _metaDataNode = 'transform'):
         self.RIG_NAME = rigName
         self._metaDataNode = _metaDataNode
-        self.DATA_PATH = None 
+        self.DATA_PATH = None
         if data_path is None:
             self.DATA_PATH = self.initDataPath()
         else:
@@ -256,6 +256,9 @@ class RigBase(object):
         elif type == 'network':
             metaData_GRP = pm.shadingNode('network', au=1, n=METADATA_grp_name)
 
+        elif type == None:
+            metaData_GRP = None
+
         return metaData_GRP
 
     @lockAttr()
@@ -263,7 +266,14 @@ class RigBase(object):
         self.WORLD_LOC = Locator.Locator.create(name='{}_WorldTransform__LOC'.format(rigName)).locators[0]
         pm.parent(self.WORLD_LOC, self.SPACES_GRP)
         self.WORLD_LOC.v.set(0)
-        return self.WORLD_LOC
+        self.WORLD_LOC.inheritsTransform.set(0)
+
+        self.MAIN_CTRL_LOC = Locator.Locator.create(name='{}_MainCTRLTransform__LOC'.format(rigName)).locators[0]
+        pm.parent(self.MAIN_CTRL_LOC, self.SPACES_GRP)
+        self.MAIN_CTRL_LOC.v.set(0)
+
+        return self.WORLD_LOC, self.MAIN_CTRL_LOC
+
 
 
     @staticmethod

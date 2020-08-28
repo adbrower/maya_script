@@ -34,10 +34,12 @@ class ModuleBase(object):
         - Create Meta Data Node
         """
         self.NAME = NAME
-        self.metaData_GRP = self.createMetaDataGrp(self.NAME, type=_metaDataNode)
-        self.hiearchy_setup(self.NAME, is_module=True)
+        self._metaDataNode = _metaDataNode
+        if self._metaDataNode is not None:
+            self.metaData_GRP = self.createMetaDataGrp(self.NAME, type=self._metaDataNode)
+            self.metaDataGRPS.append(self.metaData_GRP)
 
-        self.metaDataGRPS.append(self.metaData_GRP)
+        self.hiearchy_setup(self.NAME, is_module=True)
 
     def _build(self):
         """
@@ -50,6 +52,10 @@ class ModuleBase(object):
         - Connect to other Module
         """
         pass
+
+# =========================
+# PROPERTIES
+# =========================
 
     @property
     def getJoints(self):
@@ -91,6 +97,11 @@ class ModuleBase(object):
     def getOutputs(self):
         return self._MODEL.getOutputs
 
+
+# =========================
+# METHODS
+# =========================
+
     @lockAttr()
     def hiearchy_setup(self, module_name, is_module=True):
         """
@@ -114,7 +125,6 @@ class ModuleBase(object):
         self.RIG_GRP = pm.group(n='{}_RIG__GRP'.format(module_name), em=1)
         self.INPUT_GRP = pm.group(n='{}_INPUT__GRP'.format(module_name), em=1)
         self.OUTPUT_GRP = pm.group(n='{}_OUTPUT__GRP'.format(module_name), em=1)
-
         self.VISRULE_GRP = pm.group(n='{}_VISRULE__GRP'.format(module_name), em=1)
 
         [pm.parent(grp, self.MOD_GRP) for grp in [self.RIG_GRP, self.INPUT_GRP, self.OUTPUT_GRP]]
