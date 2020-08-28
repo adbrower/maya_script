@@ -117,11 +117,11 @@ class LimbLeg(rigBase.RigBase):
     def start(self, buildFootStatus = False):
         self.buildFootStatus = buildFootStatus
         self.side = NC.getSideFromName(self.NAME)
-        
+
         Ghips, Gknee, Gankle = [moduleGuides.ModuleGuides.createFkGuide(prefix='{}_{}'.format(self.NAME, part)) for part in ['Hips', 'Knee', 'Ankle']]
         for guide in [Ghips, Gknee, Gankle]:
             pm.parent(guide.guides, self.STARTERS_GRP)
-        
+
         pm.PyNode(Ghips.guides[0]).translate.set(0, 4, 0)
         pm.PyNode(Gknee.guides[0]).translate.set(0, 2, 0.5)
         pm.PyNode(Gankle.guides[0]).translate.set(0, 0, 0)
@@ -494,10 +494,15 @@ class LimbLeg(rigBase.RigBase):
             pm.parent(autPoleVectorGrpEnd, self.SPACES_GRP)
             pm.parentConstraint(autPoleVectorSpaceLoc.getChildren()[0], autPoleVectorGrpEnd, mo=True)
 
-            # wORLD SPACE
+            # WORLD SPACE
             ikSpaceSwitchWorldGrp = pm.group(n='{Side}__{Basename}_PV_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.WORLD_LOC)
             pm.matchTransform(ikSpaceSwitchWorldGrp, self.poleVectorCtrl, pos=1, rot=1)
             ikSpaceSwitchWorldGrp.v.set(0)
+
+            # MAIN CTRL SPACE
+            ikSpaceSwitchMainCTRLGrp = pm.group(n='{Side}__{Basename}PV_SPACES_SWITCH_MAINCTRL__GRP'.format(**self.nameStructure), em=1, parent=self.MAIN_CTRL_LOC)
+            ikSpaceSwitchMainCTRLGrp.v.set(0)
+            pm.matchTransform(ikSpaceSwitchMainCTRLGrp, self.poleVectorCtrl, pos=1, rot=1)
 
             # ANKLE SPACE
             ikSpaceSwitcAnkleGrp = pm.group(n='{Side}__{Basename}_PV_SPACES_SWITCH_ANKLE__GRP'.format(**self.nameStructure), em=1, parent=self.SPACES_GRP)
@@ -505,29 +510,34 @@ class LimbLeg(rigBase.RigBase):
             pm.parentConstraint(self.leg_IkHandle_ctrl_offset, ikSpaceSwitcAnkleGrp, mo=True)
 
             self.povSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__PoleVector'.format(**self.nameStructure),
-                                                    spacesInputs =[autPoleVectorGrpEnd, ikSpaceSwitcAnkleGrp, ikSpaceSwitchWorldGrp],
+                                                    spacesInputs =[autPoleVectorGrpEnd, ikSpaceSwitcAnkleGrp, ikSpaceSwitchWorldGrp, ikSpaceSwitchWorldGrp],
                                                     spaceOutput = self.poleVectorCtrl.getParent(),
                                                     maintainOffset = False,
-                                                    attrNames = ['auto', 'ankle', 'world'],)
+                                                    attrNames = ['auto', 'ankle', 'mainCTRL', 'world'])
             self.ikFk_MOD.metaDataGRPS += [self.povSpaceSwitch.metaData_GRP]
 
             # ==================================================
             # CREATE SPACE SWITCH FOR IK CTRL
 
-            # wORLD SPACE
+            # WORLD SPACE
             ikSpaceSwitchWorldGrpLeg = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.WORLD_LOC)
             ikSpaceSwitchWorldGrp.v.set(0)
             pm.matchTransform(ikSpaceSwitchWorldGrpLeg, self.leg_IkHandle_ctrl_offset, pos=1, rot=1)
+
+            # MAIN CTRL SPACE
+            ikSpaceSwitchMainCTRLGrpLeg = pm.group(n='{Side}__{Basename}PV_SPACES_SWITCH_MAINCTRL__GRP'.format(**self.nameStructure), em=1, parent=self.MAIN_CTRL_LOC)
+            ikSpaceSwitchMainCTRLGrpLeg.v.set(0)
+            pm.matchTransform(ikSpaceSwitchMainCTRLGrpLeg, self.leg_IkHandle_ctrl_offset, pos=1, rot=1)
 
             # HIPS SPACE
             self.ikSpaceSwitchHipsdGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_HIPS__GRP'.format(**self.nameStructure), em=1, parent=self.SPACES_GRP)
             pm.matchTransform(self.ikSpaceSwitchHipsdGrp, self.leg_IkHandle_ctrl, pos=1, rot=1)
 
             self.ikLegSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}_IK'.format(**self.nameStructure),
-                                                    spacesInputs =[ikSpaceSwitchWorldGrpLeg, self.ikSpaceSwitchHipsdGrp],
+                                                    spacesInputs =[ikSpaceSwitchMainCTRLGrpLeg, ikSpaceSwitchWorldGrpLeg, self.ikSpaceSwitchHipsdGrp],
                                                     spaceOutput = self.leg_IkHandle_ctrl.getParent(),
                                                     maintainOffset = False,
-                                                    attrNames = ['world', 'hips'])
+                                                    attrNames = ['mainCTRL', 'world', 'hips'])
             self.ikFk_MOD.metaDataGRPS += [self.ikLegSpaceSwitch.metaData_GRP]
 
 

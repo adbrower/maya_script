@@ -492,10 +492,15 @@ class LimbArm(rigBase.RigBase):
             pm.parent(autPoleVectorGrpEnd, self.SPACES_GRP)
             pm.parentConstraint(autPoleVectorSpaceLoc.getChildren()[0], autPoleVectorGrpEnd, mo=True)
 
-            # wORLD SPACE
+            # WORLD SPACE
             ikSpaceSwitchWorldGrp = pm.group(n='{Side}__{Basename}PV_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.WORLD_LOC)
             ikSpaceSwitchWorldGrp.v.set(0)
             pm.matchTransform(ikSpaceSwitchWorldGrp, self.poleVectorCtrl, pos=1, rot=1)
+
+            # MAIN CTRL SPACE
+            ikSpaceSwitchMainCTRLGrp = pm.group(n='{Side}__{Basename}PV_SPACES_SWITCH_MAINCTRL__GRP'.format(**self.nameStructure), em=1, parent=self.MAIN_CTRL_LOC)
+            ikSpaceSwitchMainCTRLGrp.v.set(0)
+            pm.matchTransform(ikSpaceSwitchMainCTRLGrp, self.poleVectorCtrl, pos=1, rot=1)
 
             # WRIST SPACE
             ikSpaceSwitchWristdGrp = pm.group(n='{Side}__{Basename}PV_SPACES_SWITCH_WRIST__GRP'.format(**self.nameStructure), em=1, parent=self.SPACES_GRP)
@@ -503,19 +508,24 @@ class LimbArm(rigBase.RigBase):
             pm.parentConstraint(self.arm_IkHandle_ctrl_offset, ikSpaceSwitchWristdGrp, mo=True)
 
             self.povSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}PoleVector'.format(**self.nameStructure),
-                                                    spacesInputs =[autPoleVectorGrpEnd, ikSpaceSwitchWristdGrp, ikSpaceSwitchWorldGrp],
+                                                    spacesInputs =[autPoleVectorGrpEnd, ikSpaceSwitchWristdGrp, ikSpaceSwitchMainCTRLGrp, ikSpaceSwitchWorldGrp],
                                                     spaceOutput = self.poleVectorCtrl.getParent(),
                                                     maintainOffset = True,
-                                                    attrNames = ['auto', 'wrist', 'world'])
+                                                    attrNames = ['auto', 'wrist', 'mainCTRL','world'])
             self.ikFk_MOD.metaDataGRPS += [self.povSpaceSwitch.metaData_GRP]
 
             # ==================================================
             # CREATE SPACE SWITCH FOR IK CTRL
 
-            # wORLD SPACE
+            # WORLD SPACE
             ikSpaceSwitchWorldGrpArm = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.WORLD_LOC)
             ikSpaceSwitchWorldGrp.v.set(0)
             pm.matchTransform(ikSpaceSwitchWorldGrpArm, self.arm_IkHandle_ctrl, pos=1, rot=1)
+
+            # MAIN CTRL SPACE
+            ikSpaceSwitchMainCTRLGrpArm = pm.group(n='{Side}__{Basename}PV_SPACES_SWITCH_MAINCTRL__GRP'.format(**self.nameStructure), em=1, parent=self.MAIN_CTRL_LOC)
+            ikSpaceSwitchMainCTRLGrpArm.v.set(0)
+            pm.matchTransform(ikSpaceSwitchMainCTRLGrpArm, self.arm_IkHandle_ctrl, pos=1, rot=1)
 
             # HIPS SPACE
             self.ikSpaceSwitchHipsdGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_HIPS__GRP'.format(**self.nameStructure), em=1, parent=self.SPACES_GRP)
@@ -526,10 +536,10 @@ class LimbArm(rigBase.RigBase):
             pm.matchTransform(self.ikSpaceSwitchChestdGrp, self.arm_IkHandle_ctrl, pos=1, rot=1)
 
             self.ikArmpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}_IK'.format(**self.nameStructure),
-                                                    spacesInputs =[ikSpaceSwitchWorldGrpArm, self.ikSpaceSwitchHipsdGrp, self.ikSpaceSwitchChestdGrp],
+                                                    spacesInputs =[self.ikSpaceSwitchHipsdGrp, self.ikSpaceSwitchChestdGrp, ikSpaceSwitchMainCTRLGrpArm, ikSpaceSwitchWorldGrpArm],
                                                     spaceOutput = self.arm_IkHandle_ctrl.getParent(),
                                                     maintainOffset = False,
-                                                    attrNames = ['world', 'hips', 'chest'])
+                                                    attrNames = ['hips', 'chest', 'mainCTRL', 'world',])
             self.ikFk_MOD.metaDataGRPS += [self.ikArmpaceSwitch.metaData_GRP]
 
             pm.parent(arm_IkHandle[0], self.arm_IkHandle_ctrl_offset)
