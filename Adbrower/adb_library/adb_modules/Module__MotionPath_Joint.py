@@ -11,11 +11,13 @@ import sys
 import maya.cmds as mc
 import pymel.core as pm
 
+from adbrower import changeColor, undo
+import adb_core.Class__Joint as Joint
 import adb_core.ModuleBase as moduleBase
 import adbrower
-
 adb = adbrower.Adbrower()
 
+# reload(moduleBase)
 
 # -----------------------------------
 # CLASS
@@ -39,7 +41,7 @@ class MotionPathJnt(moduleBase.ModuleBase):
 
     ## EXTERIOR CLASS BUILD
     #------------------------
-    import adb_utils.Class__MotionPath_Joint as adbMPJ
+    import adb_library.adb_modules.Module__MotionPath_Joint as adbMPJ
     reload(adbMPJ)
 
     mpj = MotionPathJnt('test', 5, 'curve1')
@@ -47,9 +49,9 @@ class MotionPathJnt(moduleBase.ModuleBase):
     mpj.build()
 
     """
-    def __init__(self, 
+    def __init__(self,
                 module_name,
-                invervals, 
+                invervals,
                 curve=pm.selected()):
         super(MotionPathJnt, self).__init__()
 
@@ -103,8 +105,9 @@ class MotionPathJnt(moduleBase.ModuleBase):
     # METHOD
     # =========================
 
-    def start(self, metaDataNode = 'transform'):
-        super(MotionPathJnt, self)._start(_metaDataNode = metaDataNode)  
+    def start(self, metaDataNode = None):
+        super(MotionPathJnt, self)._start(self.NAME, _metaDataNode = metaDataNode)
+        pass
 
     def build(self):
         super(MotionPathJnt, self)._build()
@@ -121,11 +124,11 @@ class MotionPathJnt(moduleBase.ModuleBase):
 
     def motionPath_setup(self):
         pos = []
-        self._MODEL.getJoints = [pm.joint(rad=self._MODEL.radius) for x in range(self._MODEL.interval)]
+        self._MODEL.getJoints = Joint.Joint.create(numb=self._MODEL.interval, name='{}'.format(self.NAME), rad=self._MODEL.radius, padding=2).joints
         for _joint in self._MODEL.getJoints:
             pm.parent(_joint, w=True)
             adb.makeroot_func(_joint)
-            
+
             double_linears_nodes = []
             _motionPathNode = pm.pathAnimation(self._MODEL.curve,_joint.getParent(), upAxis='y', fractionMode=True,
                                                worldUpType="vector",
@@ -138,13 +141,13 @@ class MotionPathJnt(moduleBase.ModuleBase):
                 double_linears_nodes.append(double_linear)
 
             pm.delete(double_linears_nodes)
-            
+
             for axis in 'xyz':
                 pm.cycleCheck(e=1)
                 pm.connectAttr('{}.{}Coordinate'.format(_motionPathNode, axis), '{}.t{}'.format(_joint.getParent(), axis), f=1)
 
             self._MODEL.motionPaths.append(_motionPathNode)
-            
+
         # New interval value for the Function
         Nintervalls = self._MODEL.interval - 1
 
