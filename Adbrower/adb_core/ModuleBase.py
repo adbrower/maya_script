@@ -39,12 +39,6 @@ class ModuleBase(object):
 
         self.metaDataGRPS.append(self.metaData_GRP)
 
-    def _guides(self):
-        """
-        - Creates all the guides
-        """
-        pass
-
     def _build(self):
         """
         - Build the rig Module
@@ -56,7 +50,6 @@ class ModuleBase(object):
         - Connect to other Module
         """
         pass
-
 
     @property
     def getJoints(self):

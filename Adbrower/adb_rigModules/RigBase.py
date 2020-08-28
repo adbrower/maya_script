@@ -15,8 +15,8 @@ import adb_core.Class__Control as Control
 import adb_core.Class__Skinning as Skinning
 
 import adb_rigModules.ModuleGuides as ModuleGuides
+import adb_core.ModuleBase as moduleBase
 
-reload(ModuleGuides)
 
 import adbrower
 adb = adbrower.Adbrower()
@@ -168,18 +168,46 @@ class MainRigBase(object):
 
 class RigBase(object):
 
-    def __init__(self, rigName = 'Audrey'):
+    def __init__(self, rigName = 'Audrey', data_path=None, _metaDataNode = 'transform'):
         self.RIG_NAME = rigName
+        self._metaDataNode = _metaDataNode
+        self.DATA_PATH = None 
+        if data_path is None:
+            self.DATA_PATH = self.initDataPath()
+        else:
+            self.DATA_PATH = data_path
 
-        self._start()
+        self._start(_metaDataNode = self._metaDataNode)
 
-    def _start(self):
+    def _start(self, _metaDataNode = 'transform'):
         """
         - Creates Rig Group
         """
+        self.metaData_GRP = self.createMetaDataGrp(self.RIG_NAME, type=_metaDataNode)
         self.createRigGroups(self.RIG_NAME)
         self.createRigLocators(self.RIG_NAME)
 
+    def _build(self):
+        """
+        - Build the rig Module
+        """
+        pass
+
+    def _connect(self):
+        """
+        - Connect to other Module
+        """
+        pass
+
+    def initDataPath(self):
+        PROJECT_DATA_PATH = '/'.join(pm.sceneName().split('/')[:-2]) + '/data/'
+        if os.path.exists(PROJECT_DATA_PATH  + 'Guides/'):
+            os.chdir(PROJECT_DATA_PATH  + 'Guides/')
+            return PROJECT_DATA_PATH  + 'Guides/'
+        else:
+            os.mkdir(PROJECT_DATA_PATH  + 'Guides/')
+            os.chdir(PROJECT_DATA_PATH  + 'Guides/')
+            return PROJECT_DATA_PATH  + 'Guides/'
 
     def createRigGroups(self, rigName):
         """
@@ -194,18 +222,41 @@ class RigBase(object):
         Returns: RIG_GRP, INPUT_GRP, OUTPUT_GRP
         """
         self.MAIN_RIG_GRP   = pm.group(n='{}_Rig__GRP'.format(rigName), em=1)
+        self.STARTERS_GRP = pm.group(n='{}_Starters__GRP'.format(rigName), em=1, parent=self.MAIN_RIG_GRP)
         self.VISIBILITY_GRP = pm.group(n='{}_Visibility__GRP'.format(rigName), em=1, parent=self.MAIN_RIG_GRP)
         self.SETTINGS_GRP   = pm.group(n='{}_Settings__GRP'.format(rigName), em=1, parent=self.MAIN_RIG_GRP)
         self.SPACES_GRP     = pm.group(n='{}_Space__GRP'.format(rigName), em=1, parent=self.MAIN_RIG_GRP)
         self.MODULES_GRP    = pm.group(n='{}_Module__GRP'.format(rigName), em=1, parent=self.MAIN_RIG_GRP)
 
         [grp.v.set(0) for grp in [self.VISIBILITY_GRP, self.SETTINGS_GRP, self.SPACES_GRP]]
-        for grp in [self.VISIBILITY_GRP, self.SETTINGS_GRP, self.SPACES_GRP]:
+        for grp in [self.VISIBILITY_GRP, self.SETTINGS_GRP, self.SPACES_GRP, self.STARTERS_GRP]:
             for att in ['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz','v']:
                         pm.PyNode(grp).setAttr(att, lock=True, channelBox=False, keyable=False)
 
-        return self.VISIBILITY_GRP, self.SETTINGS_GRP, self.SPACES_GRP, self.MODULES_GRP,
+        return self.VISIBILITY_GRP, self.SETTINGS_GRP, self.SPACES_GRP, self.MODULES_GRP, self.STARTERS_GRP
 
+    @staticmethod
+    @lockAttr()
+    def createMetaDataGrp(module_name, type ='transform'):
+        """
+        Create a Meta Data Node
+        @param type: string.
+                'transform': empty node
+                'network' : network node
+        """
+        METADATA_grp_name = module_name + '__METADATA'
+
+        if pm.objExists(METADATA_grp_name):
+            pm.delete(METADATA_grp_name)
+
+        if type == 'transform':
+            metaData_GRP = pm.group(n=METADATA_grp_name, em=True)
+            metaData_GRP.v.set(0)
+
+        elif type == 'network':
+            metaData_GRP = pm.shadingNode('network', au=1, n=METADATA_grp_name)
+
+        return metaData_GRP
 
     @lockAttr()
     def createRigLocators(self, rigName):

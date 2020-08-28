@@ -24,8 +24,6 @@ PROJECT_DATA_PATH = '/'.join(pm.sceneName().split('/')[:-2]) + '/data/'
 
 
 class ModuleGuides(object):
-
-
     def __init__(self, prefix = 'Audrey', guides=[], path=PROJECT_DATA_PATH):
         if isinstance(guides , str):
             self.guides = [pm.PyNode(guides)]
@@ -44,7 +42,7 @@ class ModuleGuides(object):
 
     @classmethod
     def createFkGuide(cls, prefix='',  guides=[]):
-        cls.locInstance = Locator.Locator.create(name='{}__GLOC'.format(prefix, NC.LOC))
+        cls.locInstance = Locator.Locator.create(name='{}__G{}'.format(prefix, NC.LOC))
         cls.locInstance.AddSeparator(cls.locInstance.locators[0])
         cls.locInstance.addAttr('Shape', 'enum',  eName = sl.sl.keys())
         cls.locInstance.setDefault('Shape', 4)
