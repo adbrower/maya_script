@@ -9,6 +9,8 @@
 import json
 import sys
 import os
+import ConfigParser
+import ast
 
 import pymel.core as pm
 
@@ -28,28 +30,27 @@ from adb_core.Class__Transforms import Transform
 
 import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
 
-import adb_rigModules.RigBase as RigBase
+import adb_rigModules.RigBase as rigBase
+import adb_rigModules.ModuleGuides as moduleGuides
 
 # reload(adbrower)
 # reload(sl)
 # reload(Joint)
-# reload(RigBase)
 # reload(adbAttr)
 # reload(NC)
 # reload(moduleBase)
 # reload(Control)
 # reload(Locator)
 # reload(SpaceSwitch)
+# reload(rigBase)
+# reload(moduleBase)
+# reload(moduleGuides)
 
 #-----------------------------------
 #  DECORATORS
 #-----------------------------------
 
-from adbrower import undo
-from adbrower import changeColor
-from adbrower import makeroot
-from adbrower import lockAttr
-
+from adbrower import undo, changeColor, makeroot, lockAttr
 
 #-----------------------------------
 # CLASS
@@ -68,33 +69,57 @@ os.chdir(CONFIG_PATH)
 with open("BipedConfig.json", "r") as f:
     BIPED_CONFIG = json.load(f)
 
-class LimbFoot(moduleBase.ModuleBase):
+class LimbFoot(rigBase.RigBase):
     """
     """
     def __init__(self,
                  module_name=None,
                  config = BIPED_CONFIG
                 ):
-        super(LimbFoot, self).__init__('')
+        super(LimbFoot, self).__init__(module_name, _metaDataNode=None)
 
         self.nameStructure = None
         self._MODEL = LimbFootModel()
         self.NAME = module_name
         self.config = config
 
+
     def __repr__(self):
-        return str('{} : {} \n {}'.format(self.__class__.__name__, self.subject, self.__class__))
+        return str('{} : {} \n {}'.format(self.__class__.__name__, self.MAIN_RIG_GRP, self.__class__))
 
     # =========================
     # METHOD
     # =========================
 
-    def start(self, metaDataNode = 'transform'):
-        super(LimbFoot, self)._start('', _metaDataNode = metaDataNode)
+    def start(self):
+        Gankle, Gball, Gtoe, Gheel = [moduleGuides.ModuleGuides.createFkGuide(prefix='{}_{}'.format(self.NAME, part)) for part in ['Ankle', 'Ball', 'Toe', 'Heel']]
+        for guide in [Gankle, Gball, Gtoe, Gheel]:
+            pm.parent(guide.guides, self.STARTERS_GRP)
 
-        # Create Guide Setup
+        pm.PyNode(Gankle.guides[0]).translate.set(0, 2.5, 0)
+        pm.PyNode(Gball.guides[0]).translate.set(0, 0.5, 2)
+        pm.PyNode(Gtoe.guides[0]).translate.set(0, 0.5, 4)
+        pm.PyNode(Gheel.guides[0]).translate.set(0, 0.5, -0.8)
 
-    def build(self, GUIDES):
+        self.curve_setup(Gankle.guides[0], Gball.guides[0])
+        self.curve_setup(Gball.guides[0], Gtoe.guides[0])
+        self.curve_setup(Gankle.guides[0], Gheel.guides[0])
+
+        self.footGuides = moduleGuides.ModuleGuides(self.NAME.upper(), [Gankle.guides[0], Gball.guides[0], Gtoe.guides[0], Gheel.guides[0]], self.DATA_PATH)
+        readPath = self.footGuides.DATA_PATH + '/' + self.footGuides.RIG_NAME + '__GLOC.ini'
+        if os.path.exists(readPath):
+            self.readData = self.footGuides.readData(readPath)
+            for guide in self.footGuides.guides:
+                _registeredAttributes = ast.literal_eval(self.readData.get(str(guide), 'registeredAttributes'))
+                for attribute in _registeredAttributes:
+                    try:
+                        pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.readData.get(str(guide), str(attribute))))
+                    except NoSectionError:
+                        pass
+
+        pm.select(None)
+
+    def build(self, GUIDES=None):
         """
         # TODO : Add Bank System
         # TODO : Automate walking cycle
@@ -102,7 +127,9 @@ class LimbFoot(moduleBase.ModuleBase):
         """
         super(LimbFoot, self)._build()
 
-        self.RIG = RigBase.RigBase(rigName = self.NAME)
+        if GUIDES is None:
+            GUIDES = self.footGuides.guides
+
         self.starter_Foot = GUIDES
         self.side = NC.getSideFromPosition(GUIDES[0])
 
@@ -116,6 +143,11 @@ class LimbFoot(moduleBase.ModuleBase):
             self.col_layer1 = indexColor[self.config["COLORS"]['R_col_layer1']]
             self.col_layer2 = indexColor[self.config["COLORS"]['R_col_layer2']]
             self.pol_vector_col = indexColor[self.config["COLORS"]['R_col_poleVector']]
+        else:
+            self.col_main = indexColor[self.config["COLORS"]['C_col_main']]
+            self.col_layer1 = indexColor[self.config["COLORS"]['C_col_layer1']]
+            self.sliding_elbow_col = indexColor[self.config["COLORS"]['C_col_layer2']]
+            self.pol_vector_col = indexColor[self.config["COLORS"]['C_col_layer2']]
 
         self.nameStructure = {
                             'Side'    : self.side,
@@ -133,8 +165,8 @@ class LimbFoot(moduleBase.ModuleBase):
         self.Foot_MOD = moduleBase.ModuleBase()
         self.BUILD_MODULES += [self.Foot_MOD]
         self.Foot_MOD._start('{Side}__Foot'.format(**self.nameStructure),_metaDataNode = 'transform')
-        pm.parent(self.Foot_MOD.metaData_GRP, self.RIG.SETTINGS_GRP)
-        pm.parent(self.Foot_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+        pm.parent(self.Foot_MOD.metaData_GRP, self.SETTINGS_GRP)
+        pm.parent(self.Foot_MOD.MOD_GRP, self.MODULES_GRP)
 
         self.footGroupSetup()
         self.create_foot_ctrl()
@@ -162,14 +194,14 @@ class LimbFoot(moduleBase.ModuleBase):
         # Hiearchy
         for module in self.BUILD_MODULES:
             try:
-                pm.parent(module.VISRULE_GRP, self.RIG.VISIBILITY_GRP)
+                pm.parent(module.VISRULE_GRP, self.VISIBILITY_GRP)
             except:
                 pass
             for grp in module.metaDataGRPS:
-                pm.parent(grp, self.RIG.SETTINGS_GRP)
+                pm.parent(grp, self.SETTINGS_GRP)
                 grp.v.set(0)
 
-        Transform(self.RIG.MODULES_GRP).pivotPoint = Transform(self.foot_ctrl).worldTrans
+        Transform(self.MODULES_GRP).pivotPoint = Transform(self.foot_ctrl).worldTrans
 
 
     # =========================
@@ -310,8 +342,8 @@ class LimbFoot(moduleBase.ModuleBase):
         self.Foot_MOD.metaDataGRPS += [self.footSpaceSwitchRot.metaData_GRP]
 
         pm.parentConstraint(self.foot_ctrl, self.footOffsetGrp, mo=1)
-        adbAttr.NodeAttr.copyAttr(self.footSpaceSwitchTrans.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
-        adbAttr.NodeAttr.copyAttr(self.footSpaceSwitchRot.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.footSpaceSwitchTrans.metaData_GRP, [self.SPACES_GRP], forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.footSpaceSwitchRot.metaData_GRP, [self.SPACES_GRP], forceConnection=True)
 
 
     # -------------------
@@ -381,11 +413,11 @@ class LimbFoot(moduleBase.ModuleBase):
 
 
     def setup_VisibilityGRP(self):
-        visGrp = adbAttr.NodeAttr([self.RIG.VISIBILITY_GRP])
-        visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Joints')
+        visGrp = adbAttr.NodeAttr([self.VISIBILITY_GRP])
+        visGrp.AddSeparator(self.VISIBILITY_GRP, 'Joints')
         visGrp.addAttr('{Side}_{Basename}_JNT'.format(**self.nameStructure), True)
 
-        visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Controls')
+        visGrp.AddSeparator(self.VISIBILITY_GRP, 'Controls')
         visGrp.addAttr('{Side}_{Basename}_Main_CTRL'.format(**self.nameStructure), True)
         visGrp.addAttr('{Side}_{Basename}_Extras_CTRL'.format(**self.nameStructure), True)
 
@@ -399,7 +431,7 @@ class LimbFoot(moduleBase.ModuleBase):
 
 
     def cleanUpEmptyGrps(self):
-        for ModGrp in self.RIG.MODULES_GRP.getChildren():
+        for ModGrp in self.MODULES_GRP.getChildren():
             for grp in ModGrp.getChildren():
                 if len(grp.getChildren()) is 0:
                     pm.delete(grp)
@@ -408,6 +440,30 @@ class LimbFoot(moduleBase.ModuleBase):
     # =========================
     # SLOTS
     # =========================
+
+
+    @changeColor('index', col=2)
+    def curve_setup(self, basePoint, endPoint):
+        baseJoint = Joint.Joint.point_base(pm.PyNode(basePoint).getRotatePivot(space='world'), name='{}__{}'.format(NC.getNameNoSuffix(basePoint), NC.JOINT)).joints[0]
+        endJoint = Joint.Joint.point_base(pm.PyNode(endPoint).getRotatePivot(space='world'), name='{}__{}'.format(NC.getNameNoSuffix(endPoint),  NC.JOINT)).joints[0]
+        pm.parent(baseJoint, basePoint)
+        pm.parent(endJoint, endPoint)
+
+        starPointPos = pm.xform(basePoint, q=1, ws=1, t=1)
+        endPointPos = pm.xform(endPoint, q=1, ws=1, t=1)
+        [pm.PyNode(joint).v.set(0) for joint in [baseJoint, endJoint]]
+
+        starting_locs = [baseJoint, endJoint]
+        pos = [pm.xform(x, ws=True, q=True, t=True) for x in starting_locs]
+        knot = []
+        for i in range(len(starting_locs)):
+            knot.append(i)
+        _curve = pm.curve(p=pos, k=knot, d=1, n='{}_{}_CRV'.format(self.NAME, NC.getNameNoSuffix(baseJoint)))
+        pm.skinCluster(baseJoint , _curve, endJoint)
+        pm.setAttr(_curve.inheritsTransform, 0)
+        pm.setAttr(_curve.template, 1)
+        pm.parent(_curve, pm.PyNode(basePoint))
+        return _curve
 
 
     def createPivotGrps(self, joint, name, forceConnection=True):
@@ -454,7 +510,8 @@ class LimbFoot(moduleBase.ModuleBase):
 # =========================
 
 # L_foot = LimbFoot(module_name='L__Foot')
-# L_foot.build(['L__ankle_guide', 'L__ball_guide', 'L__toe_guide', 'L__heel_guide'])
+# L_foot.start()
+# L_foot.build()
 # L_foot.connect()
 
 

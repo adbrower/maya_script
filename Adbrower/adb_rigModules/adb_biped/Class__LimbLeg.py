@@ -9,6 +9,8 @@
 import json
 import sys
 import os
+import ConfigParser
+import ast
 
 import pymel.core as pm
 import maya.cmds as mc
@@ -38,16 +40,15 @@ import adb_library.adb_modules.Module__SquashStretch_Ribbon as adbRibbon
 import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
 import adb_core.Class__Skinning as Skinning
 
-import adb_rigModules.RigBase as RigBase
+import adb_rigModules.RigBase as rigBase
+import adb_rigModules.ModuleGuides as moduleGuides
 import adb_rigModules.adb_biped.Class__LimbFoot as LimbFoot
 
 # reload(adbrower)
 # reload(sl)
 # reload(Joint)
-# reload(RigBase)
 # reload(adbAttr)
 # reload(NC)
-# reload(moduleBase)
 # reload(adbIkStretch)
 # reload(Control)
 # reload(locGen)
@@ -58,17 +59,16 @@ import adb_rigModules.adb_biped.Class__LimbFoot as LimbFoot
 # reload(SpaceSwitch)
 # reload(Skinning)
 # reload(AutoPoleVector)
+# reload(rigBase)
+# reload(moduleBase)
+# reload(moduleGuides)
 reload(LimbFoot)
 
 #-----------------------------------
 #  DECORATORS
 #-----------------------------------
 
-from adbrower import undo
-from adbrower import changeColor
-from adbrower import makeroot
-from adbrower import lockAttr
-
+from adbrower import undo, changeColor, makeroot, lockAttr
 
 #-----------------------------------
 # CLASS
@@ -91,7 +91,7 @@ with open("BipedConfig.json", "r") as f:
     BIPED_CONFIG = json.load(f)
 
 
-class LimbLeg(moduleBase.ModuleBase):
+class LimbLeg(rigBase.RigBase):
     """
     import adb_rigModules.adb_biped.Class__LimbLeg as LimbLeg
     """
@@ -99,7 +99,7 @@ class LimbLeg(moduleBase.ModuleBase):
                 module_name=None,
                 config = BIPED_CONFIG
                 ):
-        super(LimbLeg, self).__init__('')
+        super(LimbLeg, self).__init__(module_name, _metaDataNode=None)
 
         self.nameStructure = None
         self._MODEL = LimbLegModel()
@@ -107,19 +107,48 @@ class LimbLeg(moduleBase.ModuleBase):
         self.config = config
 
     def __repr__(self):
-        return str('{} : {} \n {}'.format(self.__class__.__name__, self.subject, self.__class__))
+        return str('{} : {} \n {}'.format(self.__class__.__name__, self.MAIN_RIG_GRP, self.__class__))
 
 
     # =========================
     # METHOD
     # =========================
 
-    def start(self, metaDataNode = 'transform'):
-        super(LimbLeg, self)._start('', _metaDataNode = metaDataNode)
+    def start(self, buildFootStatus = False):
+        self.buildFootStatus = buildFootStatus
+        self.side = NC.getSideFromName(self.NAME)
+        
+        Ghips, Gknee, Gankle = [moduleGuides.ModuleGuides.createFkGuide(prefix='{}_{}'.format(self.NAME, part)) for part in ['Hips', 'Knee', 'Ankle']]
+        for guide in [Ghips, Gknee, Gankle]:
+            pm.parent(guide.guides, self.STARTERS_GRP)
+        
+        pm.PyNode(Ghips.guides[0]).translate.set(0, 4, 0)
+        pm.PyNode(Gknee.guides[0]).translate.set(0, 2, 0.5)
+        pm.PyNode(Gankle.guides[0]).translate.set(0, 0, 0)
 
-        # Create Guide Setup
+        self.curve_setup(Ghips.guides[0], Gknee.guides[0])
+        self.curve_setup(Gknee.guides[0], Gankle.guides[0])
 
-    def build(self, GUIDES):
+        self.legGuides = moduleGuides.ModuleGuides(self.NAME.upper(), [Ghips.guides[0], Gknee.guides[0], Gankle.guides[0]], self.DATA_PATH)
+        readPath = self.legGuides.DATA_PATH + '/' + self.legGuides.RIG_NAME + '__GLOC.ini'
+        if os.path.exists(readPath):
+            self.readData = self.legGuides.readData(readPath)
+            for guide in self.legGuides.guides:
+                _registeredAttributes = ast.literal_eval(self.readData.get(str(guide), 'registeredAttributes'))
+                for attribute in _registeredAttributes:
+                    try:
+                        pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.readData.get(str(guide), str(attribute))))
+                    except NoSectionError:
+                        pass
+
+        if self.buildFootStatus:
+            self.FootRig = LimbFoot.LimbFoot(module_name='{}__Foot'.format(*self.side), config=self.config)
+            self.FootRig.start()
+
+
+        pm.select(None)
+
+    def build(self, GUIDES=None):
         """
         @param GUIDE: List of 3
 
@@ -144,7 +173,9 @@ class LimbLeg(moduleBase.ModuleBase):
         """
         super(LimbLeg, self)._build()
 
-        self.RIG = RigBase.RigBase(rigName = self.NAME)
+        if GUIDES is None:
+            GUIDES = self.legGuides.guides
+
         self.starter_Leg = GUIDES
         self.side = NC.getSideFromPosition(GUIDES[0])
 
@@ -158,6 +189,11 @@ class LimbLeg(moduleBase.ModuleBase):
             self.col_layer1 = indexColor[self.config["COLORS"]['R_col_layer1']]
             self.sliding_knee_col = indexColor[self.config["COLORS"]['R_col_layer2']]
             self.pol_vector_col = indexColor[self.config["COLORS"]['R_col_poleVector']]
+        else:
+            self.col_main = indexColor[self.config["COLORS"]['C_col_main']]
+            self.col_layer1 = indexColor[self.config["COLORS"]['C_col_layer1']]
+            self.sliding_elbow_col = indexColor[self.config["COLORS"]['C_col_layer2']]
+            self.pol_vector_col = indexColor[self.config["COLORS"]['C_col_layer2']]
 
         self.nameStructure = {
                             'Side'    : self.side,
@@ -183,7 +219,10 @@ class LimbLeg(moduleBase.ModuleBase):
         self.doubleKnee()
         self.ribbon(volumePreservation=True)
 
-    def connect(self, buildFoot=(False, ['L__ankle_guide', 'L__ball_guide', 'L__toe_guide', 'L__heel_guide'])):
+        if self.buildFootStatus:
+            self.FootRig.build()
+
+    def connect(self):
         super(LimbLeg, self)._connect()
 
         self.setup_VisibilityGRP()
@@ -191,34 +230,29 @@ class LimbLeg(moduleBase.ModuleBase):
         self.scalingUniform()
         self.cleanUpEmptyGrps()
 
-
         # Hiearchy
         for module in self.BUILD_MODULES:
             try:
-                pm.parent(module.VISRULE_GRP, self.RIG.VISIBILITY_GRP)
+                pm.parent(module.VISRULE_GRP, self.VISIBILITY_GRP)
             except:
                 pass
             for grp in module.metaDataGRPS:
-                pm.parent(grp, self.RIG.SETTINGS_GRP)
+                pm.parent(grp, self.SETTINGS_GRP)
                 grp.v.set(0)
 
-        buildFootStatus, buildFootStarter = buildFoot
-        self.Foot = None
-        if buildFootStatus:
-            self.Foot = LimbFoot.LimbFoot(module_name='{Side}__Foot'.format(**self.nameStructure), config=self.config)
-            self.Foot.build(buildFootStarter)
+        if self.buildFootStatus:
+            self.FootRig.connect(
+                                leg_ikHandle = self.leg_IkHandle,
+                                leg_offset_ik_ctrl = self.leg_IkHandle_ctrl_offset,
+                                leg_ankle_fk_ctrl = self.fkControls[-1],
+                                )
 
-            self.Foot.connect(
-                           leg_ikHandle = self.leg_IkHandle,
-                           leg_offset_ik_ctrl = self.leg_IkHandle_ctrl_offset,
-                           leg_ankle_fk_ctrl = self.fkControls[-1],
-                            )
             # connect leg space switch to foot
-            pm.PyNode('{}.{}'.format(self.RIG.SPACES_GRP, self.Ik_FK_attributeName)) >> pm.PyNode('{}.{}'.format(self.Foot.RIG.SPACES_GRP, self.Foot.footSpaceSwitchTrans_attribute))
-            pm.PyNode('{}.{}'.format(self.RIG.SPACES_GRP, self.Ik_FK_attributeName)) >> pm.PyNode('{}.{}'.format(self.Foot.RIG.SPACES_GRP, self.Foot.footSpaceSwitchRot_attribute))
+            pm.PyNode('{}.{}'.format(self.SPACES_GRP, self.Ik_FK_attributeName)) >> pm.PyNode('{}.{}'.format(self.FootRig.SPACES_GRP, self.FootRig.footSpaceSwitchTrans_attribute))
+            pm.PyNode('{}.{}'.format(self.SPACES_GRP, self.Ik_FK_attributeName)) >> pm.PyNode('{}.{}'.format(self.FootRig.SPACES_GRP, self.FootRig.footSpaceSwitchRot_attribute))
 
-        Transform(self.RIG.MODULES_GRP).pivotPoint = Transform(self.base_leg_joints[0]).worldTrans
-        # RigBase.loadSkinClustersWeights()
+        Transform(self.MODULES_GRP).pivotPoint = Transform(self.base_leg_joints[0]).worldTrans
+        # rigBase.loadSkinClustersWeights()
 
     # =========================
     # SOLVERS
@@ -457,16 +491,16 @@ class LimbLeg(moduleBase.ModuleBase):
 
             autPoleVectorGrpEnd = pm.createNode('transform', n='{Side}__{Basename}_PV_SPACES_SWITCH_AUTO__GRP'.format(**self.nameStructure))
             pm.matchTransform(autPoleVectorGrpEnd, self.poleVectorCtrl)
-            pm.parent(autPoleVectorGrpEnd, self.RIG.SPACES_GRP)
+            pm.parent(autPoleVectorGrpEnd, self.SPACES_GRP)
             pm.parentConstraint(autPoleVectorSpaceLoc.getChildren()[0], autPoleVectorGrpEnd, mo=True)
 
             # wORLD SPACE
-            ikSpaceSwitchWorldGrp = pm.group(n='{Side}__{Basename}_PV_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.WORLD_LOC)
+            ikSpaceSwitchWorldGrp = pm.group(n='{Side}__{Basename}_PV_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.WORLD_LOC)
             pm.matchTransform(ikSpaceSwitchWorldGrp, self.poleVectorCtrl, pos=1, rot=1)
             ikSpaceSwitchWorldGrp.v.set(0)
 
             # ANKLE SPACE
-            ikSpaceSwitcAnkleGrp = pm.group(n='{Side}__{Basename}_PV_SPACES_SWITCH_ANKLE__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.SPACES_GRP)
+            ikSpaceSwitcAnkleGrp = pm.group(n='{Side}__{Basename}_PV_SPACES_SWITCH_ANKLE__GRP'.format(**self.nameStructure), em=1, parent=self.SPACES_GRP)
             pm.matchTransform(ikSpaceSwitcAnkleGrp, self.poleVectorCtrl, pos=1, rot=1)
             pm.parentConstraint(self.leg_IkHandle_ctrl_offset, ikSpaceSwitcAnkleGrp, mo=True)
 
@@ -481,12 +515,12 @@ class LimbLeg(moduleBase.ModuleBase):
             # CREATE SPACE SWITCH FOR IK CTRL
 
             # wORLD SPACE
-            ikSpaceSwitchWorldGrpLeg = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.WORLD_LOC)
+            ikSpaceSwitchWorldGrpLeg = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_WORLD__GRP'.format(**self.nameStructure), em=1, parent=self.WORLD_LOC)
             ikSpaceSwitchWorldGrp.v.set(0)
             pm.matchTransform(ikSpaceSwitchWorldGrpLeg, self.leg_IkHandle_ctrl_offset, pos=1, rot=1)
 
             # HIPS SPACE
-            self.ikSpaceSwitchHipsdGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_HIPS__GRP'.format(**self.nameStructure), em=1, parent=self.RIG.SPACES_GRP)
+            self.ikSpaceSwitchHipsdGrp = pm.group(n='{Side}__{Basename}_IK_SPACES_SWITCH_HIPS__GRP'.format(**self.nameStructure), em=1, parent=self.SPACES_GRP)
             pm.matchTransform(self.ikSpaceSwitchHipsdGrp, self.leg_IkHandle_ctrl, pos=1, rot=1)
 
             self.ikLegSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}_IK'.format(**self.nameStructure),
@@ -502,7 +536,7 @@ class LimbLeg(moduleBase.ModuleBase):
 
 
         def makeConnections():
-            self.Ik_FK_attributeName = self.setup_SpaceGRP(self.RIG.SPACES_GRP, Ik_FK_attributeName ='{Side}_{Basename}_IK_FK'.format(**self.nameStructure))
+            self.Ik_FK_attributeName = self.setup_SpaceGRP(self.SPACES_GRP, Ik_FK_attributeName ='{Side}_{Basename}_IK_FK'.format(**self.nameStructure))
             for index, part in zip(xrange(3), self.nameStructure['Parts']):
                 self.nameStructure['Suffix'] = part
                 legSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}_{Suffix}IKFK'.format(**self.nameStructure),
@@ -512,7 +546,7 @@ class LimbLeg(moduleBase.ModuleBase):
                                  channels='trs',
                                  attrNames = ['Ik', 'Fk'])
 
-                pm.connectAttr('{}.{}'.format(self.RIG.SPACES_GRP, self.Ik_FK_attributeName), '{}.{}'.format(legSpaceSwitch.metaData_GRP, legSpaceSwitch.NAME))
+                pm.connectAttr('{}.{}'.format(self.SPACES_GRP, self.Ik_FK_attributeName), '{}.{}'.format(legSpaceSwitch.metaData_GRP, legSpaceSwitch.NAME))
                 self.ikFk_MOD.metaDataGRPS += [legSpaceSwitch.metaData_GRP]
 
             pm.parent(self.base_leg_joints[0], self.ikFk_MOD.OUTPUT_GRP)
@@ -525,7 +559,7 @@ class LimbLeg(moduleBase.ModuleBase):
 
         visRuleGrp = moduleBase.ModuleBase.setupVisRule(self.base_leg_joints, self.ikFk_MOD.VISRULE_GRP, '{Side}__{Basename}_Result_JNT__{Suffix}'.format(**self.nameStructure), False)[0]
 
-        pm.parent(self.ikFk_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+        pm.parent(self.ikFk_MOD.MOD_GRP, self.MODULES_GRP)
         Joint.Joint(self.base_leg_joints).radius = self.config['JOINTS']["Result_JNT"]['radius']
         Joint.Joint(self.fk_leg_joints).radius = self.config['JOINTS']["FK_JNT"]['radius']
         Joint.Joint(self.ik_leg_joints).radius = self.config['JOINTS']["IK_JNT"]['radius']
@@ -546,7 +580,7 @@ class LimbLeg(moduleBase.ModuleBase):
         self.legIk_MOD.build()
         pm.pointConstraint(self.ik_leg_joints[0], self.legIk_MOD.posLoc[0], mo=True)
         pm.parent((self.leg_IkHandle_ctrl_offset).getParent(), self.leg_IkHandle_ctrl)
-        pm.parent(self.legIk_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+        pm.parent(self.legIk_MOD.MOD_GRP, self.MODULES_GRP)
 
 
     def slidingKnee(self):
@@ -690,7 +724,7 @@ class LimbLeg(moduleBase.ModuleBase):
         pm.parent(kneeSlidingKnee02_CTL.getParent(), kneeSlidingKnee01_CTL)
         pm.parent(self.SLIDING_KNEE_MOD.getJoints, self.SLIDING_KNEE_MOD.OUTPUT_GRP)
 
-        pm.parent(self.SLIDING_KNEE_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+        pm.parent(self.SLIDING_KNEE_MOD.MOD_GRP, self.MODULES_GRP)
 
         self.SLIDING_KNEE_MOD.getControls.append(kneeSlidingKnee01_CTL)
         self.SLIDING_KNEE_MOD.getResetControls.append(kneeSlidingKnee01_CTL.getParent())
@@ -764,7 +798,7 @@ class LimbLeg(moduleBase.ModuleBase):
         pm.parent(baseJoint[0].getParent(), self.DOUBLE_KNEE_MOD.OUTPUT_GRP)
         self.DOUBLE_KNEE_MOD.getResetJoints = [baseJoint[0].getParent()]
         adb.matrixConstraint(str(self.base_leg_joints[0]), self.DOUBLE_KNEE_MOD.getResetJoints[0], channels='trs', mo=True)
-        pm.parent(self.DOUBLE_KNEE_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+        pm.parent(self.DOUBLE_KNEE_MOD.MOD_GRP, self.MODULES_GRP)
         pm.parent(self.pv_base_jnt, doubleKnee_CTL)
 
         if self.SLIDING_KNEE_MOD:
@@ -908,14 +942,14 @@ class LimbLeg(moduleBase.ModuleBase):
 
         if volumePreservation:
             addVolumePreservationMod = addVolumePreservation()
-            # pm.parent(addVolumePreservationMod.MOD_GRP, self.RIG.MODULES_GRP)
+            # pm.parent(addVolumePreservationMod.MOD_GRP, self.MODULES_GRP)
 
         self.RIBBON_MOD.setFinalHiearchy(
                         OUTPUT_GRP_LIST = leg_folli_upper_end.getJoints + leg_folli_lower_end.getJoints,
                         INPUT_GRP_LIST = leg_folli_upper.getInputs + leg_folli_lower.getInputs,
                         )
 
-        pm.parent(self.RIBBON_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+        pm.parent(self.RIBBON_MOD.MOD_GRP, self.MODULES_GRP)
 
         # Hide Unused controls
         leg_folli_lower.getResetControls[0].v.set(0)
@@ -936,22 +970,22 @@ class LimbLeg(moduleBase.ModuleBase):
     # -------------------
 
     def cleanUpEmptyGrps(self):
-        for ModGrp in self.RIG.MODULES_GRP.getChildren():
+        for ModGrp in self.MODULES_GRP.getChildren():
             for grp in ModGrp.getChildren():
                 if len(grp.getChildren()) is 0:
                     pm.delete(grp)
 
 
     def scalingUniform(self):
-            all_groups = [self.RIG.MODULES_GRP, self.RIG.MAIN_RIG_GRP]
-            all_groups += self.RIG.MODULES_GRP.getChildren()
+            all_groups = [self.MODULES_GRP, self.MAIN_RIG_GRP]
+            all_groups += self.MODULES_GRP.getChildren()
             for grp in all_groups:
                 adb.unlockAttr_func(grp, ['sx', 'sy', 'sz'])
 
-            for module in self.RIG.MODULES_GRP.getChildren():
-                self.RIG.MAIN_RIG_GRP.sx >> module.sx
-                self.RIG.MAIN_RIG_GRP.sy >> module.sy
-                self.RIG.MAIN_RIG_GRP.sz >> module.sz
+            for module in self.MODULES_GRP.getChildren():
+                self.MAIN_RIG_GRP.sx >> module.sx
+                self.MAIN_RIG_GRP.sy >> module.sy
+                self.MAIN_RIG_GRP.sz >> module.sz
 
             ## negate Module__GRP scaling
             md_scaling = pm.shadingNode('multiplyDivide', asUtility=1,  n='{}__Scaling__{}'.format(self.side, NC.MULTIPLY_DIVIDE_SUFFIX))
@@ -960,24 +994,24 @@ class LimbLeg(moduleBase.ModuleBase):
             md_scaling.input1Z.set(1)
             md_scaling.operation.set(2)
 
-            self.RIG.MAIN_RIG_GRP.sx >> md_scaling.input2X
-            self.RIG.MAIN_RIG_GRP.sy >> md_scaling.input2Y
-            self.RIG.MAIN_RIG_GRP.sz >> md_scaling.input2Z
+            self.MAIN_RIG_GRP.sx >> md_scaling.input2X
+            self.MAIN_RIG_GRP.sy >> md_scaling.input2Y
+            self.MAIN_RIG_GRP.sz >> md_scaling.input2Z
 
-            md_scaling.outputX >> self.RIG.MODULES_GRP.sx
-            md_scaling.outputY >> self.RIG.MODULES_GRP.sy
-            md_scaling.outputZ >> self.RIG.MODULES_GRP.sz
+            md_scaling.outputX >> self.MODULES_GRP.sx
+            md_scaling.outputY >> self.MODULES_GRP.sy
+            md_scaling.outputZ >> self.MODULES_GRP.sz
 
 
     def setup_VisibilityGRP(self):
-        visGrp = adbAttr.NodeAttr([self.RIG.VISIBILITY_GRP])
-        visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Joints')
+        visGrp = adbAttr.NodeAttr([self.VISIBILITY_GRP])
+        visGrp.AddSeparator(self.VISIBILITY_GRP, 'Joints')
         visGrp.addAttr('{Side}_{Basename}_IK_JNT'.format(**self.nameStructure), self.config['VISRULES']['IK_JNT'])
         visGrp.addAttr('{Side}_{Basename}_FK_JNT'.format(**self.nameStructure), self.config['VISRULES']['FK_JNT'])
         visGrp.addAttr('{Side}_{Basename}_Result_JNT'.format(**self.nameStructure), self.config['VISRULES']['Result_JNT'])
         visGrp.addAttr('{Side}_{Basename}_DoubleKnee_JNT'.format(**self.nameStructure), self.config['VISRULES']['DoubleKnee_JNT'])
         visGrp.addAttr('{Side}_{Basename}_Macro_JNT'.format(**self.nameStructure), self.config['VISRULES']['Macro_JNT'])
-        visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Controls')
+        visGrp.AddSeparator(self.VISIBILITY_GRP, 'Controls')
         visGrp.addAttr('{Side}_{Basename}_IK_CTRL'.format(**self.nameStructure), self.config['VISRULES']['IK_CTRL'])
         visGrp.addAttr('{Side}_{Basename}_IK_Offset_CTRL'.format(**self.nameStructure), self.config['VISRULES']['IK_Offset_CTRL'])
         visGrp.addAttr('{Side}_{Basename}_IK_PoleVector_CTRL'.format(**self.nameStructure), self.config['VISRULES']['IK_PoleVector_CTRL'])
@@ -1000,21 +1034,45 @@ class LimbLeg(moduleBase.ModuleBase):
     # =========================
 
 
+    @changeColor('index', col=2)
+    def curve_setup(self, basePoint, endPoint):
+        baseJoint = Joint.Joint.point_base(pm.PyNode(basePoint).getRotatePivot(space='world'), name='{}__{}'.format(NC.getNameNoSuffix(basePoint), NC.JOINT)).joints[0]
+        endJoint = Joint.Joint.point_base(pm.PyNode(endPoint).getRotatePivot(space='world'), name='{}__{}'.format(NC.getNameNoSuffix(endPoint),  NC.JOINT)).joints[0]
+        pm.parent(baseJoint, basePoint)
+        pm.parent(endJoint, endPoint)
+
+        starPointPos = pm.xform(basePoint, q=1, ws=1, t=1)
+        endPointPos = pm.xform(endPoint, q=1, ws=1, t=1)
+        [pm.PyNode(joint).v.set(0) for joint in [baseJoint, endJoint]]
+
+        starting_locs = [baseJoint, endJoint]
+        pos = [pm.xform(x, ws=True, q=True, t=True) for x in starting_locs]
+        knot = []
+        for i in range(len(starting_locs)):
+            knot.append(i)
+        _curve = pm.curve(p=pos, k=knot, d=1, n='{}_{}_CRV'.format(self.NAME, NC.getNameNoSuffix(baseJoint)))
+        pm.skinCluster(baseJoint , _curve, endJoint)
+        pm.setAttr(_curve.inheritsTransform, 0)
+        pm.setAttr(_curve.template, 1)
+        pm.parent(_curve, pm.PyNode(basePoint))
+        return _curve
+
+
     def setup_SpaceGRP(self, transform, Ik_FK_attributeName):
         space_ctrl = adbAttr.NodeAttr([transform])
         space_ctrl.addAttr(Ik_FK_attributeName, 'enum',  eName = "IK:FK:")
-        adbAttr.NodeAttr.copyAttr(self.povSpaceSwitch.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
-        adbAttr.NodeAttr.copyAttr(self.ikLegSpaceSwitch.metaData_GRP, [self.RIG.SPACES_GRP], forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.povSpaceSwitch.metaData_GRP, [self.SPACES_GRP], forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.ikLegSpaceSwitch.metaData_GRP, [self.SPACES_GRP], forceConnection=True)
         return Ik_FK_attributeName
 
 
     def setup_SettingGRP(self):
-        setting_ctrl = adbAttr.NodeAttr([self.RIG.SETTINGS_GRP])
-        adbAttr.NodeAttr.copyAttr(self.legIk_MOD.metaData_GRP, [self.RIG.SETTINGS_GRP],  nicename='{Side}_{Basename}Stretchy'.format(**self.nameStructure), forceConnection=True)
-        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], 'VolumePreservation')
+        setting_ctrl = adbAttr.NodeAttr([self.SETTINGS_GRP])
+        adbAttr.NodeAttr.copyAttr(self.legIk_MOD.metaData_GRP, [self.SETTINGS_GRP],  nicename='{Side}_{Basename}Stretchy'.format(**self.nameStructure), forceConnection=True)
+        setting_ctrl.AddSeparator([self.SETTINGS_GRP], 'VolumePreservation')
 
-        adbAttr.NodeAttr.copyAttr(self.upper_leg_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}Upper'.format(**self.nameStructure), forceConnection=True)
-        adbAttr.NodeAttr.copyAttr(self.lower_leg_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}Lower'.format(**self.nameStructure), forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.upper_leg_squash_stretch.metaData_GRP, [self.SETTINGS_GRP], nicename='{Side}_{Basename}Upper'.format(**self.nameStructure), forceConnection=True)
+        adbAttr.NodeAttr.copyAttr(self.lower_leg_squash_stretch.metaData_GRP, [self.SETTINGS_GRP], nicename='{Side}_{Basename}Lower'.format(**self.nameStructure), forceConnection=True)
 
 
 
@@ -1023,12 +1081,20 @@ class LimbLeg(moduleBase.ModuleBase):
 # =========================
 
 # L_leg = LimbLeg(module_name='L__Leg')
-# L_leg.build(['L__hip_guide', 'L__knee_guide', 'L__ankle_guide'])
-# L_leg.connect(buildFoot=(True, ['L__ankle_guide', 'L__ball_guide', 'L__toe_guide', 'L__heel_guide']))
+# L_leg.start(buildFootStatus = True)
+# L_leg.build()
+# L_leg.connect()
 
 
 # R_leg = LimbLeg(module_name='R__Leg')
 # R_leg.build(['R__hip_guide', 'R__knee_guide', 'R__ankle_guide'])
 # R_leg.connect()
 
+
+
+
+# ====================================================
+# EXPORT STARTER
+# L_leg.legGuides.exportData()
+# L_leg.FootRig.footGuides.exportData()
 

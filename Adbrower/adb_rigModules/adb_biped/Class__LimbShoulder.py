@@ -9,6 +9,8 @@
 import json
 import sys
 import os
+import ConfigParser
+import ast
 
 import pymel.core as pm
 
@@ -27,32 +29,29 @@ import adb_core.Class__Locator as Locator
 from adb_core.Class__Transforms import Transform
 
 import adb_library.adb_utils.Script__PoseReader as PoseReader
-
 import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
 
-import adb_rigModules.RigBase as RigBase
+import adb_rigModules.RigBase as rigBase
+import adb_rigModules.ModuleGuides as moduleGuides
 
 # reload(adbrower)
 # reload(sl)
 # reload(Joint)
-# reload(RigBase)
 # reload(adbAttr)
 # reload(NC)
-# reload(moduleBase)
 # reload(Control)
 # reload(Locator)
 # reload(SpaceSwitch)
 # reload(PoseReader)
+# reload(rigBase)
+# reload(moduleBase)
+# reload(moduleGuides)
 
 #-----------------------------------
 #  DECORATORS
 #-----------------------------------
 
-from adbrower import undo
-from adbrower import changeColor
-from adbrower import makeroot
-from adbrower import lockAttr
-
+from adbrower import undo, changeColor, makeroot, lockAttr
 
 #-----------------------------------
 # CLASS
@@ -94,14 +93,14 @@ os.chdir(CONFIG_PATH)
 with open("BipedConfig.json", "r") as f:
     BIPED_CONFIG = json.load(f)
 
-class LimbShoudler(moduleBase.ModuleBase):
+class LimbShoudler(rigBase.RigBase):
     """
     """
     def __init__(self,
                  module_name=None,
                  config = BIPED_CONFIG
                 ):
-        super(LimbShoudler, self).__init__('')
+        super(LimbShoudler, self).__init__(module_name, _metaDataNode=None)
 
         self.nameStructure = None
         self._MODEL = LimbShoudlerModel()
@@ -110,23 +109,44 @@ class LimbShoudler(moduleBase.ModuleBase):
 
 
     def __repr__(self):
-        return str('{} : {} \n {}'.format(self.__class__.__name__, self.subject, self.__class__))
+        return str('{} : {} \n {}'.format(self.__class__.__name__, self.MAIN_RIG_GRP, self.__class__))
 
     # =========================
     # METHOD
     # =========================
 
-    def start(self, metaDataNode = 'transform'):
-        super(LimbShoudler, self)._start('', _metaDataNode = metaDataNode)
+    def start(self):
+        Gclavicule, Gshoulder = [moduleGuides.ModuleGuides.createFkGuide(prefix='{}_{}'.format(self.NAME, part)) for part in ['Clavicule', 'Shoulder']]
+        for guide in [Gclavicule, Gshoulder]:
+            pm.parent(guide.guides, self.STARTERS_GRP)
 
-        # Create Guide Setup
+        pm.PyNode(Gclavicule.guides[0]).translate.set(0, 0, 0)
+        pm.PyNode(Gshoulder.guides[0]).translate.set(2, 0, 0)
 
-    def build(self, GUIDES):
+        self.curve_setup(Gclavicule.guides[0], Gshoulder.guides[0])
+
+        self.shoulderGuides = moduleGuides.ModuleGuides(self.NAME.upper(), [Gclavicule.guides[0], Gshoulder.guides[0]], self.DATA_PATH)
+        readPath = self.shoulderGuides.DATA_PATH + '/' + self.shoulderGuides.RIG_NAME + '__GLOC.ini'
+        if os.path.exists(readPath):
+            self.readData = self.shoulderGuides.readData(readPath)
+            for guide in self.shoulderGuides.guides:
+                _registeredAttributes = ast.literal_eval(self.readData.get(str(guide), 'registeredAttributes'))
+                for attribute in _registeredAttributes:
+                    try:
+                        pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.readData.get(str(guide), str(attribute))))
+                    except NoSectionError:
+                        pass
+
+        pm.select(None)
+
+    def build(self, GUIDES=None):
         """
         """
         super(LimbShoudler, self)._build()
 
-        self.RIG = RigBase.RigBase(rigName = self.NAME)
+        if GUIDES is None:
+            GUIDES = self.shoulderGuides.guides
+
         self.starter_Shoulder = GUIDES
         self.side = NC.getSideFromPosition(GUIDES[-1])
 
@@ -136,11 +156,16 @@ class LimbShoudler(moduleBase.ModuleBase):
         elif self.side == 'R':
             self.col_main = indexColor[self.config["COLORS"]['R_col_main']]
             self.col_layer1 = indexColor[self.config["COLORS"]['R_col_layer1']]
+        else:
+            self.col_main = indexColor[self.config["COLORS"]['C_col_main']]
+            self.col_layer1 = indexColor[self.config["COLORS"]['C_col_layer1']]
+            self.sliding_elbow_col = indexColor[self.config["COLORS"]['C_col_layer2']]
+            self.pol_vector_col = indexColor[self.config["COLORS"]['C_col_layer2']]
 
         self.nameStructure = {
                             'Side'    : self.side,
                             'Basename': 'Shoulder',
-                            'Parts'   : ['Clavicule', 'Shoulder' ,'Scapula',],
+                            'Parts'   : ['Clavicule', 'Shoulder' ,'Scapula'],
                             'Suffix'  : ''
                             }
 
@@ -156,8 +181,8 @@ class LimbShoudler(moduleBase.ModuleBase):
         self.shoulder_MOD = moduleBase.ModuleBase()
         self.BUILD_MODULES += [self.shoulder_MOD]
         self.shoulder_MOD._start('{Side}__Shoulder'.format(**self.nameStructure) ,_metaDataNode = 'transform')
-        pm.parent(self.shoulder_MOD.metaData_GRP, self.RIG.SETTINGS_GRP)
-        pm.parent(self.shoulder_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+        pm.parent(self.shoulder_MOD.metaData_GRP, self.SETTINGS_GRP)
+        pm.parent(self.shoulder_MOD.MOD_GRP, self.MODULES_GRP)
 
         self.createJoints()
         self.create_clavicule_ctrl()
@@ -188,14 +213,14 @@ class LimbShoudler(moduleBase.ModuleBase):
         # Hiearchy
         for module in self.BUILD_MODULES:
             try:
-                pm.parent(module.VISRULE_GRP, self.RIG.VISIBILITY_GRP)
+                pm.parent(module.VISRULE_GRP, self.VISIBILITY_GRP)
             except:
                 pass
             for grp in module.metaDataGRPS:
-                pm.parent(grp, self.RIG.SETTINGS_GRP)
+                pm.parent(grp, self.SETTINGS_GRP)
                 grp.v.set(0)
 
-        Transform(self.RIG.MODULES_GRP).pivotPoint = Transform(self.starter_Shoulder[0]).worldTrans
+        Transform(self.MODULES_GRP).pivotPoint = Transform(self.starter_Shoulder[0]).worldTrans
 
     # =========================
     # SOLVERS
@@ -301,8 +326,8 @@ class LimbShoudler(moduleBase.ModuleBase):
         self.AUTO_CLAVICULE_MOD = moduleBase.ModuleBase()
         self.AUTO_CLAVICULE_MOD._start('{Side}__AutoClavicule'.format(**self.nameStructure) ,_metaDataNode = 'transform')
         self.BUILD_MODULES += [self.AUTO_CLAVICULE_MOD]
-        pm.parent(self.AUTO_CLAVICULE_MOD.metaData_GRP, self.RIG.SETTINGS_GRP)
-        pm.parent(self.AUTO_CLAVICULE_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+        pm.parent(self.AUTO_CLAVICULE_MOD.metaData_GRP, self.SETTINGS_GRP)
+        pm.parent(self.AUTO_CLAVICULE_MOD.MOD_GRP, self.MODULES_GRP)
 
         autoClaviculeGrp = adbAttr.NodeAttr([self.AUTO_CLAVICULE_MOD.metaData_GRP])
         autoClaviculeGrp.addAttr('Toggle', True)
@@ -331,7 +356,7 @@ class LimbShoudler(moduleBase.ModuleBase):
                                 )
 
             adb.matrixConstraint(arm_ik_offset_ctrl, self.autoShoulder_IkHandle.getParent())
-            pm.parent(self.AUTO_CLAVICULE_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+            pm.parent(self.AUTO_CLAVICULE_MOD.MOD_GRP, self.MODULES_GRP)
             self.nameStructure['Suffix'] = NC.VISRULE
             moduleBase.ModuleBase.setupVisRule([self.ik_AutoShoulder_joint[0]], self.AUTO_CLAVICULE_MOD.VISRULE_GRP, name='{Side}__{Basename}_IK_JNT__{Suffix}'.format(**self.nameStructure), defaultValue=False)
 
@@ -408,12 +433,12 @@ class LimbShoudler(moduleBase.ModuleBase):
 
 
     def setup_VisibilityGRP(self):
-        visGrp = adbAttr.NodeAttr([self.RIG.VISIBILITY_GRP])
-        visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Joints')
+        visGrp = adbAttr.NodeAttr([self.VISIBILITY_GRP])
+        visGrp.AddSeparator(self.VISIBILITY_GRP, 'Joints')
         visGrp.addAttr('{Side}_{Basename}_Clavicule_JNT'.format(**self.nameStructure), True)
         visGrp.addAttr('{Side}_{Basename}_IK_JNT'.format(**self.nameStructure), False)
 
-        visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Controls')
+        visGrp.AddSeparator(self.VISIBILITY_GRP, 'Controls')
         visGrp.addAttr('{Side}_{Basename}_Clavicule_CTRL'.format(**self.nameStructure), True)
 
         for attr in visGrp.allAttrs.keys():
@@ -428,7 +453,7 @@ class LimbShoudler(moduleBase.ModuleBase):
 
 
     def cleanUpEmptyGrps(self):
-        for ModGrp in self.RIG.MODULES_GRP.getChildren():
+        for ModGrp in self.MODULES_GRP.getChildren():
             for grp in ModGrp.getChildren():
                 if len(grp.getChildren()) is 0:
                     pm.delete(grp)
@@ -437,6 +462,30 @@ class LimbShoudler(moduleBase.ModuleBase):
     # =========================
     # SLOTS
     # =========================
+
+
+    @changeColor('index', col=2)
+    def curve_setup(self, basePoint, endPoint):
+        baseJoint = Joint.Joint.point_base(pm.PyNode(basePoint).getRotatePivot(space='world'), name='{}__{}'.format(NC.getNameNoSuffix(basePoint), NC.JOINT)).joints[0]
+        endJoint = Joint.Joint.point_base(pm.PyNode(endPoint).getRotatePivot(space='world'), name='{}__{}'.format(NC.getNameNoSuffix(endPoint),  NC.JOINT)).joints[0]
+        pm.parent(baseJoint, basePoint)
+        pm.parent(endJoint, endPoint)
+
+        starPointPos = pm.xform(basePoint, q=1, ws=1, t=1)
+        endPointPos = pm.xform(endPoint, q=1, ws=1, t=1)
+        [pm.PyNode(joint).v.set(0) for joint in [baseJoint, endJoint]]
+
+        starting_locs = [baseJoint, endJoint]
+        pos = [pm.xform(x, ws=True, q=True, t=True) for x in starting_locs]
+        knot = []
+        for i in range(len(starting_locs)):
+            knot.append(i)
+        _curve = pm.curve(p=pos, k=knot, d=1, n='{}_{}_CRV'.format(self.NAME, NC.getNameNoSuffix(baseJoint)))
+        pm.skinCluster(baseJoint , _curve, endJoint)
+        pm.setAttr(_curve.inheritsTransform, 0)
+        pm.setAttr(_curve.template, 1)
+        pm.parent(_curve, pm.PyNode(basePoint))
+        return _curve
 
 
     def setup_SpaceGRP(self, transform, Ik_FK_attributeName=[]):
@@ -448,8 +497,8 @@ class LimbShoudler(moduleBase.ModuleBase):
 
 
     def setup_SettingGRP(self):
-        setting_ctrl = adbAttr.NodeAttr([self.RIG.SETTINGS_GRP])
-        adbAttr.NodeAttr.copyAttr(self.AUTO_CLAVICULE_MOD.metaData_GRP, [self.RIG.SETTINGS_GRP],  nicename='{Side}_AutoClavicule'.format(**self.nameStructure), forceConnection=True)
+        setting_ctrl = adbAttr.NodeAttr([self.SETTINGS_GRP])
+        adbAttr.NodeAttr.copyAttr(self.AUTO_CLAVICULE_MOD.metaData_GRP, [self.SETTINGS_GRP],  nicename='{Side}_AutoClavicule'.format(**self.nameStructure), forceConnection=True)
 
 
 # =========================
@@ -457,7 +506,8 @@ class LimbShoudler(moduleBase.ModuleBase):
 # =========================
 
 # L_Shoulder = LimbShoudler(module_name='L__Shoulder')
-# L_Shoulder.build(['L__clavicule_guide', 'L__shoulder_guide'])
+# L_Shoulder.start()
+# L_Shoulder.build()
 # L_Shoulder.connect()
 
 

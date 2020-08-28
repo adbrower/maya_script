@@ -9,6 +9,8 @@
 import json
 import sys
 import os
+import ConfigParser
+import ast
 
 import pymel.core as pm
 import maya.cmds as mc
@@ -34,35 +36,36 @@ import adb_library.adb_modules.Module__Folli as adbFolli
 import adb_library.adb_modules.Module__SquashStretch_Ribbon as adbRibbon
 import adb_library.adb_modules.Module__Slide as Slide
 import adb_library.adb_modules.Class__SpaceSwitch as SpaceSwitch
+import adb_library.adb_modules.Module__AttachOnCurve as pointOnCurve
 
-import adb_rigModules.RigBase as RigBase
+import adb_rigModules.RigBase as rigBase
+import adb_rigModules.ModuleGuides as moduleGuides
 
 # reload(adbrower)
 # reload(sl)
 # reload(Joint)
-# reload(RigBase)
 # reload(adbAttr)
 # reload(NC)
-# reload(moduleBase)
 # reload(Control)
 # reload(locGen)
 # reload(Locator)
 # reload(adbFolli)
 # reload(adbRibbon)
 # reload(SpaceSwitch)
+# reload(pointOnCurve)
 # reload(Slide)
 # reload(Skinning)
 # reload(adbProxy)
+# reload(rigBase)
+# reload(moduleBase)
+# reload(moduleGuides)
+
 
 #-----------------------------------
 #  DECORATORS
 #-----------------------------------
 
-from adbrower import undo
-from adbrower import changeColor
-from adbrower import makeroot
-from adbrower import lockAttr
-
+from adbrower import undo, changeColor, makeroot, lockAttr
 
 #-----------------------------------
 # CLASS
@@ -92,14 +95,14 @@ class LimbSpineModel(moduleBase.ModuleBaseModel):
         pass
 
 
-class LimbSpine(moduleBase.ModuleBase):
+class LimbSpine(rigBase.RigBase):
     """
     """
     def __init__(self,
                  module_name=None,
                  config = BIPED_CONFIG
                 ):
-        super(LimbSpine, self).__init__('')
+        super(LimbSpine, self).__init__(module_name, _metaDataNode=None)
 
         self.nameStructure = None
         self._MODEL = LimbSpineModel()
@@ -108,23 +111,65 @@ class LimbSpine(moduleBase.ModuleBase):
 
 
     def __repr__(self):
-        return str('{} : {} \n {}'.format(self.__class__.__name__, self.subject, self.__class__))
+        return str('{} : {} \n {}'.format(self.__class__.__name__, self.MAIN_RIG_GRP, self.__class__))
 
     # =========================
     # METHOD
     # =========================
 
-    def start(self, metaDataNode = 'transform'):
-        super(LimbSpine, self)._start('', _metaDataNode = metaDataNode)
+    @undo
+    def start(self, jointNumber=7):
+        def spineGuideCurve():
+            _ctrl = pm.curve(p=[[0.0000, 13.9516, 0.4714], [0.0000, 14.0435, 0.4840], [0.0000, 14.4707, 0.5526], [0.0000, 15.7496, 0.7265], [0.0000, 17.1387, 0.6106], [0.0000, 18.1458, 0.7250], [0.0000, 18.6555, 0.8777]],
+                            k=[0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 4.0, 4.0],
+                            d=3,
+                            n="spineGuide__CRV",
+                            )
+            return _ctrl
+        spineGuideCurve = spineGuideCurve()
+        spineGuideCurve = pm.rebuildCurve(spineGuideCurve, rt=0, ch=0, end=1, d=3, kr=0, s=4)
 
-        # Create Guide Setup
+        ## FreezeCvs
+        mc.DeleteHistory(spineGuideCurve)
+        cluster = pm.cluster(spineGuideCurve)
+        pm.delete(cluster)
 
-    def build(self, GUIDES):
+        pointOnCurveJoint = pointOnCurve.PointToCurveJnt('{}_PointOnCurve'.format(self.NAME), jointNumber, spineGuideCurve)
+        pointOnCurveJoint.start()
+        pointOnCurveJoint.build()
+
+        pm.parent(pointOnCurveJoint.MOD_GRP, self.STARTERS_GRP)
+        [pm.delete(grp) for grp in [pointOnCurveJoint.VISRULE_GRP, pointOnCurveJoint.OUTPUT_GRP]]
+
+        Gspine = [moduleGuides.ModuleGuides.createFkGuide(prefix='{}_{}'.format(self.NAME, joint+1)).guides[0] for joint in xrange(jointNumber)]
+        for guide in Gspine:
+            pm.parent(guide, self.STARTERS_GRP)
+
+        for guide, joint in zip(Gspine, pointOnCurveJoint.getJoints):
+            pm.matchTransform(guide, joint, pos=1, rot=0)
+
+        self.spineGuides = moduleGuides.ModuleGuides(self.NAME.upper(), Gspine, self.DATA_PATH)
+        readPath = self.spineGuides.DATA_PATH + '/' + self.spineGuides.RIG_NAME + '__GLOC.ini'
+        if os.path.exists(readPath):
+            self.readData = self.spineGuides.readData(readPath)
+            for guide in self.spineGuides.guides:
+                _registeredAttributes = ast.literal_eval(self.readData.get(str(guide), 'registeredAttributes'))
+                for attribute in _registeredAttributes:
+                    try:
+                        pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.readData.get(str(guide), str(attribute))))
+                    except NoSectionError:
+                        pass
+
+        pm.select(None)
+
+    def build(self, GUIDES=None):
         """
         """
         super(LimbSpine, self)._build()
 
-        self.RIG = RigBase.RigBase(rigName = self.NAME)
+        if GUIDES is None:
+            GUIDES = self.spineGuides.guides
+
         self.starter_Spine = GUIDES
         self.side = 'C'
 
@@ -157,7 +202,6 @@ class LimbSpine(moduleBase.ModuleBase):
         self.createHipsMainCTRL()
         self.createChestMainCTRL()
 
-
     def connect(self):
         super(LimbSpine, self)._connect()
 
@@ -169,14 +213,14 @@ class LimbSpine(moduleBase.ModuleBase):
         # Hiearchy
         for module in self.BUILD_MODULES:
             try:
-                pm.parent(module.VISRULE_GRP, self.RIG.VISIBILITY_GRP)
+                pm.parent(module.VISRULE_GRP, self.VISIBILITY_GRP)
             except:
                 pass
             for grp in module.metaDataGRPS:
-                pm.parent(grp, self.RIG.SETTINGS_GRP)
+                pm.parent(grp, self.SETTINGS_GRP)
                 grp.v.set(0)
 
-        Transform(self.RIG.MODULES_GRP).pivotPoint = Transform(self.spine_chain_joints[0]).worldTrans
+        Transform(self.MODULES_GRP).pivotPoint = Transform(self.spine_chain_joints[0]).worldTrans
         # self.loadSkinClustersWeights()
 
 
@@ -195,7 +239,7 @@ class LimbSpine(moduleBase.ModuleBase):
             self.RESULT_MOD = moduleBase.ModuleBase()
             self.RESULT_MOD.hiearchy_setup('{Side}__Result'.format(**self.nameStructure))
             self.BUILD_MODULES += [self.RESULT_MOD]
-            pm.parent(self.RESULT_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+            pm.parent(self.RESULT_MOD.MOD_GRP, self.MODULES_GRP)
 
             points = [pm.PyNode(guide).getRotatePivot(space='world') for guide in self.starter_Spine]
             self.spine_chain = Joint.Joint.point_base(*points, name='{Side}__{Basename}_Result'.format(**self.nameStructure), chain=True, padding=2)
@@ -245,7 +289,7 @@ class LimbSpine(moduleBase.ModuleBase):
         self.REVERSE_MOD = moduleBase.ModuleBase()
         self.REVERSE_MOD.hiearchy_setup('{Side}__Reverse'.format(**self.nameStructure))
         self.BUILD_MODULES += [self.REVERSE_MOD]
-        pm.parent(self.REVERSE_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+        pm.parent(self.REVERSE_MOD.MOD_GRP, self.MODULES_GRP)
 
         @changeColor('index', col = (20))
         def createReverseJoints():
@@ -352,13 +396,13 @@ class LimbSpine(moduleBase.ModuleBase):
         """
         resultOffset_grp = [adb.makeroot_func(subject=x, suff = 'OFFSET', forceNameConvention=True) for x in self.spine_chain_joints]
 
-        settingsGrpAttr = adbAttr.NodeAttr([self.RIG.SETTINGS_GRP])
+        settingsGrpAttr = adbAttr.NodeAttr([self.SETTINGS_GRP])
         settingsGrpAttr.addAttr('Bend', 0)
-        fkV = Slide.FkVariable(module_name='Bend', joint_chain=self.spine_chain_joints, driver=[self.RIG.SETTINGS_GRP], range=2, driver_axis='Bend', target_axis='rx', useMinus=False)
+        fkV = Slide.FkVariable(module_name='Bend', joint_chain=self.spine_chain_joints, driver=[self.SETTINGS_GRP], range=2, driver_axis='Bend', target_axis='rx', useMinus=False)
         fkV.start()
         fkV.build()
 
-        pm.parent(fkV.metaData_GRP, self.RIG.SETTINGS_GRP)
+        pm.parent(fkV.metaData_GRP, self.SETTINGS_GRP)
         return fkV
 
 
@@ -366,7 +410,7 @@ class LimbSpine(moduleBase.ModuleBase):
         self.SPINEIK_MOD = moduleBase.ModuleBase()
         self.SPINEIK_MOD.hiearchy_setup('{Side}__Ik'.format(**self.nameStructure))
         self.BUILD_MODULES += [self.SPINEIK_MOD]
-        pm.parent(self.SPINEIK_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+        pm.parent(self.SPINEIK_MOD.MOD_GRP, self.MODULES_GRP)
 
         @changeColor('index', col = (18))
         def createIkJoint():
@@ -424,7 +468,7 @@ class LimbSpine(moduleBase.ModuleBase):
             self.RIBBON_MOD.hiearchy_setup('{Side}__Ribbon'.format(**self.nameStructure))
             self.BUILD_MODULES += [self.RIBBON_MOD]
             self.RIBBON_MOD.RIG_GRP.inheritsTransform.set(0)
-            pm.parent(self.RIBBON_MOD.MOD_GRP, self.RIG.MODULES_GRP)
+            pm.parent(self.RIBBON_MOD.MOD_GRP, self.MODULES_GRP)
 
             def createProxyPlane(name, interval=4):
                 locs = locGen.locGenerator(interval, str(self.spine_ik_joints[0]), str(self.spine_ik_joints[-1]))
@@ -478,7 +522,7 @@ class LimbSpine(moduleBase.ModuleBase):
 
             if volumePreservation:
                 addVolumePreservationMod = addVolumePreservation()
-                pm.parent(addVolumePreservationMod.MOD_GRP, self.RIG.MODULES_GRP)
+                pm.parent(addVolumePreservationMod.MOD_GRP, self.MODULES_GRP)
 
                 pm.select(addVolumePreservationMod.spineLenghtCurve, r=1)
                 pm.select(spine_proxy_plane, add=1)
@@ -587,14 +631,14 @@ class LimbSpine(moduleBase.ModuleBase):
 
 
     def setup_VisibilityGRP(self):
-        visGrp = adbAttr.NodeAttr([self.RIG.VISIBILITY_GRP])
-        visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Joints')
+        visGrp = adbAttr.NodeAttr([self.VISIBILITY_GRP])
+        visGrp.AddSeparator(self.VISIBILITY_GRP, 'Joints')
         visGrp.addAttr('{Side}_{Basename}_FK_JNT'.format(**self.nameStructure), self.config['VISRULES']['FK_Reg_JNT'])
         visGrp.addAttr('{Side}_{Basename}_FK_Reverse_JNT'.format(**self.nameStructure), self.config['VISRULES']['FK_Rev_JNT'])
         visGrp.addAttr('{Side}_{Basename}_IK_JNT'.format(**self.nameStructure), self.config['VISRULES']['IK_JNT'])
         visGrp.addAttr('{Side}_{Basename}_MACRO_JNT'.format(**self.nameStructure), self.config['VISRULES']['Macro_JNT'])
 
-        visGrp.AddSeparator(self.RIG.VISIBILITY_GRP, 'Controls')
+        visGrp.AddSeparator(self.VISIBILITY_GRP, 'Controls')
         visGrp.addAttr('{Side}_{Basename}_FK_CTRL'.format(**self.nameStructure), self.config['VISRULES']['FK_Reg_CTRL'])
         visGrp.addAttr('{Side}_{Basename}_FK_Reverse_CTRL'.format(**self.nameStructure), self.config['VISRULES']['FK_Rev_CTRL'])
         visGrp.addAttr('{Side}_{Basename}_IK_CTRL'.format(**self.nameStructure), self.config['VISRULES']['IK_CTRL'])
@@ -613,15 +657,15 @@ class LimbSpine(moduleBase.ModuleBase):
 
 
     def scalingUniform(self):
-                all_groups = [self.RIG.MODULES_GRP, self.RIG.MAIN_RIG_GRP]
-                all_groups += self.RIG.MODULES_GRP.getChildren()
+                all_groups = [self.MODULES_GRP, self.MAIN_RIG_GRP]
+                all_groups += self.MODULES_GRP.getChildren()
                 for grp in all_groups:
                     adb.unlockAttr_func(grp, ['sx', 'sy', 'sz'])
 
-                for module in self.RIG.MODULES_GRP.getChildren():
-                    self.RIG.MAIN_RIG_GRP.sx >> module.sx
-                    self.RIG.MAIN_RIG_GRP.sy >> module.sy
-                    self.RIG.MAIN_RIG_GRP.sz >> module.sz
+                for module in self.MODULES_GRP.getChildren():
+                    self.MAIN_RIG_GRP.sx >> module.sx
+                    self.MAIN_RIG_GRP.sy >> module.sy
+                    self.MAIN_RIG_GRP.sz >> module.sz
 
                 ## negate Module__GRP scaling
                 md_scaling = pm.shadingNode('multiplyDivide', asUtility=1,  n='{}__Scaling__{}'.format(self.side, NC.MULTIPLY_DIVIDE_SUFFIX))
@@ -630,17 +674,17 @@ class LimbSpine(moduleBase.ModuleBase):
                 md_scaling.input1Z.set(1)
                 md_scaling.operation.set(2)
 
-                self.RIG.MAIN_RIG_GRP.sx >> md_scaling.input2X
-                self.RIG.MAIN_RIG_GRP.sy >> md_scaling.input2Y
-                self.RIG.MAIN_RIG_GRP.sz >> md_scaling.input2Z
+                self.MAIN_RIG_GRP.sx >> md_scaling.input2X
+                self.MAIN_RIG_GRP.sy >> md_scaling.input2Y
+                self.MAIN_RIG_GRP.sz >> md_scaling.input2Z
 
-                md_scaling.outputX >> self.RIG.MODULES_GRP.sx
-                md_scaling.outputY >> self.RIG.MODULES_GRP.sy
-                md_scaling.outputZ >> self.RIG.MODULES_GRP.sz
+                md_scaling.outputX >> self.MODULES_GRP.sx
+                md_scaling.outputY >> self.MODULES_GRP.sy
+                md_scaling.outputZ >> self.MODULES_GRP.sz
 
 
     def cleanUpEmptyGrps(self):
-        for ModGrp in self.RIG.MODULES_GRP.getChildren():
+        for ModGrp in self.MODULES_GRP.getChildren():
             for grp in ModGrp.getChildren():
                 if len(grp.getChildren()) is 0:
                     pm.delete(grp)
@@ -667,9 +711,9 @@ class LimbSpine(moduleBase.ModuleBase):
 
 
     def setup_SettingGRP(self):
-        setting_ctrl = adbAttr.NodeAttr([self.RIG.SETTINGS_GRP])
-        setting_ctrl.AddSeparator([self.RIG.SETTINGS_GRP], 'VolumePreservation')
-        adbAttr.NodeAttr.copyAttr(self.spine_squash_stretch.metaData_GRP, [self.RIG.SETTINGS_GRP], nicename='{Side}_{Basename}'.format(**self.nameStructure), forceConnection=True)
+        setting_ctrl = adbAttr.NodeAttr([self.SETTINGS_GRP])
+        setting_ctrl.AddSeparator([self.SETTINGS_GRP], 'VolumePreservation')
+        adbAttr.NodeAttr.copyAttr(self.spine_squash_stretch.metaData_GRP, [self.SETTINGS_GRP], nicename='{Side}_{Basename}'.format(**self.nameStructure), forceConnection=True)
 
 
     def setupVisRule(self, tansformList, parent, name=False, defaultValue=True):
@@ -703,7 +747,8 @@ class LimbSpine(moduleBase.ModuleBase):
 # =========================
 
 # L_Spine = LimbSpine(module_name='L__Spine')
-# L_Spine.build(['C_spine001_guide', 'C_spine002_guide', 'C_spine003_guide', 'C_spine004_guide', 'C_spine005_guide', 'C_spine006_guide', 'C_spine007_guide'])
+# L_Spine.start()
+# L_Spine.build()
 # L_Spine.connect()
 
 
