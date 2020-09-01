@@ -57,10 +57,13 @@ class Locator(adbTransform.Transform):
 
 
     @classmethod
-    def create(cls, numb = 1, name = ''):
+    def create(cls, numb = 1, name = '', padding=None):
         loc_created = []
-        for number in range(numb):
-            loc = pm.spaceLocator(n=name)
+        for number in xrange(numb):
+            if padding:
+                loc = pm.spaceLocator(n='{}_{:0{}d}'.format(name, number+1, padding))
+            else:
+                loc = pm.spaceLocator(n=name)
             pm.parent(loc, w=1)
             loc_created.append(loc)
         return cls(loc_created)
@@ -80,12 +83,15 @@ class Locator(adbTransform.Transform):
         """
 
         name = kwargs.pop('name', 'locator1')
-
+        padding = kwargs.pop('padding', False)
 
         locs_array = []
         for index, point in enumerate(point_array):
             pm.select(None)
-            new_loc = pm.spaceLocator(p=point, name=name)
+            if padding:
+                new_loc = pm.spaceLocator(p=point, name='{}_{:0{}d}'.format(name, number+1, padding))
+            else:
+                new_loc = pm.spaceLocator(p=point, name=name)
             pm.PyNode(new_loc).setRotatePivot(point)
             locs_array.append(new_loc)
         return cls(locs_array)

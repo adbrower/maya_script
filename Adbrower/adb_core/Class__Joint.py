@@ -64,6 +64,7 @@ class Joint(adbTransform.Transform):
                 jnt = pm.joint(n='{}'.format(name), rad=rad)
             pm.parent(jnt, w=1)
             jnt_created.append(jnt)
+            adb.AutoSuffix([jnt])
         return cls(jnt_created)
 
     @classmethod
@@ -91,9 +92,10 @@ class Joint(adbTransform.Transform):
         for index, point in enumerate(point_array):
             pm.select(None)
             if padding:
-                new_joint = pm.joint(name='{}_{:02d}'.format(name, index+1), p=point, rad=radius)
+                new_joint = pm.joint(name='{}_{:0{}d}'.format(name, index+1, padding), p=point, rad=radius)
             else:
                 new_joint = pm.joint(name=name, p=point, rad=radius)
+            adb.AutoSuffix([new_joint])
             joint_array.append(new_joint)
 
         if chain:
