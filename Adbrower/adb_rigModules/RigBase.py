@@ -32,9 +32,17 @@ PROJECT_DATA_PATH = '/'.join(pm.sceneName().split('/')[:-2]) + '/data/'
 
 class MainRigBase(object):
     def __init__(self, rigName = 'Audrey', data_path=None):
+        """
+        Create a Master Rig hiearchy. Example for a Character rig.
+
+        Args:
+            rigName (str): Name for the Rig. Defaults to 'Test'.
+            data_path (str, optional): Path where all the Data will be saved. Defaults to None.
+            _metaDataNode (str, optional): Type of metaData node. Defaults to 'transform'. transform , network  or None
+        """
         self.RIG_NAME = rigName
-        self.DATA_PATH = None
-        if data_path is None:
+        self.DATA_PATH = data_path
+        if self.DATA_PATH is None:
             self.DATA_PATH = self.initDataPath()
         else:
             self.DATA_PATH = data_path
@@ -46,14 +54,15 @@ class MainRigBase(object):
         self.createMainRigCtrl()
         self.vosGuide = self.createGuides()
 
-        readPath = self.DATA_PATH + '{}_DATA/'.format(self.vosGuide.RIG_NAME) + self.vosGuide.RIG_NAME + '__GLOC.ini'
-        if os.path.exists(readPath):
-            self.readData = self.vosGuide.readData(readPath)
-            _registeredAttributes = ast.literal_eval(self.readData.get(str(self.vosGuide.guides[0]), 'registeredAttributes'))
-            for attribute in _registeredAttributes:
-                pm.setAttr('{}.{}'.format(self.vosGuide.guides[0], attribute), ast.literal_eval(self.readData.get(str(self.vosGuide.guides[0]), str(attribute))))
-        else:
-            pass
+        if self.DATA_PATH is not None:
+            readPath = self.DATA_PATH + '{}_DATA/'.format(self.vosGuide.RIG_NAME) + self.vosGuide.RIG_NAME + '__GLOC.ini'
+            if os.path.exists(readPath):
+                self.readData = self.vosGuide.readData(readPath)
+                _registeredAttributes = ast.literal_eval(self.readData.get(str(self.vosGuide.guides[0]), 'registeredAttributes'))
+                for attribute in _registeredAttributes:
+                    pm.setAttr('{}.{}'.format(self.vosGuide.guides[0], attribute), ast.literal_eval(self.readData.get(str(self.vosGuide.guides[0]), str(attribute))))
+            else:
+                pass
 
 
     def build(self):
@@ -69,14 +78,17 @@ class MainRigBase(object):
 
 
     def initDataPath(self):
-        PROJECT_DATA_PATH = '/'.join(pm.sceneName().split('/')[:-2]) + '/data/'
-        if os.path.exists(PROJECT_DATA_PATH  + 'Guides/'):
-            os.chdir(PROJECT_DATA_PATH  + 'Guides/')
-            return PROJECT_DATA_PATH  + 'Guides/'
-        else:
-            os.mkdir(PROJECT_DATA_PATH  + 'Guides/')
-            os.chdir(PROJECT_DATA_PATH  + 'Guides/')
-            return PROJECT_DATA_PATH  + 'Guides/'
+        try:
+            PROJECT_DATA_PATH = '/'.join(pm.sceneName().split('/')[:-2]) + '/data/'
+            if os.path.exists(PROJECT_DATA_PATH  + 'Guides/'):
+                os.chdir(PROJECT_DATA_PATH  + 'Guides/')
+                return PROJECT_DATA_PATH  + 'Guides/'
+            else:
+                os.mkdir(PROJECT_DATA_PATH  + 'Guides/')
+                os.chdir(PROJECT_DATA_PATH  + 'Guides/')
+                return PROJECT_DATA_PATH  + 'Guides/'
+        except:
+            return None
 
 
     def createMainRigCtrl(self):
@@ -167,12 +179,19 @@ class MainRigBase(object):
 
 
 class RigBase(object):
+    def __init__(self, rigName='Test', data_path=None, _metaDataNode='transform'):
+        """
+        Create a Rig Hiearchy for a rig system. Ex: Leg_Rig
 
-    def __init__(self, rigName = 'Audrey', data_path=None, _metaDataNode = 'transform'):
+        Args:
+            rigName (str): Name for the Rig. Defaults to 'Test'.
+            data_path (str, optional): Path where all the Data will be saved. Defaults to None.
+            _metaDataNode (str, optional): Type of metaData node. Defaults to 'transform'. transform , network  or None
+        """
         self.RIG_NAME = rigName
         self._metaDataNode = _metaDataNode
-        self.DATA_PATH = None
-        if data_path is None:
+        self.DATA_PATH = data_path
+        if self.DATA_PATH is None:
             self.DATA_PATH = self.initDataPath()
         else:
             self.DATA_PATH = data_path
@@ -200,14 +219,17 @@ class RigBase(object):
         pass
 
     def initDataPath(self):
-        PROJECT_DATA_PATH = '/'.join(pm.sceneName().split('/')[:-2]) + '/data/'
-        if os.path.exists(PROJECT_DATA_PATH  + 'Guides/'):
-            os.chdir(PROJECT_DATA_PATH  + 'Guides/')
-            return PROJECT_DATA_PATH  + 'Guides/'
-        else:
-            os.mkdir(PROJECT_DATA_PATH  + 'Guides/')
-            os.chdir(PROJECT_DATA_PATH  + 'Guides/')
-            return PROJECT_DATA_PATH  + 'Guides/'
+        try:
+            PROJECT_DATA_PATH = '/'.join(pm.sceneName().split('/')[:-2]) + '/data/'
+            if os.path.exists(PROJECT_DATA_PATH  + 'Guides/'):
+                os.chdir(PROJECT_DATA_PATH  + 'Guides/')
+                return PROJECT_DATA_PATH  + 'Guides/'
+            else:
+                os.mkdir(PROJECT_DATA_PATH  + 'Guides/')
+                os.chdir(PROJECT_DATA_PATH  + 'Guides/')
+                return PROJECT_DATA_PATH  + 'Guides/'
+        except:
+            return None
 
     def createRigGroups(self, rigName):
         """

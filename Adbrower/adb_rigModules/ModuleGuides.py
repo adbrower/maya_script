@@ -41,8 +41,9 @@ class ModuleGuides(object):
 
 
     @classmethod
-    def createFkGuide(cls, prefix='',  guides=[]):
-        cls.locInstance = Locator.Locator.create(name='{}__G{}'.format(prefix, NC.LOC))
+    def createFkGuide(cls, prefix='',  guides=[], padding=None):
+        cls.locInstance = Locator.Locator.create(name='{}'.format(prefix), padding=padding)
+        pm.rename(cls.locInstance.locators[0], '{}__GLOC'.format(cls.locInstance.locators[0]))
         cls.locInstance.AddSeparator(cls.locInstance.locators[0])
         cls.locInstance.addAttr('Shape', 'enum',  eName = sl.sl.keys())
         cls.locInstance.setDefault('Shape', 4)
@@ -70,8 +71,8 @@ class ModuleGuides(object):
         with open("{}.ini".format(FILE_NAME),"w+") as wf:
             for guide in self.guides:
                 wf.write('[{}] \n'.format(guide))
-                for translate in attrDic['Translate']:
-                    wf.write(translate + '=' + str(pm.getAttr('{}.{}'.format(guide, translate))) + '\n')
+                for index, translate in enumerate(attrDic['Translate']):
+                    wf.write(translate + '=' + str(pm.xform('{}'.format(guide), rp=True , q=True , ws=True)[index]) + '\n')
                     self.registeredAttributes.append(translate)
 
                 for rotate in attrDic['Rotate']:
@@ -86,7 +87,16 @@ class ModuleGuides(object):
                     wf.write(str(key) + '=' + str(pm.getAttr('{}.{}'.format(guide, key))) + '\n')
                     self.registeredAttributes.append(key)
 
-                wf.write('registeredAttributes' + '=' + str(self.registeredAttributes) + '\n')
+                wf.write("parent={} \n".format(pm.PyNode(guide).getParent()))
+                for index, value in enumerate(sl.sl.keys()):
+                    if index == int(pm.getAttr('{}.Shape'.format(guide))):
+                        wf.write("shape=" + str([value, index]) + '\n')
+
+                for index, value in enumerate(['auto'] + indexColor.keys()):
+                    if index == int(pm.getAttr('{}.Color'.format(guide))):
+                        wf.write("color=" + str([value, index]) + '\n')
+
+                wf.write('registeredAttributes' + '=' + str(list(set(self.registeredAttributes))) + '\n')
         wf.close()
 
 

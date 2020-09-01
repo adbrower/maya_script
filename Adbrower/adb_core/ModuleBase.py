@@ -28,18 +28,19 @@ class ModuleBase(object):
         self.NAME = None
 
 
-    def _start(self, NAME, _metaDataNode = 'transform'):
+    def _start(self, NAME, _metaDataNode = 'transform', is_module=True):
         """
         - Creates Rig Group hiearchy
         - Create Meta Data Node
         """
         self.NAME = NAME
+        self.is_module = is_module
         self._metaDataNode = _metaDataNode
         if self._metaDataNode is not None:
             self.metaData_GRP = self.createMetaDataGrp(self.NAME, type=self._metaDataNode)
             self.metaDataGRPS.append(self.metaData_GRP)
 
-        self.hiearchy_setup(self.NAME, is_module=True)
+        self.hiearchy_setup(self.NAME, is_module=self.is_module)
 
     def _build(self):
         """
@@ -123,14 +124,14 @@ class ModuleBase(object):
         self.NAME = module_name
         self.MOD_GRP = pm.group(n=module_grp_name, em=1)
         self.RIG_GRP = pm.group(n='{}_RIG__GRP'.format(module_name), em=1)
+        self.STARTERS_GRP = pm.group(n='{}_STARTERS__GRP'.format(module_name), em=1)
         self.INPUT_GRP = pm.group(n='{}_INPUT__GRP'.format(module_name), em=1)
         self.OUTPUT_GRP = pm.group(n='{}_OUTPUT__GRP'.format(module_name), em=1)
         self.VISRULE_GRP = pm.group(n='{}_VISRULE__GRP'.format(module_name), em=1)
 
-        [pm.parent(grp, self.MOD_GRP) for grp in [self.RIG_GRP, self.INPUT_GRP, self.OUTPUT_GRP]]
-        pm.parent(self.VISRULE_GRP, self.MOD_GRP)
+        [pm.parent(grp, self.MOD_GRP) for grp in [self.STARTERS_GRP, self.RIG_GRP, self.INPUT_GRP, self.OUTPUT_GRP, self.VISRULE_GRP]]
 
-        return self.MOD_GRP, self.RIG_GRP, self.INPUT_GRP, self.OUTPUT_GRP, self.VISRULE_GRP
+        return self.MOD_GRP, self.RIG_GRP, self.INPUT_GRP, self.OUTPUT_GRP, self.VISRULE_GRP, self.STARTERS_GRP
 
     def setFinalHiearchy(self,
                          RIG_GRP_LIST = [],
