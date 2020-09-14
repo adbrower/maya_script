@@ -266,9 +266,9 @@ class stretchyIK(moduleBase.ModuleBase):
         pm.parent(self.ik_NonStretch_joint[-1], self.ik_NonStretch_joint[-2])
         pm.parent(self.ik_NonStretch_joint[-2], self.ik_NonStretch_joint[0])
 
-        [pm.PyNode(jnt).rename('{}_NonStetch__{}'.format(NC.getNameNoSuffix(jnt), NC.JOINT)) for jnt in self.ik_NonStretch_joint]
+        [pm.PyNode(jnt).rename('{}_NonStretch__{}'.format(NC.getNameNoSuffix(jnt), NC.JOINT)) for jnt in self.ik_NonStretch_joint]
 
-        nonStretch_IkHandle, nonStretch_IkHandle_effector = pm.ikHandle(n='{}_NonStetch__{}'.format(self.NAME, NC.IKHANDLE_SUFFIX), sj=self.ik_NonStretch_joint[0], ee=self.ik_NonStretch_joint[-1])
+        nonStretch_IkHandle, nonStretch_IkHandle_effector = pm.ikHandle(n='{}_NonStretch__{}'.format(self.NAME, NC.IKHANDLE_SUFFIX), sj=self.ik_NonStretch_joint[0], ee=self.ik_NonStretch_joint[-1])
         nonStretch_IkHandle.v.set(0)
         self.nonStretch_IkHandle = nonStretch_IkHandle
         adb.makeroot_func(self.nonStretch_IkHandle)

@@ -586,7 +586,7 @@ class LimbLeg(rigBase.RigBase):
                     )
         self.legIk_MOD.start(metaDataNode='transform')
         self.legIk_MOD.metaDataGRPS += [self.legIk_MOD.metaData_GRP]
-        self.legIk_MOD.metaData_GRP.Toggle.set(self.config['ATTRIBUTES']["StretchyLimb"])
+        pm.addAttr(self.legIk_MOD.metaData_GRP.Toggle, e=1, dv=self.config['ATTRIBUTES']["StretchyLimb"])
         self.BUILD_MODULES += [self.legIk_MOD]
 
         self.legIk_MOD.build()

@@ -45,9 +45,9 @@ class Control(adbAttr.NodeAttr):
 
         super(Control, self).__init__(self.control)
 
-    #===================
-    # PROPERTIES
-    #===================
+#===================
+# CLASSMETHODS
+#===================
 
     @classmethod
     @makeroot(suf='Offset', forceNameConvention=True)
@@ -71,6 +71,10 @@ class Control(adbAttr.NodeAttr):
                 joint = adb.AutoSuffix([joint])
             fk_joint.append(joint)
         return fk_joint
+
+#===================
+# PROPERTIES
+#===================
 
     @property
     def shape(self):
@@ -259,6 +263,7 @@ class ShapeManagement(object):
             self.replaceShape(old_ctrl=ctrl, new_ctrl=name)
 
 
+    @propScale
     def replaceShape(self, old_ctrl=pm.selected(), new_ctrl=None):
         """
         Replacing shape function
@@ -275,7 +280,6 @@ class ShapeManagement(object):
         else:
             color = pm.PyNode(original_ctl).overrideColor.get()
 
-        @propScale
         def createCtl():
             ctl =  new_ctrl()
             pm.PyNode(ctl).overrideEnabled.set(1)

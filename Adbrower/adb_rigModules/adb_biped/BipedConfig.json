@@ -8,7 +8,7 @@
         "FK_Reg_JNT" : false,
         "FK_Rev_JNT" : false,
         "Macro_JNT" : true,
-        
+
         "IK_CTRL": true,
         "IK_Offset_CTRL": false,
         "FK_Reg_CTRL" : true,
@@ -39,133 +39,135 @@
     },
 
     "ATTRIBUTES":{
-        "StretchyLimb": true,
+        "StretchyLimb": false,
         "StretchyArmUpperExp": [1, 0.5, 0.8],
         "StretchyArmLowerExp": [0.5, 0.5, 0],
         "StretchyLegUpperExp": [0.8, 0.8, 0.8],
         "StretchyLegLowerExp": [0.8, 0.8, 1.0]
         },
 
-    "CONTROLS":{
-        "Spine_Chest":{
-            "shape": "chest_shape",
-            "scale": 1.5
+        "CONTROLS":{
+            "Spine_Chest":{
+                "shape": "cube_shape",
+                "scale": [1.5, 0.2, 1.5],
+                "pivotPoint": -4
+            },
+            "Spine_Hips":{
+                "shape": "cube_shape",
+                "scale": [1.5, 0.5, 1.5]
+            },
+            "Spine_IK_Chest":{
+                "shape": "square_shape",
+                "scale": [2, 0.3, 1]
+            },
+            "Spine_IK_Belly":{
+                "shape": "square_shape",
+                "scale": [1.5, 1, 1]
+            },
+            "Spine_IK_Hips":{
+                "shape": "square_shape",
+                "scale": [1.8, 0.3, 0.8]
+            },
+            "Spine_FK_Reg":{
+                "shape": "pinZ_shape",
+                "scale": [0.8, 0.8, 1.2]
+            },
+            "Spine_FK_Rev":{
+                "shape": "circleY_shape",
+                "scale": 1.3
+            },
+            "IK_Control":{
+                "shape": "cube_shape",
+                "scale": 0.5
+            },
+            "IK_Control_Offset":{
+                "shape": "cube_shape",
+                "scale": 0.4
+            },
+            "FK_Control":{
+                "shape": "circleY_shape",
+                "scale": 0.8
+            },
+            "Arm_Macro":{
+                "shape": "circleX_shape",
+                "scale": 0.6
+            },
+            "PoleVector_Control":{
+                "shape": "ball_shape",
+                "scale": 0.2,
+                "exposant": 1
+            },
+            "Sliding_Knee_Hip":{
+                "shape": "locator_shape",
+                "scale": 0.5
+            },
+            "Sliding_Knee_Knee_01":{
+                "shape": "locator_shape",
+                "scale": 1
+            },
+            "Sliding_Knee_Knee_02":{
+                "shape": "locator_shape",
+                "scale": 0.5
+            },
+            "Sliding_Knee_ankle":{
+                "shape": "locator_shape",
+                "scale": 0.5
+            },
+            "Double_Knee":{
+                "shape": "locator_shape",
+                "scale": 1
+            },
+            "Sliding_Elbow_Shoulder":{
+                "shape": "locator_shape",
+                "scale": 0.5
+            },
+            "Sliding_Elbow_Elbow_01":{
+                "shape": "locator_shape",
+                "scale": 0.5
+            },
+            "Sliding_Elbow_Elbow_02":{
+                "shape": "locator_shape",
+                "scale": 0.5
+            },
+            "Sliding_Elbow_Wrist":{
+                "shape": "locator_shape",
+                "scale": 0.5
+            },
+            "Double_Elbow":{
+                "shape": "locator_shape",
+                "scale": 1
+            },
+            "Clavicule":{
+                "shape": "pinY_shape",
+                "scale": 1,
+                "rotation_degree":30
+            },
+            "Shoulder":{
+                "shape": "ball_shape",
+                "scale": 0.6
+            },
+            "Foot":{
+                "shape": "foot_shape",
+                "scale": 1
+            },
+            "Foot_Ball":{
+                "shape": "pinX_shape",
+                "scale": 0.5
+            },
+            "Foot_Heel":{
+                "shape": "ball2_shape",
+                "scale": 0.3
+            },
+            "Foot_Toe":{
+                "shape": "ball2_shape",
+                "scale": 0.2
+            },
+            "Foot_ToeBend":{
+                "shape": "cube_shape",
+                "scale": [0.5, 0.13, 0.15]
+            }
         },
-        "Spine_Hips":{
-            "shape": "chest_shape",
-            "scale": 1.5
-        },
-        "Spine_IK_Chest":{
-            "shape": "square_shape",
-            "scale": [1.3, 0.3, 0.8]
-        },
-        "Spine_IK_Belly":{
-            "shape": "square_shape",
-            "scale": [1.5, 1, 1]
-        },
-        "Spine_IK_Hips":{
-            "shape": "square_shape",
-            "scale": [1.8, 0.3, 0.8]
-        },
-        "Spine_FK_Reg":{
-            "shape": "pinZ_shape",
-            "scale": 0.8
-        },
-        "Spine_FK_Rev":{
-            "shape": "circleY_shape",
-            "scale": 1.3
-        },
-        "IK_Control":{
-            "shape": "cube_shape",
-            "scale": 0.5
-        },
-        "IK_Control_Offset":{
-            "shape": "cube_shape",
-            "scale": 0.4
-        },
-        "FK_Control":{
-            "shape": "circleY_shape",
-            "scale": 0.8
-        },
-        "Arm_Macro":{
-            "shape": "circleX_shape",
-            "scale": 0.6
-        },
-        "PoleVector_Control":{
-            "shape": "ball_shape",
-            "scale": 0.2,
-            "exposant": 1
-        },
-        "Sliding_Knee_Hip":{
-            "shape": "locator_shape",
-            "scale": 0.5
-        },
-        "Sliding_Knee_Knee_01":{
-            "shape": "locator_shape",
-            "scale": 1
-        },
-        "Sliding_Knee_Knee_02":{
-            "shape": "locator_shape",
-            "scale": 0.5
-        },
-        "Sliding_Knee_ankle":{
-            "shape": "locator_shape",
-            "scale": 0.5
-        },
-        "Double_Knee":{
-            "shape": "locator_shape",
-            "scale": 1
-        },
-        "Sliding_Elbow_Shoulder":{
-            "shape": "locator_shape",
-            "scale": 0.5
-        },
-        "Sliding_Elbow_Elbow_01":{
-            "shape": "locator_shape",
-            "scale": 0.5
-        },
-        "Sliding_Elbow_Elbow_02":{
-            "shape": "locator_shape",
-            "scale": 0.5
-        },
-        "Sliding_Elbow_Wrist":{
-            "shape": "locator_shape",
-            "scale": 0.5
-        },
-        "Double_Elbow":{
-            "shape": "locator_shape",
-            "scale": 1
-        },
-        "Clavicule":{
-            "shape": "pinY_shape",
-            "scale": 1,
-            "rotation_degree":30
-        },
-        "Shoulder":{
-            "shape": "ball_shape",
-            "scale": 0.6
-        },
-        "Foot":{
-            "shape": "foot_shape",
-            "scale": 1
-        },
-        "Foot_Ball":{
-            "shape": "pinX_shape",
-            "scale": 0.5
-        },
-        "Foot_Heel":{
-            "shape": "ball2_shape",
-            "scale": 0.3
-        },
-        "Foot_Toe":{
-            "shape": "ball2_shape",
-            "scale": 0.2
-        },
-        "Foot_ToeBend":{
-            "shape": "cube_shape",
-            "scale": [0.5, 0.13, 0.15]
-        }
-    },
+
     "JOINTS":{
         "Result_JNT":{
             "radius": 2
@@ -183,5 +185,4 @@
             "radius": 1
         }
     }
-
 }

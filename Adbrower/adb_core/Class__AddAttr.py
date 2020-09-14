@@ -310,11 +310,6 @@ class NodeAttr(object):
         return all_attr
 
 
-    def addMethods(self):
-        """ Add all the new attributes as methods of the class"""
-        for methods in self.list_methods:
-            setattr(NodeAttr, methods, self.list_methods[methods])
-
 
 # -----------------------------------
 # METHODS
@@ -495,6 +490,13 @@ class NodeAttr(object):
         else:
             pass
         return(self.node)
+
+
+    def addMethods(self):
+        """ Add all the new attributes as methods of the class"""
+        for methods in self.list_methods:
+            setattr(NodeAttr, methods, self.list_methods[methods])
+
 
 
     def set(self, attr, value):

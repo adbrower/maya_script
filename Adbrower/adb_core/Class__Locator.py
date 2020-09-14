@@ -57,7 +57,7 @@ class Locator(adbTransform.Transform):
 
 
     @classmethod
-    def create(cls, numb = 1, name = '', padding=None):
+    def create(cls, numb=1, name = '', padding=None):
         loc_created = []
         for number in xrange(numb):
             if padding:
@@ -65,6 +65,7 @@ class Locator(adbTransform.Transform):
             else:
                 loc = pm.spaceLocator(n=name)
             pm.parent(loc, w=1)
+            adb.AutoSuffix([loc])
             loc_created.append(loc)
         return cls(loc_created)
 
