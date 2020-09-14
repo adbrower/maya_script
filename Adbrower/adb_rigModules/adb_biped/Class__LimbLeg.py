@@ -244,12 +244,14 @@ class LimbLeg(rigBase.RigBase):
             self.FootRig.connect(
                                 leg_ikHandle = self.leg_IkHandle,
                                 leg_offset_ik_ctrl = self.leg_IkHandle_ctrl_offset,
+                                leg_ankle_ik_joint = self.legIk_MOD.ik_NonStretch_joint[-1],
                                 leg_ankle_fk_ctrl = self.fkControls[-1],
                                 )
 
             # connect leg space switch to foot
             pm.PyNode('{}.{}'.format(self.SPACES_GRP, self.Ik_FK_attributeName)) >> pm.PyNode('{}.{}'.format(self.FootRig.SPACES_GRP, self.FootRig.footSpaceSwitchTrans_attribute))
             pm.PyNode('{}.{}'.format(self.SPACES_GRP, self.Ik_FK_attributeName)) >> pm.PyNode('{}.{}'.format(self.FootRig.SPACES_GRP, self.FootRig.footSpaceSwitchRot_attribute))
+            self.legIk_MOD.metaData_GRP.Toggle >> pm.PyNode('{}.{}'.format(self.FootRig.SPACES_GRP, self.FootRig.footStretchSpaceSwitch_attribute))
 
         Transform(self.MODULES_GRP).pivotPoint = Transform(self.base_leg_joints[0]).worldTrans
         # rigBase.loadSkinClustersWeights()

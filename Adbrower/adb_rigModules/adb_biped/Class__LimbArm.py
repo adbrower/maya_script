@@ -536,10 +536,10 @@ class LimbArm(rigBase.RigBase):
             pm.matchTransform(self.ikSpaceSwitchChestdGrp, self.arm_IkHandle_ctrl, pos=1, rot=1)
 
             self.ikArmpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}_IK'.format(**self.nameStructure),
-                                                    spacesInputs =[self.ikSpaceSwitchHipsdGrp, self.ikSpaceSwitchChestdGrp, ikSpaceSwitchMainCTRLGrpArm, ikSpaceSwitchWorldGrpArm],
+                                                    spacesInputs =[self.ikSpaceSwitchChestdGrp, self.ikSpaceSwitchHipsdGrp, ikSpaceSwitchMainCTRLGrpArm, ikSpaceSwitchWorldGrpArm],
                                                     spaceOutput = self.arm_IkHandle_ctrl.getParent(),
                                                     maintainOffset = False,
-                                                    attrNames = ['hips', 'chest', 'mainCTRL', 'world',])
+                                                    attrNames = ['chest', 'hips', 'mainCTRL', 'world',])
             self.ikFk_MOD.metaDataGRPS += [self.ikArmpaceSwitch.metaData_GRP]
 
             pm.parent(arm_IkHandle[0], self.arm_IkHandle_ctrl_offset)

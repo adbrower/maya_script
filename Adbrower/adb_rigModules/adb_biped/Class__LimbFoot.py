@@ -175,6 +175,7 @@ class LimbFoot(rigBase.RigBase):
                 legSpaceGroup = None,
                 leg_ikHandle = [],
                 leg_offset_ik_ctrl = [],
+                leg_ankle_ik_joint = [],
                 leg_ankle_fk_ctrl = []
                 ):
 
@@ -183,6 +184,7 @@ class LimbFoot(rigBase.RigBase):
         self.connectFootToLeg(legSpaceGroup = legSpaceGroup,
                               leg_ikHandle = leg_ikHandle,
                               leg_offset_ik_ctrl = leg_offset_ik_ctrl,
+                              leg_ankle_ik_joint = leg_ankle_ik_joint,
                               leg_ankle_fk_ctrl = leg_ankle_fk_ctrl,
                               )
 
@@ -299,6 +301,7 @@ class LimbFoot(rigBase.RigBase):
                  legSpaceGroup = None,
                  leg_ikHandle = None,
                  leg_offset_ik_ctrl = None,
+                 leg_ankle_ik_joint = None,
                  leg_ankle_fk_ctrl = None,
                  ):
         # TODO: ADD SPACE SWITCH TO PIN THE FOOT WHEN IS ON STRETCHY LIMB OR NOT
@@ -331,6 +334,7 @@ class LimbFoot(rigBase.RigBase):
                                         attrNames = ['Ik', 'Fk'])
         self.footSpaceSwitchTrans_attribute = self.footSpaceSwitchTrans.NAME
         self.Foot_MOD.metaDataGRPS += [self.footSpaceSwitchTrans.metaData_GRP]
+        adbAttr.NodeAttr.copyAttr(self.footSpaceSwitchTrans.metaData_GRP, [self.SPACES_GRP], forceConnection=True)
 
         self.footSpaceSwitchRot = SpaceSwitch.SpaceSwitch('{Side}__Rotation_Foot'.format(**self.nameStructure),
                                         spacesInputs =[ik_loc[0], fk_loc[0]],
@@ -340,11 +344,22 @@ class LimbFoot(rigBase.RigBase):
                                         attrNames = ['Ik', 'Fk'])
         self.footSpaceSwitchRot_attribute = self.footSpaceSwitchRot.NAME
         self.Foot_MOD.metaDataGRPS += [self.footSpaceSwitchRot.metaData_GRP]
-
-        pm.parentConstraint(self.foot_ctrl, self.footOffsetGrp, mo=1)
-        adbAttr.NodeAttr.copyAttr(self.footSpaceSwitchTrans.metaData_GRP, [self.SPACES_GRP], forceConnection=True)
         adbAttr.NodeAttr.copyAttr(self.footSpaceSwitchRot.metaData_GRP, [self.SPACES_GRP], forceConnection=True)
 
+        try:
+            self.footStretchSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__Stretch_Foot'.format(**self.nameStructure),
+                                    spacesInputs =[leg_ankle_ik_joint, leg_offset_ik_ctrl],
+                                    spaceOutput = ik_loc[0],
+                                    maintainOffset = False,
+                                    channels='t',
+                                    attrNames = ['Off', 'On'])
+            self.footStretchSpaceSwitch_attribute = self.footStretchSpaceSwitch.NAME
+            self.Foot_MOD.metaDataGRPS += [self.footStretchSpaceSwitch.metaData_GRP]
+            adbAttr.NodeAttr.copyAttr(self.footStretchSpaceSwitch.metaData_GRP, [self.SPACES_GRP], forceConnection=True)
+        except:
+            pass
+
+        pm.parentConstraint(self.foot_ctrl, self.footOffsetGrp, mo=1)
 
     # -------------------
     # CONNECT SLOVERS
