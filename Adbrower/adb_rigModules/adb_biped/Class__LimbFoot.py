@@ -172,20 +172,12 @@ class LimbFoot(rigBase.RigBase):
         self.create_foot_ctrl()
 
     def connect(self,
-                legSpaceGroup = None,
-                leg_ikHandle = [],
-                leg_offset_ik_ctrl = [],
-                leg_ankle_ik_joint = [],
-                leg_ankle_fk_ctrl = []
+                legModule = None,
                 ):
 
         super(LimbFoot, self)._connect()
 
-        self.connectFootToLeg(legSpaceGroup = legSpaceGroup,
-                              leg_ikHandle = leg_ikHandle,
-                              leg_offset_ik_ctrl = leg_offset_ik_ctrl,
-                              leg_ankle_ik_joint = leg_ankle_ik_joint,
-                              leg_ankle_fk_ctrl = leg_ankle_fk_ctrl,
+        self.connectFootToLeg(legModule = legModule,
                               )
 
         self.addControls()
@@ -298,16 +290,10 @@ class LimbFoot(rigBase.RigBase):
 
 
     def connectFootToLeg(self,
-                 legSpaceGroup = None,
-                 leg_ikHandle = None,
-                 leg_offset_ik_ctrl = None,
-                 leg_ankle_ik_joint = None,
-                 leg_ankle_fk_ctrl = None,
+                 legModule = None,
                  ):
-        # TODO: ADD SPACE SWITCH TO PIN THE FOOT WHEN IS ON STRETCHY LIMB OR NOT
         # ik Foot Connect
-
-        ikBlendGrp = self.createPivotGrps(leg_ikHandle, name='{Basename}_Pivots'.format(**self.nameStructure))
+        ikBlendGrp = self.createPivotGrps(legModule.leg_IkHandle, name='{Basename}_Pivots'.format(**self.nameStructure))
         Transform(ikBlendGrp).pivotPoint = Transform(self.footAnkle_joint).worldTrans
         adbAttr.NodeAttr.copyAttr(self.Foot_MOD.metaData_GRP, [self.foot_ctrl], forceConnection=True)
         [pm.setAttr('{}.{}'.format(self.foot_ctrl, attr), keyable=False) for attr in pm.listAttr(self.foot_ctrl, k=1, v=1, ud=1)]
@@ -315,12 +301,12 @@ class LimbFoot(rigBase.RigBase):
         foot_ctrlBlendGrp = adb.makeroot_func(self.foot_ctrl, suff='blend', forceNameConvention=1)
 
         fk_loc = Locator.Locator.create(name='{Side}__{Basename}_blendFk__LOC'.format(**self.nameStructure)).locators
-        pm.matchTransform(fk_loc, leg_ankle_fk_ctrl, pos=1, rot=0)
-        pm.parent(fk_loc, leg_ankle_fk_ctrl)
+        pm.matchTransform(fk_loc, legModule.fkControls[-1], pos=1, rot=0)
+        pm.parent(fk_loc, legModule.fkControls[-1])
 
         ik_loc = Locator.Locator.create(name='{Side}__{Basename}_blendIk__LOC'.format(**self.nameStructure)).locators
-        pm.matchTransform(ik_loc, leg_offset_ik_ctrl)
-        pm.parent(ik_loc, leg_offset_ik_ctrl)
+        pm.matchTransform(ik_loc, legModule.leg_IkHandle_ctrl_offset)
+        pm.parent(ik_loc, legModule.leg_IkHandle_ctrl_offset)
 
         [pm.PyNode(loc[0]).v.set(0) for loc in [ik_loc, fk_loc]]
 
@@ -347,14 +333,18 @@ class LimbFoot(rigBase.RigBase):
         adbAttr.NodeAttr.copyAttr(self.footSpaceSwitchRot.metaData_GRP, [self.SPACES_GRP], forceConnection=True)
 
         try:
+            duplicate = pm.duplicate(legModule.legIk_MOD.ik_NonStretch_joint[-1])[0]
+            pm.parent(duplicate, legModule.legIk_MOD.ik_NonStretch_joint[-1])
+            pm.rename(duplicate, '{}_dup'.format(legModule.legIk_MOD.ik_NonStretch_joint[-1]))
             self.footStretchSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__Stretch_Foot'.format(**self.nameStructure),
-                                    spacesInputs =[leg_ankle_ik_joint, leg_offset_ik_ctrl],
+                                    spacesInputs =[legModule.legIk_MOD.ik_NonStretch_joint[-1], duplicate],
                                     spaceOutput = ik_loc[0],
                                     maintainOffset = False,
                                     channels='t',
                                     attrNames = ['Off', 'On'])
             self.footStretchSpaceSwitch_attribute = self.footStretchSpaceSwitch.NAME
             self.Foot_MOD.metaDataGRPS += [self.footStretchSpaceSwitch.metaData_GRP]
+            pm.pointConstraint(legModule.ik_leg_joints[-1], duplicate, mo=1)
             adbAttr.NodeAttr.copyAttr(self.footStretchSpaceSwitch.metaData_GRP, [self.SPACES_GRP], forceConnection=True)
         except:
             pass

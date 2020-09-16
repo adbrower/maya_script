@@ -242,10 +242,7 @@ class LimbLeg(rigBase.RigBase):
 
         if self.buildFootStatus:
             self.FootRig.connect(
-                                leg_ikHandle = self.leg_IkHandle,
-                                leg_offset_ik_ctrl = self.leg_IkHandle_ctrl_offset,
-                                leg_ankle_ik_joint = self.legIk_MOD.ik_NonStretch_joint[-1],
-                                leg_ankle_fk_ctrl = self.fkControls[-1],
+                                legModule = self,
                                 )
 
             # connect leg space switch to foot
