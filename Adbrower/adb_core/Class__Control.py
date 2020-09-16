@@ -6,6 +6,11 @@
 #     audreydb23@gmail.com
 # -------------------------------------------------------------------
 
+import os
+import sys
+import ConfigParser
+import ast
+
 import pymel.core as pm
 import maya.cmds as mc
 
@@ -18,6 +23,124 @@ adb = adbrower.Adbrower()
 
 from adbrower import changeColor, propScale, makeroot
 from CollDict import indexColor
+
+
+# -----------------------------------
+# FUNCTIONS
+# -----------------------------------
+
+
+def exportShape(control='', path=None):
+        """
+        Exported CVs points
+
+        Args:
+            path (String): Path where the ini file is saved.
+        """
+        if path is None:
+            pm.warning('A path is needed')
+            return None
+
+        FILE_NAME = control + '_Shape_DATA'
+
+        if os.path.exists(path + '/'):
+            os.chdir(path)
+        else:
+            os.mkdir(path + '/')
+            os.chdir(path + '/')
+        os.chdir(path + '/')
+        DATA_PATH = path 
+
+        numb_point = len(pm.PyNode(control).getCVs())
+        points = pm.PyNode(control).getCVs()
+        format_points = []
+
+        for i in range(numb_point):
+            list = points[i]
+            formatting = ['{:.4f}'.format(x) for x in list]
+            format_points.append(formatting)
+
+        controlDict = {
+            "fpoints": format_points,
+            "knots": pm.PyNode(control).getKnots(),
+            "degree": pm.PyNode(control).degree(),
+            "form": pm.PyNode(control).form(),
+        }
+
+        with open("{}.ini".format(FILE_NAME),"w+") as wf:
+            wf.write('[{}]\n'.format(control))
+            wf.write('points : {}\n'.format(controlDict["fpoints"]).replace("'", ""))
+            wf.write('knots : {}\n'.format(controlDict["knots"]))
+            wf.write('degree : {}\n'.format(controlDict["degree"]))
+
+        sys.stdout.write('// Shape Exported : {} \n'.format(DATA_PATH))
+
+
+def loadShape(control='', path=None):
+        """
+        Loaded CVs points
+
+        Args:
+            path (String): Path from which the ini file is loaded
+        """
+        if path is None:
+            pm.warning('A path is needed')
+            return None
+
+        original_ctl = pm.PyNode(control)
+        colorSolver = pm.PyNode(original_ctl.getShape()).overrideRGBColors.get()
+
+        if colorSolver:
+            color = pm.PyNode(original_ctl.getShape()).overrideColorRGB.get()
+            _type = 'rgb'
+        else:
+            color = pm.PyNode(original_ctl.getShape()).overrideColor.get()
+            _type = 'index'
+
+        @changeColor(type=_type, col=color)
+        def loadedShapeCtrl():
+            config = ConfigParser.ConfigParser()
+            config.read(path)
+
+            loadedShape = pm.curve(p=ast.literal_eval(config.get(control, 'points')),
+                                   k=ast.literal_eval(config.get(control, 'knots')),
+                                   d=ast.literal_eval(config.get(control, 'degree')))
+            return loadedShape
+
+        new_ctrl = loadedShapeCtrl()
+        new_shape = new_ctrl
+
+        # Duplicate source and move to target location
+        new_shape_dup = pm.duplicate(new_shape, rc=True)[0]
+        pm.matchTransform(new_shape_dup, original_ctl, pos=True, rot=True)
+
+        # Parent source to target's parent
+        pm.parent(new_shape_dup, original_ctl.getTransform())
+        pm.makeIdentity(new_shape_dup, apply=True, t=1, r=1, s=1)
+
+        # Get transforms and shapes of source and target
+        new_shape_getShape = pm.PyNode(new_shape_dup).getShapes()
+        original_ctl_getShapes = pm.PyNode(original_ctl).getShapes()
+
+        for original, new in zip (original_ctl_getShapes, new_shape_getShape):
+            pm.rename(new, original.name())
+
+        # Parent shapes of source to target
+        for srcShapes in new_shape_getShape:
+            pm.parent(srcShapes, original_ctl, add=True, s=True)
+
+        # Clean up
+        pm.delete(new_shape_dup)
+        pm.delete(original_ctl_getShapes)
+        pm.delete(new_ctrl)
+
+        sys.stdout.write('// Shape Loaded : from {} \n'.format(path))
+        return original_ctl
+
+
+# -----------------------------------
+# CLASS
+# -----------------------------------
 
 
 class Control(adbAttr.NodeAttr):
@@ -106,6 +229,9 @@ class Control(adbAttr.NodeAttr):
             else:
                 self.scaleVertex('-', valuePos=scale_value)
 
+#===================
+# METHODS
+#===================
 
     def create(self):
         self.control = self._shape()
@@ -221,6 +347,116 @@ class Control(adbAttr.NodeAttr):
                     e=1, keyable=True)
         pm.connectAttr((str(self.control) + ".rotationOrder"),
                         (str(self.control) + ".rotateOrder"))
+
+
+    def exportShape(self, path=None):
+        """
+        Exported CVs points
+
+        Args:
+            path (String): Path where the ini file is saved.
+        """
+        if path is None:
+            pm.warning('A path is needed')
+            return None
+
+        FILE_NAME = self.control + '_Shape_DATA'
+
+        if os.path.exists(path + '/' ):
+            os.chdir(path)
+        else:
+            os.mkdir(path + '/' )
+            os.chdir(path + '/' )
+        os.chdir(path + '/' )
+        self.DATA_PATH = path 
+
+        numb_point = len(pm.PyNode(self.control).getCVs())
+        points = pm.PyNode(self.control).getCVs()
+        format_points = []
+
+        for i in range(numb_point):
+            list = points[i]
+            formatting = ['{:.4f}'.format(x) for x in list]
+            format_points.append(formatting)
+
+        controlDict = {
+            "fpoints": format_points,
+            "knots": pm.PyNode(self.control).getKnots(),
+            "degree": pm.PyNode(self.control).degree(),
+            "form": pm.PyNode(self.control).form(),
+        }
+
+        with open("{}.ini".format(FILE_NAME),"w+") as wf:
+            wf.write('[{}]\n'.format(self.control))
+            wf.write('points : {}\n'.format(controlDict["fpoints"]).replace("'", ""))
+            wf.write('knots : {}\n'.format(controlDict["knots"]))
+            wf.write('degree : {}\n'.format(controlDict["degree"]))
+
+        sys.stdout.write('// Shape Exported : {} \n'.format(self.DATA_PATH))
+
+
+    def loadShape(self, path=None):
+        """
+        Loaded CVs points
+
+        Args:
+            path (String): Path from which the ini file is loaded
+        """
+        if path is None:
+            pm.warning('A path is needed')
+            return None
+
+        config = ConfigParser.ConfigParser()
+        config.read(path)
+
+        original_ctl = self.control
+        colorSolver = pm.PyNode(original_ctl.getShape()).overrideRGBColors.get()
+
+        if colorSolver:
+            color = pm.PyNode(original_ctl.getShape()).overrideColorRGB.get()
+            _type = 'rgb'
+        else:
+            color = pm.PyNode(original_ctl.getShape()).overrideColor.get()
+            _type = 'index'
+
+        @changeColor(type=_type, col=color)
+        def loadedShapeCtrl():
+            loadedShape = pm.curve(p=ast.literal_eval(config.get(str(self.control), 'points')),
+                 k=ast.literal_eval(config.get(str(self.control), 'knots')),
+                 d=ast.literal_eval(config.get(str(self.control), 'degree')))
+            return loadedShape
+
+        new_ctrl = loadedShapeCtrl()
+        new_shape = new_ctrl
+
+        # Duplicate source and move to target location
+        new_shape_dup = pm.duplicate(new_shape, rc=True)[0]
+        pm.matchTransform(new_shape_dup, original_ctl, pos=True, rot=True)
+
+        # Parent source to target's parent
+        pm.parent(new_shape_dup, original_ctl.getTransform())
+        pm.makeIdentity(new_shape_dup, apply=True, t=1, r=1, s=1)
+
+        # Get transforms and shapes of source and target
+        self.new_shape_getShape = pm.PyNode(new_shape_dup).getShapes()
+        original_ctl_getShapes = pm.PyNode(original_ctl).getShapes()
+
+        for original, new in zip (original_ctl_getShapes, self.new_shape_getShape):
+            pm.rename(new, original.name())
+
+        # Parent shapes of source to target
+        for srcShapes in self.new_shape_getShape:
+            pm.parent(srcShapes, original_ctl, add=True, s=True)
+
+        # Clean up
+        pm.delete(new_shape_dup)
+        pm.delete(original_ctl_getShapes)
+        pm.delete(new_ctrl)
+
+        sys.stdout.write('// Shape Loaded : from {} \n'.format(path))
+        return original_ctl
+
+
 
 # -----------------------------------
 # CLASS
