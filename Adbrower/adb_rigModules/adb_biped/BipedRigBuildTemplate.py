@@ -11,6 +11,7 @@ import adb_rigModules.adb_biped.Class__LimbLeg as LimbLeg
 import adb_rigModules.adb_biped.Class__LimbArm as LimbArm
 import adb_rigModules.RigBase as rigBase
 import adb_rigModules.ModuleGuides as moduleGuides
+import adb_core.Class__Control as Control
 
 reload(adbAttr)
 reload(NC)
@@ -23,6 +24,7 @@ reload(moduleGuides)
 
 DATA_WEIGHT_PATH = 'C:/Users/Audrey/Documents/maya/projects/Roller_Rigging_Project/data/skinWeights/'
 DATA_GUIDES_PATH = 'C:/Users/Audrey/Documents/maya/projects/Roller_Rigging_Project/data/guides/'
+DATA_SHAPES_PATH = 'C:/Users/Audrey/Documents/maya/projects/Roller_Rigging_Project/data/shapes/'
 
 CONFIG_PATH = 'C:/Users/Audrey/Documents/maya/projects/Roller_Rigging_Project/scripts/'
 os.chdir(CONFIG_PATH)
@@ -115,7 +117,7 @@ class gShowProgress(object):
 class BuipedBuildTemplate(object):
     def __init__(self):
 
-        self.RIGBASE = RigBase.MainRigBase('RollerGirl')
+        self.RIGBASE = rigBase.MainRigBase('RollerGirl')
 
         self.ALL_BUILD_MODULES = []
         self.ALL_MODULES = []
@@ -168,10 +170,10 @@ class BuipedBuildTemplate(object):
         self.ALL_BUILD_MODULES.append(self.C_spine)
         self.ALL_MODULES.append(self.C_spine)
 
-
         [pm.parent(rig.MAIN_RIG_GRP, self.RIGBASE.MODULES_BASERIG_GRP) for rig in self.ALL_MODULES]
         [pm.parent(rig.STARTERS_GRP, self.RIGBASE.STARTER_BASERIG_GRP) for rig in self.ALL_MODULES]
         sys.stdout.write('// Result: Guide Phase Done //\n')
+
 
     @gShowProgress(status="building ...")
     def build(self):
@@ -193,7 +195,7 @@ class BuipedBuildTemplate(object):
             module.connect()
 
         self.C_spine.connectSpineToLeg(spaceSwitchLocatorHips = [self.L_leg.ikSpaceSwitchHipsdGrp, self.R_leg.ikSpaceSwitchHipsdGrp],
-                         leg_Ik_Hips=['L__Leg_Ik_Hips__JNT', 'R__Leg_Ik_Hips__JNT'],
+                         leg_Ik_Hips=['L__Leg_Ik_Hips__JNT', 'R__Leg_Ik_Hips__JNT', 'L__Leg_Ik_Hips_NonStretch__JNT', 'R__Leg_Ik_Hips_NonStretch__JNT'],
                          leg_Fk_Offset_Hips = ['L__Leg_Fk_Hips_Offset__GRP', 'R__Leg_Fk_Hips_Offset__GRP']
                          )
 
@@ -201,7 +203,6 @@ class BuipedBuildTemplate(object):
                                             spaceSwitchLocatorChest = [self.L_arm.ikSpaceSwitchChestdGrp, self.R_arm.ikSpaceSwitchChestdGrp],
                                             shoulder_ctrl_offset = ['L__Shoulder_Module__GRP', 'R__Shoulder_Module__GRP'],
                                             )
-
 
         self.RIGBASE.build()
         for module in self.ALL_MODULES:
@@ -233,9 +234,19 @@ class BuipedBuildTemplate(object):
 
 
     @staticmethod
-    def loadSkinClustersWeights(path = DATA_WEIGHT_PATH):
+    def loadSkinClustersWeights(path=DATA_WEIGHT_PATH):
         rigBase.RigBase.loadSkinClustersWeights(path = path)
 
+
+    @staticmethod
+    def loadControlShapes(path=DATA_SHAPES_PATH):
+        os.chdir(path)
+        for FILE_NAME in os.listdir(path):
+            with open("{}".format(FILE_NAME),"rb") as rb:
+                weightData = rb.read()
+                weightLines = weightData.split('\n')
+                ctrl = weightLines[0].replace('[','').replace(']','')
+                loadShape(control=ctrl, path=path + FILE_NAME)
 
 # ====================================================
 # BUILD
@@ -244,14 +255,15 @@ class BuipedBuildTemplate(object):
 
 RollerGirlRig = BuipedBuildTemplate()
 RollerGirlRig.start()
-# RollerGirlRig.build()
-# RollerGirlRig.connect()
+RollerGirlRig.build()
+RollerGirlRig.connect()
 
-# RollerGirlRig.loadSkinClustersWeights()
+RollerGirlRig.loadSkinClustersWeights()
+RollerGirlRig.loadControlShapes()
 
 
 # ====================================================
-# EXPORT STARTER
+# EXPORT DATA
 
 def exportStartersData():
     """
@@ -276,7 +288,14 @@ def exportStartersData():
     sys.stdout.write('// Result: Data exported! \n')
 
 
+def exportControlsShapes(controlList=[], path = DATA_SHAPES_PATH):
+    for ctrl in controlList:
+        Control.exportShape(control=ctrl, path=path)
+
+
+
 # exportStartersData()
+# exportControlsShapes(controlList=['C__Chest__CTRL', 'C__Spine_Belly__CTRL', 'C__Spine_Hips__CTRL', 'C__Hips__CTRL'])
 
 
 
