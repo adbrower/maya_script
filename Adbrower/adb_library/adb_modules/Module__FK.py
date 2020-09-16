@@ -54,6 +54,21 @@ class Fk(moduleBase.ModuleBase):
                  count = 3,
                  parent = None,
                  ):
+        """[summary]
+
+        Args:
+            module_name ([type]): [description]
+            count (int, optional): [description]. Defaults to 3.
+            parent ([type], optional): [description]. Defaults to None.
+
+        Example:
+            FK = Fk('audrey', count = 8)
+
+            # FK.start()
+            # FK.build()
+
+            # FK.FkGuides.exportData(path='C:/Users/Audrey/Desktop/')
+        """
         super(Fk, self).__init__()
 
         self._MODEL = FkModel()
@@ -73,9 +88,8 @@ class Fk(moduleBase.ModuleBase):
     def start(self, metaDataNode = None):
         super(Fk, self)._start(self.NAME, _metaDataNode = metaDataNode)
 
-        FkGuide = [moduleGuides.ModuleGuides.createFkGuide(prefix='{}'.format(self.NAME), padding=2).guides[0] for guide in xrange(self.count)]
+        FkGuide = [moduleGuides.ModuleGuides.createFkGuide(prefix='{}_{:02d}'.format(self.NAME, guide+1)).guides[0] for guide in xrange(self.count)]
         for index, guide in enumerate(FkGuide):
-            pm.rename(guide, '{}__G{}'.format(guide, NC.LOC))
             pm.parent(guide, self.STARTERS_GRP)
             pm.move(guide, (0+(index), 0, 0), r=0, os=1)
             pm.makeIdentity(guide, n=0, s=1, r=1, t=1, apply=True, pn=1)
@@ -87,18 +101,18 @@ class Fk(moduleBase.ModuleBase):
         readPath = self.FkGuides.DATA_PATH + '/' + self.FkGuides.RIG_NAME + '__GLOC.ini'
         if os.path.exists(readPath):
             try:
-                self.readData = self.FkGuides.readData(readPath)
+                self.loadData = self.FkGuides.loadData(readPath)
                 for guide in self.FkGuides.guides:
-                    _registeredAttributes = ast.literal_eval(self.readData.get(str(guide), 'registeredAttributes'))
+                    _registeredAttributes = ast.literal_eval(self.loadData.get(str(guide), 'registeredAttributes'))
                     for attribute in _registeredAttributes:
                         try:
-                            pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.readData.get(str(guide), str(attribute))))
-                        except NoSectionError:
+                            pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.loadData.get(str(guide), str(attribute))))
+                        except:
                             pass
-                    pm.parent(guide, self.readData.get(str(guide), 'parent'))
-                    value, index =  ast.literal_eval(self.readData.get(str(guide), 'shape'))
+                    pm.parent(guide, self.loadData.get(str(guide), 'parent'))
+                    value, index =  ast.literal_eval(self.loadData.get(str(guide), 'shape'))
                     pm.setAttr('{}.Shape'.format(guide), index)
-                    value, index =  ast.literal_eval(self.readData.get(str(guide), 'color'))
+                    value, index =  ast.literal_eval(self.loadData.get(str(guide), 'color'))
                     pm.setAttr('{}.Color'.format(guide), index)
             except:
                 pass
@@ -111,10 +125,10 @@ class Fk(moduleBase.ModuleBase):
         points = [pm.xform(guide, rp=True , q=True , ws=True) for guide in self.FkGuides.guides]
         jnt = Joint.Joint.point_base(*points, name = self.NAME, chain=False, padding=2)
         for _jnt, guide in zip(jnt.joints, self.FkGuides.guides):
-            if self.readData.get(str(guide), 'parent') == self.STARTERS_GRP:
+            if self.loadData.get(str(guide), 'parent') == self.STARTERS_GRP:
                 pm.parent(_jnt, self.OUTPUT_GRP)
             else:
-                pm.parent(_jnt, self.readData.get(str(guide), 'parent').replace('GLOC', NC.JOINT))
+                pm.parent(_jnt, self.loadData.get(str(guide), 'parent').replace('GLOC', NC.JOINT))
 
         self.side = NC.getSideFromPosition(self.FkGuides.guides[0])
         if self.side == 'L':
@@ -127,11 +141,11 @@ class Fk(moduleBase.ModuleBase):
 
         fk_control = []
         for guide in self.FkGuides.guides:
-            if self.readData.get(str(guide), 'color') == 'auto':
+            if self.loadData.get(str(guide), 'color') == 'auto':
                 _color = self.col_main
             else:
-                valueColor, _indexColor =  ast.literal_eval(self.readData.get(str(guide), 'color'))
-                valueShape, indexShape =  ast.literal_eval(self.readData.get(str(guide), 'shape'))
+                valueColor, _indexColor =  ast.literal_eval(self.loadData.get(str(guide), 'color'))
+                valueShape, indexShape =  ast.literal_eval(self.loadData.get(str(guide), 'shape'))
                 _color = indexColor[str(valueColor)]
             fk = Control.Control.fkShape(jnt.joints,
                                                 shape=sl.sl[valueShape],
@@ -181,9 +195,9 @@ class Fk(moduleBase.ModuleBase):
 
 
 
-test = Fk('audrey', count = 8)
+# test = Fk('audrey', count = 8)
 
-test.start()
-test.build()
+# test.start()
+# test.build()
 
 # test.FkGuides.exportData(path='C:/Users/Audrey/Desktop/')

@@ -15,6 +15,8 @@ import adb_core.Class__Control as Control
 import adbrower
 adb = adbrower.Adbrower()
 
+reload(Locator)
+
 
 PROJECT_DATA_PATH = '/'.join(pm.sceneName().split('/')[:-2]) + '/data/'
 
@@ -43,7 +45,7 @@ class ModuleGuides(object):
     @classmethod
     def createFkGuide(cls, prefix='',  guides=[], padding=None):
         cls.locInstance = Locator.Locator.create(name='{}'.format(prefix), padding=padding)
-        pm.rename(cls.locInstance.locators[0], '{}__GLOC'.format(cls.locInstance.locators[0]))
+        [pm.rename(loc, loc.replace('LOC', 'GLOC')) for loc in cls.locInstance.locators]
         cls.locInstance.AddSeparator(cls.locInstance.locators[0])
         cls.locInstance.addAttr('Shape', 'enum',  eName = sl.sl.keys())
         cls.locInstance.setDefault('Shape', 4)
@@ -52,6 +54,8 @@ class ModuleGuides(object):
         adb.changeColor_func(cls.locInstance.locators, 'index', indexColor['lightGrey'])
         for attr in ['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz']:
             cls.locInstance.addAttr('enable_{}'.format(attr), True)
+
+        cls.list_methods = cls.locInstance.list_methods
         return cls(prefix, cls.locInstance.locators)
 
 
@@ -71,6 +75,7 @@ class ModuleGuides(object):
         with open("{}.ini".format(FILE_NAME),"w+") as wf:
             for guide in self.guides:
                 wf.write('[{}] \n'.format(guide))
+
                 for index, translate in enumerate(attrDic['Translate']):
                     wf.write(translate + '=' + str(pm.xform('{}'.format(guide), rp=True , q=True , ws=True)[index]) + '\n')
                     self.registeredAttributes.append(translate)
@@ -83,7 +88,7 @@ class ModuleGuides(object):
                     wf.write(scale + '=' + str(pm.getAttr('{}.{}'.format(guide, scale))) + '\n')
                     self.registeredAttributes.append(scale)
 
-                for key, value in zip(self.locInstance.list_methods.keys(), self.locInstance.list_methods.values()):
+                for key, value in zip(self.list_methods.keys(), self.list_methods.values()):
                     wf.write(str(key) + '=' + str(pm.getAttr('{}.{}'.format(guide, key))) + '\n')
                     self.registeredAttributes.append(key)
 
@@ -100,7 +105,7 @@ class ModuleGuides(object):
         wf.close()
 
 
-    def readData(self, path=None):
+    def loadData(self, path=None):
         config = ConfigParser.ConfigParser()
         config.read(path)
         return config

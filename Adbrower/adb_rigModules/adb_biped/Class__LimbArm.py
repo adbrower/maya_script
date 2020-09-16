@@ -133,12 +133,12 @@ class LimbArm(rigBase.RigBase):
         self.armGuides = moduleGuides.ModuleGuides(self.NAME.upper(), [Gshoulder.guides[0], Gelbow.guides[0], Gwrist.guides[0]], self.DATA_PATH)
         readPath = self.armGuides.DATA_PATH + '/' + self.armGuides.RIG_NAME + '__GLOC.ini'
         if os.path.exists(readPath):
-            self.readData = self.armGuides.readData(readPath)
+            self.loadData = self.armGuides.loadData(readPath)
             for guide in self.armGuides.guides:
-                _registeredAttributes = ast.literal_eval(self.readData.get(str(guide), 'registeredAttributes'))
+                _registeredAttributes = ast.literal_eval(self.loadData.get(str(guide), 'registeredAttributes'))
                 for attribute in _registeredAttributes:
                     try:
-                        pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.readData.get(str(guide), str(attribute))))
+                        pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.loadData.get(str(guide), str(attribute))))
                     except NoSectionError:
                         pass
 

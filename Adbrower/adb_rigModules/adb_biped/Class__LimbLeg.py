@@ -132,12 +132,12 @@ class LimbLeg(rigBase.RigBase):
         self.legGuides = moduleGuides.ModuleGuides(self.NAME.upper(), [Ghips.guides[0], Gknee.guides[0], Gankle.guides[0]], self.DATA_PATH)
         readPath = self.legGuides.DATA_PATH + '/' + self.legGuides.RIG_NAME + '__GLOC.ini'
         if os.path.exists(readPath):
-            self.readData = self.legGuides.readData(readPath)
+            self.loadData = self.legGuides.loadData(readPath)
             for guide in self.legGuides.guides:
-                _registeredAttributes = ast.literal_eval(self.readData.get(str(guide), 'registeredAttributes'))
+                _registeredAttributes = ast.literal_eval(self.loadData.get(str(guide), 'registeredAttributes'))
                 for attribute in _registeredAttributes:
                     try:
-                        pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.readData.get(str(guide), str(attribute))))
+                        pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.loadData.get(str(guide), str(attribute))))
                     except NoSectionError:
                         pass
 

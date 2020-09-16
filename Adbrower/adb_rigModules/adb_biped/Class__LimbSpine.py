@@ -151,12 +151,12 @@ class LimbSpine(rigBase.RigBase):
         self.spineGuides = moduleGuides.ModuleGuides(self.NAME.upper(), Gspine, self.DATA_PATH)
         readPath = self.spineGuides.DATA_PATH + '/' + self.spineGuides.RIG_NAME + '__GLOC.ini'
         if os.path.exists(readPath):
-            self.readData = self.spineGuides.readData(readPath)
+            self.loadData = self.spineGuides.loadData(readPath)
             for guide in self.spineGuides.guides:
-                _registeredAttributes = ast.literal_eval(self.readData.get(str(guide), 'registeredAttributes'))
+                _registeredAttributes = ast.literal_eval(self.loadData.get(str(guide), 'registeredAttributes'))
                 for attribute in _registeredAttributes:
                     try:
-                        pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.readData.get(str(guide), str(attribute))))
+                        pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.loadData.get(str(guide), str(attribute))))
                     except NoSectionError:
                         pass
 
@@ -334,7 +334,7 @@ class LimbSpine(rigBase.RigBase):
                 pm.rename(joint, NC.getNameNoSuffix(joint))
                 adb.AutoSuffix([joint])
 
-                adb.lockAttr_func(joint, ['tx', 'ty', 'tz', 'sx', 'sy', 'sz', 'radius'])
+                adb.lockAttr_func(joint, ['sx', 'sy', 'sz', 'radius'])
 
             self.nameStructure['Suffix'] = NC.VISRULE
             shapes = [x.getShape() for x in self.reverse_spine_chain_joints]
@@ -471,9 +471,9 @@ class LimbSpine(rigBase.RigBase):
             pm.parent(self.RIBBON_MOD.MOD_GRP, self.MODULES_GRP)
 
             def createProxyPlane(name, interval=4):
-                locs = locGen.locGenerator(interval, str(self.spine_ik_joints[0]), str(self.spine_ik_joints[-1]))
-                first_loc = Locator.Locator.point_base(pm.PyNode(self.spine_ik_joints[0]).getRotatePivot(space='world')).locators[0]
-                last_loc = Locator.Locator.point_base(pm.PyNode(self.spine_ik_joints[-1]).getRotatePivot(space='world')).locators[0]
+                locs = locGen.locGenerator(interval, str(self.RESULT_MOD.getJoints[0]), str(self.RESULT_MOD.getJoints[-1]))
+                first_loc = Locator.Locator.point_base(pm.PyNode(self.RESULT_MOD.getJoints[0]).getRotatePivot(space='world')).locators[0]
+                last_loc = Locator.Locator.point_base(pm.PyNode(self.RESULT_MOD.getJoints[-1]).getRotatePivot(space='world')).locators[0]
                 locs.insert(0, first_loc)
                 locs.append(last_loc)
                 proxy_plane = adbProxy.plane_proxy(locs, name , 'x', type='nurbs')
@@ -576,7 +576,7 @@ class LimbSpine(rigBase.RigBase):
         chest_Ctrl_Object = Control.Control(name='{Side}__Chest__CTRL'.format(**self.nameStructure),
                                            shape = sl.sl[self.config['CONTROLS']['Spine_Chest']['shape']],
                                            scale = self.config['CONTROLS']['Spine_Chest']['scale'],
-                                           matchTransforms = (self.SPINEIK_MOD.getJoints[2], 1, 1),
+                                           matchTransforms = (self.starter_Spine[self.config['CONTROLS']['Spine_Chest']['pivotPoint']], 1, 1),
                                            parent = self.RIBBON_MOD.INPUT_GRP,
                                            color=('index', self.col_main)
                                            )
@@ -607,8 +607,12 @@ class LimbSpine(rigBase.RigBase):
             leg_Ik_Hips (list, optional): [description]. ex: ['{Side}__Leg_Ik_Hips__JNT'.format(x) for x in 'LR'].
             leg_Fk_Offset_Hips (list, optional): [description]. ex: ['{Side}__Leg_Fk_Hips_Offset__GRP'.format(x) for x in 'LR'].
         """
-        [pm.parentConstraint(self.REVERSE_MOD.getJoints[0], jnt, mo=True) for jnt in leg_Ik_Hips]
-        [pm.parentConstraint(self.REVERSE_MOD.getJoints[0], jnt, mo=True) for jnt in leg_Fk_Offset_Hips]
+        [pm.parentConstraint(self.SPINEIK_MOD.getJoints[0], jnt, mo=True) for jnt in leg_Ik_Hips]
+        [pm.parentConstraint(self.SPINEIK_MOD.getJoints[0], jnt, mo=True) for jnt in leg_Fk_Offset_Hips]
+
+        # OR
+        # [pm.parentConstraint(self.REVERSE_MOD.getJoints[0], jnt, mo=True) for jnt in leg_Ik_Hips]
+        # [pm.parentConstraint(self.REVERSE_MOD.getJoints[0], jnt, mo=True) for jnt in leg_Fk_Offset_Hips]
 
         [pm.parentConstraint(self.REVERSE_MOD.getJoints[0], loc, mo=True) for loc in spaceSwitchLocatorHips]
 
@@ -747,7 +751,7 @@ class LimbSpine(rigBase.RigBase):
 # =========================
 
 # L_Spine = LimbSpine(module_name='L__Spine')
-# L_Spine.start()
+# L_Spine.start(jointNumber=7)
 # L_Spine.build()
 # L_Spine.connect()
 
