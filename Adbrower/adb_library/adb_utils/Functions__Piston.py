@@ -37,7 +37,7 @@ def createDoublePiston(
     """
     Creates a piston system
 
-    import adb_rig.Func__Piston as adbPiston
+    import adb_utils.Functions__Piston as adbPiston
     reload (adbPiston)
 
     test = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5__LOC', 'joint6__LOC']

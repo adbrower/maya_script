@@ -29,7 +29,7 @@ import adb_core.Class__Joint as Joint
 import adb_core.Class__Locator as Locator
 from adb_core.Class__Transforms import Transform
 
-import adb_library.adb_utils.Func__Piston as adbPiston
+import adb_library.adb_utils.Functions__Piston as adbPiston
 import adb_library.adb_utils.Functions_AutoPoleVectorSystem as AutoPoleVector
 import adb_library.adb_utils.Script__LocGenerator as locGen
 import adb_library.adb_utils.Script__ProxyPlane as adbProxy
