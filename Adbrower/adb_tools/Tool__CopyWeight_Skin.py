@@ -887,6 +887,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         print('test')
 
     def copySkinAB(self):
+        # CBB : Support Geo in skinCluster
         if len(self.sources) == len(self.targets):  # for zip
             data_surfaceAssociation = str(self.comboBox['surface_Association'].currentText().replace(' ', ''))
             data_influenceAssociation = [str(self.comboBox['influence_Association_1'].currentText().replace(' ', '')),
@@ -897,6 +898,11 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
             for source, target in zip(self.sources, self.targets):
                 original_skinCls = skin.getSkinCluster(target)
+                if original_skinCls:
+                    original_skinningMethod = original_skinCls.skinningMethod.get()
+                    original_useComponents = original_skinCls.useComponents.get()
+                    original_normalizeWeights = original_skinCls.normalizeWeights.get()
+                    original_deformUserNormals = original_skinCls.deformUserNormals.get()
                 try:
                     pm.skinCluster(target, e=1, ub=1,)
                 except:
@@ -919,6 +925,10 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
                 if original_skinCls is not False:
                     pm.rename(skin.getSkinCluster(target),  str(original_skinCls))
+                    skin.getSkinCluster(target).skinningMethod.set(original_skinningMethod)
+                    skin.getSkinCluster(target).useComponents.set(original_useComponents)
+                    skin.getSkinCluster(target).normalizeWeights.set(original_normalizeWeights)
+                    skin.getSkinCluster(target).deformUserNormals.set(original_deformUserNormals)
 
             sys.stdout.write('// Result: Zip skin is done!  //')
 
@@ -934,6 +944,10 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
                 if original_skinCls is not False:
                     pm.rename(skin.getSkinCluster(target),  str(original_skinCls))
+                    skin.getSkinCluster(target).skinningMethod.set(original_skinningMethod)
+                    skin.getSkinCluster(target).useComponents.set(original_useComponents)
+                    skin.getSkinCluster(target).normalizeWeights.set(original_normalizeWeights)
+                    skin.getSkinCluster(target).deformUserNormals.set(original_deformUserNormals)
             sys.stdout.write('// Result: Loop skin is done!  //')
 
     def verifyJointSideAB(self):
@@ -1040,6 +1054,12 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
         for source, target in zip(self.sources, self.targets):
             original_skinCls = skin.getSkinCluster(target)
+            if original_skinCls:
+                original_skinningMethod = original_skinCls.skinningMethod.get()
+                original_useComponents = original_skinCls.useComponents.get()
+                original_normalizeWeights = original_skinCls.normalizeWeights.get()
+                original_deformUserNormals = original_skinCls.deformUserNormals.get()
+
             try:
                 pm.skinCluster(target, e=1, ub=1,)
             except:
@@ -1056,6 +1076,10 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                                  )
             if original_skinCls is not False:
                 pm.rename(skin.getSkinCluster(target),  str(original_skinCls))
+                skin.getSkinCluster(target).skinningMethod.set(original_skinningMethod)
+                skin.getSkinCluster(target).useComponents.set(original_useComponents)
+                skin.getSkinCluster(target).normalizeWeights.set(original_normalizeWeights)
+                skin.getSkinCluster(target).deformUserNormals.set(original_deformUserNormals)
 
     def selectSknJntsAB(self):
         skn = skin.Skinning(pm.selected()[0])
