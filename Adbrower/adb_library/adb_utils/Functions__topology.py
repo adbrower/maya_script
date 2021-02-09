@@ -419,7 +419,7 @@ def getCurrentGeometry():
     return geometry, vert_indices
 
 
-def _getSelectionPairs(geometry, vert_indices, mirror_src, lf_verts, cn_verts, rt_verts):
+def getSelectionPairs(geometry, vert_indices, mirror_src, lf_verts, cn_verts, rt_verts):
     """
     Find the opposite vertex
         return List of pair of vertex and list of center vertex
@@ -460,7 +460,7 @@ def _getSelectionPairs(geometry, vert_indices, mirror_src, lf_verts, cn_verts, r
 def _selectMirrorVtx(geometry, vert_indices, mirror_src, lf_verts, cn_verts, rt_verts):
     vert_positions = getAllVertexPositions(geometry, worldSpace=False)
 
-    mirror_pairs, cn_verts = _getSelectionPairs(geometry, vert_indices, mirror_src,
+    mirror_pairs, cn_verts = getSelectionPairs(geometry, vert_indices, mirror_src,
                                                 lf_verts, cn_verts, rt_verts)
 
     for pair_vert, original_vert in list(mirror_pairs):

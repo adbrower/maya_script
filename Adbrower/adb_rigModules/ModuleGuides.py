@@ -38,7 +38,7 @@ class ModuleGuides(object):
         self.RIG_NAME = prefix
         self.PATH = path
         self.FOLDER_NAME = self.RIG_NAME + '_DATA'
-        self.DATA_PATH = self.PATH + self.FOLDER_NAME
+        self.DATA_PATH = str(self.PATH) + str(self.FOLDER_NAME)
         self.registeredAttributes = []
 
 

@@ -6,6 +6,9 @@ import maya.cmds as cmds
 
 
 class ResetDeltaDeformerNode(ommpx.MPxDeformerNode):
+    """
+    mc.deformer(type='adbResetDeltaDeformer')
+    """
 
     TYPE_NAME = "adbResetDeltaDeformer"
     TYPE_ID = om.MTypeId(0x0007F7FD)

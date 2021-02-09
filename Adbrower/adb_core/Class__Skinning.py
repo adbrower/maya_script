@@ -127,7 +127,6 @@ class Skinning(object):
         full_path = path + fileName
         mc.manageSkinCluster(mode=0, f=full_path)
 
-
     @classmethod
     def importWeights(cls, path, fileName):
         full_path = path + fileName
@@ -153,6 +152,33 @@ class Skinning(object):
         mc.manageSkinCluster(mode=1, f=full_path)
         return cls(transform)
 
+    @classmethod
+    @undo
+    def conform_weights(cls):
+        """
+        It conforms the weights of the selected vertices. The selection needs to be vertices of a mesh and
+        the mesh should have attached a skinCluster.
+        """
+        weights_data = dict()
+        selection = mc.ls(sl=1, fl=1)
+        mc.select(cl=1)
+        for component in selection:
+            if mc.objectType(component, i='mesh'):
+                mesh = mc.listRelatives(component, p=1)[0]
+                for skn in mc.ls(typ='skinCluster'):
+                    if mc.skinCluster(skn, q=1, g=1)[0] == mesh:
+                        for influence, weight in zip(mc.skinCluster(skn, inf=1, q=1),
+                                                     mc.skinPercent(skn, component, q=1, v=1)):
+                            if weight != 0 and influence in weights_data.keys():
+                                weights_data[influence] += weight
+                            elif weight != 0 and influence not in weights_data.keys():
+                                weights_data[influence] = weight
+                            else:
+                                pass
+                        break
+        transformation_value = [(influence, weight / len(selection)) for influence, weight in weights_data.items()]
+        for component in selection:
+            mc.skinPercent(skn, component, transformValue=transformation_value)
 
     def getSkinCluster(self):
         """
@@ -422,37 +448,6 @@ class Skinning(object):
                 interpWeights(start, end, mod, infs, weights, skcls)
         solveBetween()
 
-    @staticmethod
-    @undo
-    def conform_weights():
-        """
-        It conforms the weights of the selected vertices. The selection needs to be vertices of a mesh and
-        the mesh should have attached a skinCluster.
-
-        Returns:
-
-        """
-        weights_data = dict()
-        selection = mc.ls(sl=1, fl=1)
-        mc.select(cl=1)
-        for component in selection:
-            if mc.objectType(component, i='mesh'):
-                mesh = mc.listRelatives(component, p=1)[0]
-                for skn in mc.ls(typ='skinCluster'):
-                    if mc.skinCluster(skn, q=1, g=1)[0] == mesh:
-                        for influence, weight in zip(mc.skinCluster(skn, inf=1, q=1),
-                                                     mc.skinPercent(skn, component, q=1, v=1)):
-                            if weight != 0 and influence in weights_data.keys():
-                                weights_data[influence] += weight
-                            elif weight != 0 and influence not in weights_data.keys():
-                                weights_data[influence] = weight
-                            else:
-                                pass
-                        break
-        transformation_value = [(influence, weight / len(selection)) for influence, weight in weights_data.items()]
-        for component in selection:
-            mc.skinPercent(skn, component, transformValue=transformation_value)
-
     def verifyJntsSkin(self, sign_to_split='__', left_side='L', right_side='R'):
         """
         Verify if the same amount of joint on the Left side are skinned to the Right side to exexute a proper mirror
@@ -679,6 +674,5 @@ class Skinning(object):
 # node = Skinning('pSphere1')
 # print node.getSkinCluster()
 # node.extractWeight('pSphere2', 2)
-
 
 # Skinning.setPreBind('toto')

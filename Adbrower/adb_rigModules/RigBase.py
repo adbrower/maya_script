@@ -257,6 +257,7 @@ class RigBase(object):
 
         return self.VISIBILITY_GRP, self.SETTINGS_GRP, self.SPACES_GRP, self.MODULES_GRP, self.STARTERS_GRP
 
+
     @staticmethod
     @lockAttr()
     def createMetaDataGrp(module_name, type ='transform'):
@@ -282,6 +283,7 @@ class RigBase(object):
             metaData_GRP = None
 
         return metaData_GRP
+
 
     @lockAttr()
     def createRigLocators(self, rigName):
