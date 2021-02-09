@@ -306,11 +306,19 @@ class Bbox(object):
         return self.bbox[0].width()
 
     @property
+    def depth(self):
+        return self.bbox[0].depth()
+
+    @property
     def getBbox(self):
         if len(self.bbox) > 1:
             return self.bbox
         else:
             return self.bbox[0]
+
+    @property
+    def volume(self):
+        return self.depth * self.width * self.height
 
     def posCenter(self, loc=True, axis='all'):
         """ Get the center position """
@@ -450,3 +458,5 @@ class Bbox(object):
     def deleteLocs(self):
         pm.delete(self.all_locs)
         self.all_locs = []
+
+
