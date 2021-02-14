@@ -14,7 +14,7 @@ import pymel.core as pm
 import maya.cmds as mc
 import maya.mel
 
-from adb_library.adb_utils.Functions__topology import getSymmetry, getSelectionPairs
+from adb_library.adb_utils.Functions__topology import getSymmetry, getSelectionPairs, getMDagPath, getMObject
 
 # ==========================
 #  GENERAL DEFORMER
@@ -33,26 +33,7 @@ def mirrorWeightsMap(center_edge, deformer ='', toSide='RIGHT'):
 
     example:
         mirrorWeightsMap('pSphere1.e[614]', deformer='adbResetDeltaDeformer1', toSide='LEFT')
-    """
-    def getMDagPath(node):
-        """
-        Returns MDagPath of given nodepour invert les value
-        """
-        selList = om2.MSelectionList()
-        selList.add(node)
-        return selList.getDagPath(0)
-
-    def getMObject(node):
-        """
-        Returns MObject of given node
-        """
-        selList = om2.MSelectionList()
-        selList.add(node)
-        return selList.getDependNode(0)
-
-
-        mObj = getMObject('cluster1')
-    
+    """   
     geometry, edge_index = center_edge.split('.')
     clusterDnode = om2.MFnDependencyNode(getMObject(deformer))
     weightsPlug  = clusterDnode.findPlug('weightList', True)
@@ -94,8 +75,29 @@ def mirrorWeightsMap(center_edge, deformer ='', toSide='RIGHT'):
 # ==========================
 # BLENDSHAPES
 
-def getBaseWeights():
-    pass
+def getBaseWeights(mesh, deformer):
+    deformer_node = deformer
+    map = 'baseWeights'
+    targetWeight = {}
+
+    MeshDag = getMDagPath(str(mesh))
+    numVerts = om2.MItMeshVertex(MeshDag).count()
+    vert_iter = om2.MItMeshVertex(MeshDag)
+
+    while not vert_iter.isDone():
+        vrtxIndex = vert_iter.index()
+        sl1 = om2.MSelectionList()
+        sl1.add("{}.inputTarget[0].{}".format(deformer_node, map))
+        basePlug = sl1.getPlug(0)
+
+        w = basePlug.elementByLogicalIndex(vrtxIndex)
+        weight = w.asFloat()
+
+        targetWeight[vrtxIndex] = weight
+        vert_iter.next()
+
+    return targetWeight
+
 
 def setBaseWeights():
     pass
@@ -105,30 +107,12 @@ def mirrorBaseWeightMap(center_edge, deformer ='', toSide='RIGHT'):
     """Mirror BaseWeight Map
 
     example:
-        mirrorWeightsMap(center_edge='pPlane1.e[53]', deformer='pPlane1_BLS1', mapName='baseWeights')
+        mirrorBaseWeightMap(center_edge='head_geo.e[4993]', deformer='head_geo_BLS')
 
     Arguments:
         center_edge {String} -- Edge from with we separate Left from Right
         mirror_src {String} -- LEFT or RIGHT
     """
-    def getMDagPath(node):
-        """
-        Returns MDagPath of given nodepour invert les value
-        """
-        selList = om2.MSelectionList()
-        selList.add(node)
-        return selList.getDagPath(0)
-
-
-    def getMObject(node):
-        """
-        Returns MObject of given node
-        """
-        selList = om2.MSelectionList()
-        selList.add(node)
-        return selList.getDependNode(0)
-
-
     mesh, edge_index = center_edge.split('.')
     deformer_node = deformer
     map = 'baseWeights'
@@ -177,6 +161,7 @@ def mirrorBaseWeightMap(center_edge, deformer ='', toSide='RIGHT'):
 def getTargetWeights():
     pass
 
+
 def setTargetWeights():
     pass
 
@@ -194,24 +179,6 @@ def mirrorTargetMap(center_edge, deformer ='', toSide='RIGHT'):
         mirror_src {String} -- LEFT or RIGHT
 
     """
-    def getMDagPath(node):
-        """
-        Returns MDagPath of given nodepour invert les value
-        """
-        selList = om2.MSelectionList()
-        selList.add(node)
-        return selList.getDagPath(0)
-
-
-    def getMObject(node):
-        """
-        Returns MObject of given node
-        """
-        selList = om2.MSelectionList()
-        selList.add(node)
-        return selList.getDependNode(0)
-
-
     mesh, edge_index = center_edge.split('.')
     bs_node = deformer
 

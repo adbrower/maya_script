@@ -134,6 +134,7 @@ class TopoTool(object):
 
                         with pm.columnLayout(adj=True, rs = 4):
                             pm.button(label="Mirror Blendshape Map",  backgroundColor = colordic['green3'], c=pm.Callback(self.mirrorBlsWeightsMapAB))
+                            pm.button(label="Mirror Target Blendshape Map",  backgroundColor = colordic['green3'], c=pm.Callback(self.mirrorBlsTargetMapAB))
 
 
                     with pm.frameLayout( cll = True, bgc=[0.15, 0.15, 0.15], labelVisible=True , cl = False, label = " RESET"):
@@ -336,8 +337,14 @@ class TopoTool(object):
             mirror_src = 'RIGHT'
         else:
             mirror_src = 'LEFT'
-
         mc.mirrorBlsWeights(ce=self.edge, s=mirror_src)
+
+    def mirrorBlsTargetMapAB(self):
+        if pm.radioButton(self.leftInput, q=1, sl=1):
+            mirror_src = 'RIGHT'
+        else:
+            mirror_src = 'LEFT'
+        mc.mirrorBlsMap(ce=self.edge, s=mirror_src)
 
 
     def load_symetry_data(self):

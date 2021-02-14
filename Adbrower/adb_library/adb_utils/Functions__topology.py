@@ -22,6 +22,23 @@ loadPlugin('adbTopology__Command')
 # --------------------------------------------------------------------------------------------------------------
 #                                                       GET DATA
 # --------------------------------------------------------------------------------------------------------------
+def getMDagPath(node):
+    """
+    Returns MDagPath of given nodepour invert les value
+    """
+    selList = om2.MSelectionList()
+    selList.add(node)
+    return selList.getDagPath(0)
+
+
+def getMObject(node):
+    """
+    Returns MObject of given node
+    """
+    selList = om2.MSelectionList()
+    selList.add(node)
+    return selList.getDependNode(0)
+
 
 class gShowProgress(object):
     """
@@ -108,8 +125,10 @@ class gShowProgress(object):
         # Return wrapped function
         return wrapped_f
 
+
 class SymmetryError(Exception):
     pass
+
 
 def getSymmetry(center_edge):
     sel_list =  om2.MSelectionList()
