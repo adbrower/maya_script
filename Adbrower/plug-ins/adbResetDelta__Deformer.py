@@ -1,11 +1,13 @@
+
 import maya.OpenMaya as om
-import maya.OpenMayaMPx as ommpx
+import maya.OpenMayaMPx as OpenMayaMPx
 
-import maya.cmds as cmds
+import pymel.core as pm
+import maya.cmds as mc
 
+CMD_CLASSES = []
 
-
-class ResetDeltaDeformerNode(ommpx.MPxDeformerNode):
+class ResetDeltaDeformerNode(OpenMayaMPx.MPxDeformerNode):
     """
     mc.deformer(type='adbResetDeltaDeformer')
     """
@@ -107,7 +109,7 @@ class ResetDeltaDeformerNode(ommpx.MPxDeformerNode):
         cls.addAttribute(cls.axisYvalue)
         cls.addAttribute(cls.axisZvalue)
 
-        output_geom = ommpx.cvar.MPxGeometryFilter_outputGeom
+        output_geom = OpenMayaMPx.cvar.MPxGeometryFilter_outputGeom
 
         cls.attributeAffects(cls.blend_mesh, output_geom)
         cls.attributeAffects(cls.percentageValue, output_geom)
@@ -117,31 +119,152 @@ class ResetDeltaDeformerNode(ommpx.MPxDeformerNode):
         cls.attributeAffects(cls.axisZvalue, output_geom)
 
 
+class ResetDeltaDeformerCmd(OpenMayaMPx.MPxCommand):
+    """
+    Create a ResetDelta Deformer
+
+    Keyword Arguments:
+        - g / geometry {str} -- Geo on which the deformer is applied
+        - s / source {str} -- Source Geo
+        - 
+    """
+    commandName = "createResetDelta"
+
+    HELP_FLAG =['-h', '-help']
+    GEOMETRY =['-g', '-geometry', om.MSyntax.kString]
+    SOURCE =['-s', '-source', om.MSyntax.kString]
+    PERCENTAGE =['-p', '-percentage', om.MSyntax.kString]
+
+    def __init__(self):
+        OpenMayaMPx.MPxCommand.__init__(self)
+        self.geo = None
+        self.source = None
+        self.percentage = None
+
+
+    def argumentParser(self, argList):
+        argData = om.MArgParser(self.syntax(), argList)
+
+        if argData.isFlagSet(ResetDeltaDeformerCmd.HELP_FLAG[0]):
+            print self.__class__.__doc__
+            return None
+
+        if argData.isFlagSet(ResetDeltaDeformerCmd.HELP_FLAG[1]):
+            print self.__class__.__doc__
+            return None
+
+        else:
+            if argData.isFlagSet(ResetDeltaDeformerCmd.GEOMETRY[0]):
+                self.geo = "{}".format(argData.flagArgumentString(ResetDeltaDeformerCmd.GEOMETRY[0], 0))
+            else:
+                self.geo = pm.selected()[-1]
+
+            if argData.isFlagSet(ResetDeltaDeformerCmd.GEOMETRY[1]):
+                self.geo = "{}".format(argData.flagArgumentString(ResetDeltaDeformerCmd.GEOMETRY[1], 0))
+            else:
+                self.geo = pm.selected()[-1]
+
+            if argData.isFlagSet(ResetDeltaDeformerCmd.SOURCE[0]):
+                self.source = "{}".format(argData.flagArgumentString(ResetDeltaDeformerCmd.SOURCE[0], 0))
+            else:
+                self.source = pm.selected()[0]
+
+            if argData.isFlagSet(ResetDeltaDeformerCmd.SOURCE[1]):
+                self.source = "{}".format(argData.flagArgumentString(ResetDeltaDeformerCmd.SOURCE[1], 0))
+            else:
+                self.source = pm.selected()[0]
+
+            if argData.isFlagSet(ResetDeltaDeformerCmd.PERCENTAGE[0]):
+                self.percentage = "{}".format(argData.flagArgumentString(ResetDeltaDeformerCmd.PERCENTAGE[0], 0))
+            else:
+                self.percentage = 100
+
+            if argData.isFlagSet(ResetDeltaDeformerCmd.PERCENTAGE[1]):
+                self.percentage = "{}".format(argData.flagArgumentString(ResetDeltaDeformerCmd.PERCENTAGE[1], 0))
+            else:
+                self.percentage = 100
+
+
+
+    def isUndoable(self):
+        return True
+
+
+    def undoIt(self):
+        pass
+
+
+    def redoIt(self):
+        pm.select(self.geo, r=1)
+        deformerNode = pm.deformer(type='adbResetDeltaDeformer')[0]
+        shape = pm.PyNode(self.source).getShape()
+        pm.connectAttr(shape.worldMesh[0], '{}.blendMesh'.format(deformerNode), f=1)
+        pm.setAttr('{}.percentage'.format(deformerNode), int(self.percentage))
+
+    def doIt(self,argList):
+        self.argumentParser(argList)
+        self.redoIt()
+
+
+    @classmethod
+    def cmdCreator(cls):
+        return OpenMayaMPx.asMPxPtr(cls())
+
+
+    @classmethod
+    def syntaxCreator(cls):
+        syntax = om.MSyntax()
+        syntax.addFlag(*cls.HELP_FLAG)
+        syntax.addFlag(*cls.GEOMETRY)
+        syntax.addFlag(*cls.SOURCE)
+        syntax.addFlag(*cls.PERCENTAGE)
+        return syntax
+
+
+CMD_CLASSES.append(ResetDeltaDeformerCmd)
+
 
 def initializePlugin(plugin):
+    """
+    Initialize the script plug-in
+    """
     vendor = "Audrey Deschamps-Brower"
     version = "1.0.0"
 
-    plugin_fn = ommpx.MFnPlugin(plugin, vendor, version)
+    plugin_fn = OpenMayaMPx.MFnPlugin(plugin, vendor, version)
     try:
         plugin_fn.registerNode(ResetDeltaDeformerNode.TYPE_NAME,
                                ResetDeltaDeformerNode.TYPE_ID,
                                ResetDeltaDeformerNode.creator,
                                ResetDeltaDeformerNode.initialize,
-                               ommpx.MPxNode.kDeformerNode)
+                               OpenMayaMPx.MPxNode.kDeformerNode)
     except:
         om.MGlobal.displayError("Failed to register node: {0}".format(ResetDeltaDeformerNode.TYPE_NAME))
+    mc.makePaintable(ResetDeltaDeformerNode.TYPE_NAME, "weights", attrType="multiFloat", shapeMode="deformer")
 
-    cmds.makePaintable(ResetDeltaDeformerNode.TYPE_NAME, "weights", attrType="multiFloat", shapeMode="deformer")
+    for cmd in CMD_CLASSES:
+        try:
+            plugin_fn.registerCommand(cmd.commandName, cmd.cmdCreator, cmd.syntaxCreator)
+        except:
+            om.MGlobal.displayError("Failed to register node: {}\n".format(cmd.commandName))
 
 
 def uninitializePlugin(plugin):
-    cmds.makePaintable(ResetDeltaDeformerNode.TYPE_NAME, "weights", remove=True)
-
-    plugin_fn = ommpx.MFnPlugin(plugin)
+    """
+    Uninitialize the script plug-in
+    """
+    plugin_fn = OpenMayaMPx.MFnPlugin(plugin)
     try:
         plugin_fn.deregisterNode(ResetDeltaDeformerNode.TYPE_ID)
     except:
         om.MGlobal.displayError("Failed to deregister node: {0}".format(ResetDeltaDeformerNode.TYPE_NAME))
+    mc.makePaintable(ResetDeltaDeformerNode.TYPE_NAME, "weights", remove=True)
+
+    for cmd in CMD_CLASSES:
+        try:
+            plugin_fn.deregisterCommand(cmd.commandName)
+        except:
+            om.MGlobal.displayError("Failed to register node: {}\n".format(cmd.commandName))
+
 
 
