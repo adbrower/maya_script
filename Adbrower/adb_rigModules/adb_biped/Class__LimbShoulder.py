@@ -9,6 +9,7 @@
 import json
 import sys
 import os
+import adb_core.NameConv_utils as NC
 import ConfigParser
 import ast
 
@@ -38,11 +39,11 @@ import adb_rigModules.ModuleGuides as moduleGuides
 # reload(sl)
 # reload(Joint)
 # reload(adbAttr)
-# reload(NC)
+reload(NC)
 # reload(Control)
 # reload(Locator)
 # reload(SpaceSwitch)
-# reload(PoseReader)
+reload(PoseReader)
 # reload(rigBase)
 # reload(moduleBase)
 # reload(moduleGuides)
@@ -134,7 +135,7 @@ class LimbShoudler(rigBase.RigBase):
                 for attribute in _registeredAttributes:
                     try:
                         pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.loadData.get(str(guide), str(attribute))))
-                    except NoSectionError:
+                    except :
                         pass
 
         pm.select(None)
@@ -190,20 +191,23 @@ class LimbShoudler(rigBase.RigBase):
         self.autoClavicule(
                       arm_ik_joints = ['{Side}__Arm_Ik_Shoulder__JNT'.format(**self.nameStructure), '{Side}__Arm_Ik_Elbow__JNT'.format(**self.nameStructure), '{Side}__Arm_Ik_Wrist__JNT'.format(**self.nameStructure)],
                       poleVector_ctl = '{Side}__Arm_PoleVector__CTRL'.format(**self.nameStructure),
-                      arm_ik_offset_ctrl = '{Side}__Arm_IK_offset__CTRL'.format(**self.nameStructure)
+                      arm_ik_offset_ctrl = '{Side}__Arm_IK_offset__CTRL'.format(**self.nameStructure),
                       )
 
     def connect(self,
                  arm_result_joint = [],
-                 arm_ik_joint = [] ,
-                 arm_fk_joint_parent = []
+                 arm_ik_joint = [],
+                 arm_fk_joint_parent = [],
+                 arm_spaceGrp = [],
                 ):
 
         super(LimbShoudler, self)._connect()
 
         self.connectShoulderToArm(arm_result_joint = arm_result_joint,
                                 arm_ik_joint = arm_ik_joint,
-                                arm_fk_joint_parent = arm_fk_joint_parent)
+                                arm_fk_joint_parent = arm_fk_joint_parent,
+                                arm_spaceGrp = arm_spaceGrp,
+                                )
 
 
         self.setup_VisibilityGRP()
@@ -392,11 +396,35 @@ class LimbShoudler(rigBase.RigBase):
                                   target=self.ik_AutoShoulder_joint[0],
                                   upPostion=(0,10,0),
                                   targetPosition=(10,0,0),
-                                  )[0]
+                                  )
 
-            claviculePoseReader[0].rx >> autoShoulder_toggle.input1X
-            claviculePoseReader[0].ry >> autoShoulder_toggle.input1Y
-            claviculePoseReader[0].rz >> autoShoulder_toggle.input1Z
+            # add choice node for switching between Fk and IK arm
+            targetPoseReaderGrp = claviculePoseReader['targetGrp']
+            decomposeMatrixNode =  pm.listConnections('{}.rx'.format(targetPoseReaderGrp), plugs=False, destination=False)[0]
+
+            self.shoulderChoice = pm.createNode('choice', n='{Side}__Auto{Basename}Choice__CH'.format(**self.nameStructure))
+            decomposeMatrixNode.outputRotate >> self.shoulderChoice.input[0]
+            decomposeMatrixNode.outputRotateX // targetPoseReaderGrp.rotateX
+            decomposeMatrixNode.outputRotateY // targetPoseReaderGrp.rotateY
+            decomposeMatrixNode.outputRotateZ // targetPoseReaderGrp.rotateZ
+            pm.PyNode('{Side}__Arm_Fk_Shoulder__CTRL'.format(**self.nameStructure)).rotate >> self.shoulderChoice.input[1]
+
+            if self.side == NC.LEFT_SIDE_PREFIX:
+               self.shoulderChoice.output >> targetPoseReaderGrp.rotate
+            else:
+                shoulderTemp = pm.group(n='{}__ShoulderTemp__GRP'.format(NC.RIGTH_SIDE_PREFIX), em=1)
+                self.shoulderChoice.output >> shoulderTemp.rotate
+                mult = pm.createNode('multiplyDivide', n='{}__inverseShoulder__{}'.format(NC.RIGTH_SIDE_PREFIX, NC.MULTIPLY_DIVIDE_SUFFIX))
+                mult.input2X.set(-1)
+                mult.input2Y.set(-1)
+                mult.input2Z.set(-1)
+                shoulderTemp.rotate >> mult.input1
+                mult.output >> targetPoseReaderGrp.rotate
+
+            # connect Clavicule to the shoulder
+            claviculePoseReader['mainPoseReaderOutput'][0].rx >> autoShoulder_toggle.input1X
+            claviculePoseReader['mainPoseReaderOutput'][0].ry >> autoShoulder_toggle.input1Y
+            claviculePoseReader['mainPoseReaderOutput'][0].rz >> autoShoulder_toggle.input1Z
 
             autoShoulder_toggle.outputX >> autoShoulder_remapNode.colorR
             autoShoulder_toggle.outputY >> autoShoulder_remapNode.colorG
@@ -425,11 +453,15 @@ class LimbShoudler(rigBase.RigBase):
                  arm_result_joint = None,
                  arm_ik_joint = None,
                  arm_fk_joint_parent = None,
+                 arm_spaceGrp = None,
                  ):
 
         pm.pointConstraint(self.shoulder_joint, arm_ik_joint, mo=True)
         pm.pointConstraint(self.shoulder_joint, arm_fk_joint_parent, mo=True)
         pm.pointConstraint(self.shoulder_joint, arm_result_joint, mo=True)
+        # connect Arm Space to the choice node
+        self.nameStructure['Node'] = arm_spaceGrp
+        pm.connectAttr('{Node}.{Side}_Arm_IK_FK'.format(**self.nameStructure), '{}.selector'.format(self.shoulderChoice))
 
 
     def setup_VisibilityGRP(self):
