@@ -28,7 +28,7 @@ from functools import wraps
 import pymel.core as pm
 import maya.cmds as mc
 import maya.mel as mel
-import maya.OpenMaya as omsss
+import maya.OpenMaya as om
 
 import adb_core.NameConv_utils as NC
 import ShapesLibrary as sl
@@ -53,7 +53,7 @@ def timeit(method):
             name = kw.get('log_name', method.__name__.upper())
             kw['log_time'][name] = int((te - ts) * 1000)
         else:
-            print 'TIME: %r ----  %2.2f ms' % (method.__name__, (te - ts) * 1000)
+            print('TIME: %r ----  %2.2f ms' % (method.__name__, (te - ts) * 1000))
         return result
     return timed
 
