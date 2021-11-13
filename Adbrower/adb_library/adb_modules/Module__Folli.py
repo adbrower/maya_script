@@ -266,7 +266,6 @@ class Folli(moduleBase.ModuleBase):
 
                 pm.parent(oGrp, oFoll.getParent())
                 pm.parent(oFoll.getParent(), self._MODEL.getFolliGrp)
-                oGrp.rotate.set(0.0, 0.0, 0.0)
 
                 pm.select(None)
 
@@ -298,7 +297,7 @@ class Folli(moduleBase.ModuleBase):
         return self._MODEL.getControls
 
 
-    def add_folli(self, add_value, radius=0.2):
+    def add_folli(self, add_value):
         """
         add follicules to an already existing system
 
@@ -323,8 +322,8 @@ class Folli(moduleBase.ModuleBase):
             oGrp = pm.group(em=True, n='{}_0{}__{}'.format(pName, index, NC.GRP))
             oGrp.setTranslation(oFoll.getParent().getTranslation(space='world'), space='world')
 
-            oJoint = pm.joint(rad=radius)
-            self.all_joints_list.append(oJoint)
+            oJoint = pm.joint(rad=self._MODEL.getJoints[0].radius.get())
+            self._MODEL.getJoints.append(oJoint)
             oJoint.setTranslation(oFoll.getParent().getTranslation(space='world'), space='world')
 
             # connect the UV params to the joint so you can move the follicle by selecting the joint directly.
@@ -335,24 +334,28 @@ class Folli(moduleBase.ModuleBase):
             uParam.connect(oFoll.getParent().u_param)
             vParam.connect(oFoll.getParent().v_param)
 
-            pm.rename(oJoint, '{}_0{}__{}'.format(pName, index, NC.JOINT))
+            pm.rename(oJoint,'{}_0{}__{}'.format(pName, current_numb_foll + 1, NC.JOINT))
             pm.rename(oJoint.getParent(), '{}_0{}__{}'.format(pName, current_numb_foll + 1, NC.GRP))
 
             pm.parent(oGrp, oFoll.getParent())
             pm.parent(oFoll.getParent(), oRoot)
-            oGrp.rx.set(0.0)
-            oGrp.ry.set(0.0)
-            oGrp.rz.set(0.0)
 
             Transform(oFoll.getTransform().getChildren(type='transform')[0]).matrixConstraint(oJoint, channels='trh', mo=True)
             pm.parent(oJoint, self.OUTPUT_GRP)
             pm.select(None)
 
+        # Re adjust all the U and V attribute
+        inital_v_param = self._MODEL.getJoints[0].v_param.get()
+        for index, joint in enumerate(self._MODEL.getJoints):
+            uPos = (index / (len(self._MODEL.getJoints) - 1.00)) * 100.0
+            joint.u_param.set(uPos)
+            joint.v_param.set(inital_v_param)
 
 # arm = Folli('ArmFolli', 1, 5, radius = 0.5, subject = 'proxy_plane')
 # arm.start()
 # arm.build()
 
+# arm.add_folli(23)
 # arm.addControls()
 
 
