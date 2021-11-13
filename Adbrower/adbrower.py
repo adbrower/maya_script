@@ -28,7 +28,7 @@ from functools import wraps
 import pymel.core as pm
 import maya.cmds as mc
 import maya.mel as mel
-import maya.OpenMaya as om
+import maya.OpenMaya as omsss
 
 import adb_core.NameConv_utils as NC
 import ShapesLibrary as sl
@@ -1125,11 +1125,8 @@ class Adbrower(object):
             # split the verts up by their parent mesh
             selectedVerts = [vert for vert in verts if vert.node() == eachNode]
             selectedVert = selectedVerts[0]
-
             geoNode = selectedVert.node().getParent()
-            
             ctrlName = geoNode.name()
-
             connectedVerts = list(selectedVert.connectedVertices())
 
             xComp = [vert.getPosition(
