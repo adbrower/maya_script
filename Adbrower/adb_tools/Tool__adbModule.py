@@ -309,14 +309,20 @@ class adbModule():
             radius = pm.floatField(self.radius, q=True, value=True)
             countV = int(pm.floatField(self.folli, q=True, value=True))
 
-            [adbFolli.Folli(1, countV, radius=radius, sub=x) for x in pm.selected()]
+            for x in pm.selected():
+                folli = adbFolli.Folli('Folli', 1, countV, radius = radius, subject = x)
+                folli.start()
+                folli.build()
 
         else:
             radius = pm.floatField(self.radius, q=True, value=True)
             countV = int(pm.floatField(self.folli, q=True, value=True))
-
-            folli = [adbFolli.Folli(1, countV, radius=radius, sub=x) for x in pm.selected()]
-            [x.addControls() for x in folli]
+            
+            for x in pm.selected():
+                folli = adbFolli.Folli('Folli', 1, countV, radius=radius, subject=x)
+                folli.start()
+                folli.build()
+                folli.addControls(scale=radius) 
 
     @undo
     @changeColor()
@@ -329,14 +335,13 @@ class adbModule():
         [x.scaleX.set((pm.PyNode(oJoints[0]).radius.get()) + 0.5) for x in create_ctrls]
         [x.scaleY.set((pm.PyNode(oJoints[0]).radius.get()) + 0.5) for x in create_ctrls]
         [x.scaleZ.set((pm.PyNode(oJoints[0]).radius.get()) + 0.5) for x in create_ctrls]
+        [adb.makeroot_func(x) for x in create_ctrls]
 
         for joints, ctrls in zip(oJoints, create_ctrls):
-            pm.parent(ctrls, pm.PyNode(joints).getParent())
+            pm.parent(pm.PyNode(ctrls).getParent(), pm.PyNode(joints).getParent())
 
         for joints, ctrls in zip(oJoints, create_ctrls):
             pm.parent(joints, ctrls)
-
-        [pm.makeIdentity(x, n=0, s=1, r=1, t=1, apply=True, pn=1) for x in create_ctrls]
 
         return create_ctrls
 
