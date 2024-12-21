@@ -244,10 +244,10 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             [self.mesh_left_QList.addItem(str(item)) for item in self.sources]
             _type = adb.Type(self.sources)[0]
             if _type == 'mesh':
-                for i in xrange(len(self.sources)):
+                for i in range(len(self.sources)):
                     self.mesh_left_QList.item(i).setIcon(QtGui.QIcon(':/out_mesh.png'))
             elif _type == 'joint':
-                for i in xrange(len(self.sources)):
+                for i in range(len(self.sources)):
                     self.mesh_left_QList.item(i).setIcon(QtGui.QIcon(':/kinJoint.png'))
             else:
                 pass
@@ -265,10 +265,10 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             [self.mesh_right_QList.addItem(str(item)) for item in self.targets]
             _type = adb.Type(self.targets)[0]
             if _type == 'mesh':
-                for i in xrange(len(self.targets)):
+                for i in range(len(self.targets)):
                     self.mesh_right_QList.item(i).setIcon(QtGui.QIcon(':/out_mesh.png'))
             elif _type == 'joint':
-                for i in xrange(len(self.targets)):
+                for i in range(len(self.targets)):
                     self.mesh_right_QList.item(i).setIcon(QtGui.QIcon(':/kinJoint.png'))
             else:
                 pass
@@ -343,7 +343,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def create_Button(self):
         """ Create the buttons  """
         self.buttonAndFunctions = [
-            # name,                  function ,     group number,                   labelColor,            backgroundColor,                      layout,              layout_coordinate     width
+            # name,                  function ,              group number,          labelColor,            backgroundColor,                      layout,              layout_coordinate     width
             ['expand',               self.qList_expand_plus,       0,        pyQtDic['colorLightGrey'],         '',                    self.hlayout['icons'],                    '',         30],
             ['minus',                self.qList_expand_moins,      0,        pyQtDic['colorLightGrey'],         '',                    self.hlayout['icons'],                    '',         30],
             ['reverse',              self.swap_data,               0,        pyQtDic['colorLightGrey'],         '',                    self.hlayout['icons'],                    '',         30],
@@ -528,7 +528,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def saveData(self):
         os.chdir(self.final_path)
         try:
-            os.mkdir(folder_name)
+            os.mkdir(FOLDER_NAME)
         except:
             pass
 
@@ -543,7 +543,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             file_ini.write("sources_data=  " + '\n')
         else:
             file_ini.write("sources_number=" + str(len(self.sources)) + '\n')
-            for i in xrange(len(self.sources)):
+            for i in range(len(self.sources)):
                 file_ini.write("sources_data_{}=".format(i) + self.mesh_left_QList.item(i).text() + '\n')
 
         if self.mesh_right_QList.count() == 0:
@@ -551,7 +551,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             file_ini.write("targets_data=  " + '\n')
         else:
             file_ini.write("targets_number=" + str(len(self.targets)) + '\n')
-            for i in xrange(len(self.targets)):
+            for i in range(len(self.targets)):
                 file_ini.write("targets_data_{}=".format(i) + self.mesh_right_QList.item(i).text() + '\n')
 
         file_ini.write("search_data=" + self.search_QLine.text() + '\n')
@@ -577,7 +577,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         if source_number_data == '':
             self.sources_setdata = []
         else:
-            for i in xrange(int(source_number_data)):
+            for i in range(int(source_number_data)):
                 _sources_setdata = config.get("General", "sources_data_{}".format(i))
                 if pm.objExists(_sources_setdata):
                     self.sources_setdata.append(_sources_setdata)
@@ -589,7 +589,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         if target_number_data == '':
             self.targets_setdata = []
         else:
-            for i in xrange(int(target_number_data)):
+            for i in range(int(target_number_data)):
                 _targets_setdata = config.get("General", "targets_data_{}".format(i))
                 if pm.objExists(_targets_setdata):
                     self.targets_setdata.append(_targets_setdata)
@@ -763,11 +763,11 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         [self.mesh_left_QList.addItem(str(item)) for item in self.sources]
         _type = adb.Type(self.sources)[0]
         if _type == 'mesh':
-            for i in xrange(len(self.sources)):
+            for i in range(len(self.sources)):
                 self.mesh_left_QList.item(i).setIcon(QtGui.QIcon(':/out_mesh.png'))
 
         elif _type == 'joint':
-            for i in xrange(len(self.sources)):
+            for i in range(len(self.sources)):
                 self.mesh_left_QList.item(i).setIcon(QtGui.QIcon(':/kinJoint.png'))
 
         else:
@@ -785,10 +785,10 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         [self.mesh_right_QList.addItem(str(item)) for item in self.targets]
         _type = adb.Type(self.targets)[0]
         if _type == 'mesh':
-            for i in xrange(len(self.targets)):
+            for i in range(len(self.targets)):
                 self.mesh_right_QList.item(i).setIcon(QtGui.QIcon(':/out_mesh.png'))
         elif _type == 'joint':
-            for i in xrange(len(self.targets)):
+            for i in range(len(self.targets)):
                 self.mesh_right_QList.item(i).setIcon(QtGui.QIcon(':/kinJoint.png'))
         else:
             pass
@@ -816,10 +816,10 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         [self.mesh_left_QList.addItem(str(item)) for item in self.sources]
         _type_left = adb.Type(self.sources)[0]
         if _type_left == 'mesh':
-            for i in xrange(len(self.sources)):
+            for i in range(len(self.sources)):
                 self.mesh_left_QList.item(i).setIcon(QtGui.QIcon(':/out_mesh.png'))
         elif _type_left == 'joint':
-            for i in xrange(len(self.sources)):
+            for i in range(len(self.sources)):
                 self.mesh_left_QList.item(i).setIcon(QtGui.QIcon(':/kinJoint.png'))
         else:
             pass
@@ -828,10 +828,10 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         [self.mesh_right_QList.addItem(str(item)) for item in self.targets]
         _type_right = adb.Type(self.targets)[0]
         if _type_right == 'mesh':
-            for i in xrange(len(self.targets)):
+            for i in range(len(self.targets)):
                 self.mesh_right_QList.item(i).setIcon(QtGui.QIcon(':/out_mesh.png'))
         elif _type_right == 'joint':
-            for i in xrange(len(self.targets)):
+            for i in range(len(self.targets)):
                 self.mesh_right_QList.item(i).setIcon(QtGui.QIcon(':/kinJoint.png'))
         else:
             pass
@@ -953,7 +953,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def verifyJointSideAB(self):
         if not pm.selected():
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setIcon(QMessageBox.Warning)
+            msgBox.setIcon(QtWidgets.QMessageBox.Warning)
             msgBox.setText('Nothing is selected!!!')
             msgBox.setInformativeText('Select a mesh')
             msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
@@ -984,7 +984,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         except:
             print("// Warning: Nothing Selected! //")
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setIcon(QMessageBox.Warning)
+            msgBox.setIcon(QtWidgets.QMessageBox.Warning)
             msgBox.setText('Nothing is selected!!!')
             msgBox.setInformativeText('Select a your joints')
             msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
@@ -1017,7 +1017,7 @@ class SkinCopyWEIGHTS(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def transferJointSkinAB(self):
         if not pm.selected():
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setIcon(QMessageBox.Warning)
+            msgBox.setIcon(QtWidgets.QMessageBox.Warning)
             msgBox.setText('Nothing is selected!!!')
             msgBox.setInformativeText('Select a mesh')
             msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)

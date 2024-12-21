@@ -74,6 +74,7 @@ def exportShape(control='', path=None):
             wf.write('degree : {}\n'.format(controlDict["degree"]))
 
         sys.stdout.write('// Shape Exported : {} \n'.format(DATA_PATH))
+        return controlDict
 
 
 def loadShape(control='', path=None):

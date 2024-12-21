@@ -221,7 +221,7 @@ class FkVariable(moduleBase.ModuleBase):
     import adb_library.adb_modules.Module__Slide as Slide
     reload(Slide)
 
-    jnts = ['adb_00{}'.format(x+1) for x in xrange(49)]
+    jnts = ['adb_00{}'.format(x+1) for x in range(49)]
     fk_ctrl = ['pPlane1_01__jnt____ctrl__', 'pPlane1_02__jnt____ctrl__', 'pPlane1_03__jnt____ctrl__']
     fkV = Slide.FkVariable(jnts, fk_ctrl, 15 , 'ry', 'rz')
     """
@@ -276,7 +276,7 @@ class FkVariable(moduleBase.ModuleBase):
 
     def creates_joint_offset_grp(self):
         offset_groups_layers = []
-        for ctrl in xrange(len(self.driver)):
+        for ctrl in range(len(self.driver)):
             layer = [adb.makeroot_func(x, suff='{}0{}'.format(self.NAME, ctrl + 1), forceNameConvention=True) for i, x in enumerate(self.joint_chain)]
             offset_groups_layers.append(layer)
         return offset_groups_layers

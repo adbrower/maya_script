@@ -55,7 +55,7 @@ class Bbox_Array(object):
         if isinstance(array, pm.datatypes.BoundingBox):
             self.boundingbox = array
         else:
-            _spheres = [pm.polySphere(r=0.01)[0] for x in xrange(6)]
+            _spheres = [pm.polySphere(r=0.01)[0] for x in range(6)]
             for sphere, points, axe in zip(_spheres, array, 'xyzxyz'):
                 sphere.setAttr('t{}'.format(axe), points)
             pm.select(_spheres, r=1)

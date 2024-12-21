@@ -352,7 +352,7 @@ def getSoftSelection():
     componentIndex = om2.MFnSingleIndexedComponent(component[1])
     vertexList =  componentIndex.getElements()
 
-    for loop in xrange(len(vertexList)):
+    for loop in range(len(vertexList)):
         weight = componentIndex.weight(loop)
         softSelectDict[vertexList[loop]] = float(format(weight.influence, '.5f'))
 

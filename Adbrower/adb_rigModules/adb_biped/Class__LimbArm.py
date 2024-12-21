@@ -7,9 +7,10 @@
 # ------------------------------------------------------
 
 import json
+import importlib
 import sys
 import os
-import ConfigParser
+import configparser
 import ast
 
 import pymel.core as pm
@@ -60,7 +61,7 @@ import adb_rigModules.adb_biped.Class__LimbShoulder as LimbShoulder
 # reload(rigBase)
 # reload(moduleBase)
 # reload(moduleGuides)
-reload(LimbShoulder)
+importlib.reload(LimbShoulder)
 
 #-----------------------------------
 #  DECORATORS
@@ -139,7 +140,7 @@ class LimbArm(rigBase.RigBase):
                 for attribute in _registeredAttributes:
                     try:
                         pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.loadData.get(str(guide), str(attribute))))
-                    except NoSectionError:
+                    except :
                         pass
 
 
@@ -208,6 +209,7 @@ class LimbArm(rigBase.RigBase):
         self.SLIDING_ELBOW_MOD = None
         self.DOUBLE_ELBOW_MOD = None
         self.RIBBON_MOD = None
+        self.RIBBON_NUMBER = 5
 
         # =================
         # BUILD
@@ -244,7 +246,8 @@ class LimbArm(rigBase.RigBase):
             self.ShoulderRig.connect(
                             arm_result_joint = self.base_arm_joints[0],
                             arm_ik_joint = self.ik_arm_joints[0],
-                            arm_fk_joint_parent = self.fk_arm_joints[0].getParent()
+                            arm_fk_joint_parent = self.fk_arm_joints[0].getParent(),
+                            arm_spaceGrp = self.SPACES_GRP,
                             )
 
         Transform(self.MODULES_GRP).pivotPoint = Transform(self.base_arm_joints[0]).worldTrans
@@ -548,7 +551,7 @@ class LimbArm(rigBase.RigBase):
 
         def makeConnections():
             self.Ik_FK_attributeName = self.setup_SpaceGRP(self.SPACES_GRP, Ik_FK_attributeName ='{Side}_{Basename}_IK_FK'.format(**self.nameStructure))
-            for index, part in zip(xrange(3), self.nameStructure['Parts']):
+            for index, part in zip(range(3), self.nameStructure['Parts']):
                 self.nameStructure['Suffix'] = part
                 armSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}_{Suffix}IKFK'.format(**self.nameStructure),
                                  spacesInputs =[self.ik_arm_joints[index], self.fk_arm_joints[index]],
@@ -899,14 +902,14 @@ class LimbArm(rigBase.RigBase):
         _folliculeVis = 0
         folli_radius = self.config['JOINTS']["Follicule_JNT"]['radius']
 
-        arm_folli_upper = adbFolli.Folli('{Side}__Upper{Basename}_Folli_Base1'.format(**self.nameStructure), 1, 5, radius=folli_radius, subject = upper_proxy_plane)
+        arm_folli_upper = adbFolli.Folli('{Side}__Upper{Basename}_Folli_Base1'.format(**self.nameStructure), 1, self.RIBBON_NUMBER, radius=folli_radius, subject = upper_proxy_plane)
         arm_folli_upper.start(metaDataNode='transform')
         self.RIBBON_MOD.metaDataGRPS += [arm_folli_upper.metaData_GRP]
         arm_folli_upper.build()
         arm_folli_upper.addControls(shape=sl.sl[self.config['CONTROLS']['Arm_Macro']['shape']], scale=self.config['CONTROLS']['Arm_Macro']['scale'], color=('index', self.col_layer1))
         arm_folli_upper.getFollicules = _folliculeVis
 
-        arm_folli_lower = adbFolli.Folli('{Side}__Lower{Basename}_Folli_Base1'.format(**self.nameStructure), 1, 5, radius=folli_radius, subject = lower_proxy_plane)
+        arm_folli_lower = adbFolli.Folli('{Side}__Lower{Basename}_Folli_Base1'.format(**self.nameStructure), 1, self.RIBBON_NUMBER, radius=folli_radius, subject = lower_proxy_plane)
         arm_folli_lower.start(metaDataNode='transform')
         self.RIBBON_MOD.metaDataGRPS += [arm_folli_lower.metaData_GRP]
         arm_folli_lower.build()
@@ -916,13 +919,13 @@ class LimbArm(rigBase.RigBase):
         upper_proxy_plane_end = createProxyPlaneUpperPart('{Side}__Upper{Basename}_END__MSH'.format(**self.nameStructure), interval=20)
         lower_proxy_plane_end = createProxyPlaneLowerPart('{Side}__Lower{Basename}_END__MSH'.format(**self.nameStructure), interval=20)
 
-        arm_folli_upper_end = adbFolli.Folli('{Side}__Upper{Basename}_Folli_END'.format(**self.nameStructure), 1, 5, radius=folli_radius, subject = upper_proxy_plane_end)
+        arm_folli_upper_end = adbFolli.Folli('{Side}__Upper{Basename}_Folli_END'.format(**self.nameStructure), 1, self.RIBBON_NUMBER, radius=folli_radius, subject = upper_proxy_plane_end)
         arm_folli_upper_end.start(metaDataNode='transform')
         self.RIBBON_MOD.metaDataGRPS += [arm_folli_upper_end.metaData_GRP]
         arm_folli_upper_end.build()
         arm_folli_upper_end.getFollicules = _folliculeVis
 
-        arm_folli_lower_end = adbFolli.Folli('{Side}__Lower{Basename}_Folli_END'.format(**self.nameStructure), 1, 5, radius=folli_radius, subject = lower_proxy_plane_end)
+        arm_folli_lower_end = adbFolli.Folli('{Side}__Lower{Basename}_Folli_END'.format(**self.nameStructure), 1, self.RIBBON_NUMBER, radius=folli_radius, subject = lower_proxy_plane_end)
         arm_folli_lower_end.start(metaDataNode='transform')
         self.RIBBON_MOD.metaDataGRPS += [arm_folli_lower_end.metaData_GRP]
         arm_folli_lower_end.build()

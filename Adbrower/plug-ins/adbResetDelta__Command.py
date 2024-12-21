@@ -29,7 +29,7 @@ def timeit(method):
             name = kw.get('log_name', method.__name__.upper())
             kw['log_time'][name] = int((te - ts) * 1000)
         else:
-            print 'TIME: %r ----  %2.2f ms' % (method.__name__, (te - ts) * 1000)
+            print('TIME: %r ----  %2.2f ms' % (method.__name__, (te - ts) * 1000))
         return result
     return timed
 
@@ -150,11 +150,11 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
         argData = om.MArgParser(self.syntax(), argList)
 
         if argData.isFlagSet(resetDeltaCmd.kHelpFlag):
-            print self.__class__.__doc__
+            print (self.__class__.__doc__)
             return None
 
         if argData.isFlagSet(resetDeltaCmd.kHelpLongFlag):
-            print self.__class__.__doc__
+            print (self.__class__.__doc__)
             return None
 
         else:
@@ -216,7 +216,7 @@ class resetDeltaCmd(OpenMayaMPx.MPxCommand):
         componentIndex = om2.MFnSingleIndexedComponent(component[1])
         vertexList =  componentIndex.getElements()
 
-        for loop in xrange(len(vertexList)):
+        for loop in range(len(vertexList)):
             weight = componentIndex.weight(loop)
             softSelectDict[vertexList[loop]] = float(format(weight.influence, '.5f'))
 
@@ -632,11 +632,11 @@ class resetDeltaDeformerCmd(OpenMayaMPx.MPxCommand):
         argData = om.MArgParser(self.syntax(), argList)
 
         if argData.isFlagSet(resetDeltaDeformerCmd.HELP_FLAG[0]):
-            print self.__class__.__doc__
+            print (self.__class__.__doc__)
             return None
 
         if argData.isFlagSet(resetDeltaDeformerCmd.HELP_FLAG[1]):
-            print self.__class__.__doc__
+            print (self.__class__.__doc__)
             return None
         else:
             try:

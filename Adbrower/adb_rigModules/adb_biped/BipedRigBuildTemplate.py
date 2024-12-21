@@ -1,7 +1,7 @@
 import json
 import sys
 import os
-import ConfigParser
+import configparser
 import ast
 
 import adb_core.Class__AddAttr as adbAttr
@@ -12,14 +12,16 @@ import adb_rigModules.adb_biped.Class__LimbArm as LimbArm
 import adb_rigModules.RigBase as rigBase
 import adb_rigModules.ModuleGuides as moduleGuides
 import adb_core.Class__Control as Control
+import importlib
 
-reload(adbAttr)
-reload(NC)
-reload(LimbSpine)
-reload(LimbLeg)
-reload(LimbArm)
-reload(rigBase)
-reload(moduleGuides)
+# reload(adbAttr)
+# reload(NC)
+importlib.reload(LimbSpine)
+importlib.reload(LimbLeg)
+importlib.reload(LimbArm)
+importlib.reload(rigBase)
+importlib.reload(moduleGuides)
+
 
 
 DATA_WEIGHT_PATH = 'C:/Users/Audrey/Documents/maya/projects/Roller_Rigging_Project/data/skinWeights/'
@@ -130,23 +132,6 @@ class BuipedBuildTemplate(object):
     @gShowProgress(status="starting ...")
     def start(self):
         sys.stdout.write('// Result: starting...\n')
-        # LEGS
-        self.L_leg = LimbLeg.LimbLeg(module_name='L__Leg', config=ROLLERGIRL_CONFIG)
-        self.L_leg.start(buildFootStatus=True)
-        self.ALL_BUILD_MODULES.append(self.L_leg)
-        self.ALL_MODULES.append(self.L_leg)
-
-        if self.L_leg.buildFootStatus:
-            self.ALL_MODULES.append(self.L_leg.FootRig)
-
-        self.R_leg = LimbLeg.LimbLeg(module_name='R__Leg', config=ROLLERGIRL_CONFIG)
-        self.R_leg.start(buildFootStatus=True)
-        self.ALL_BUILD_MODULES.append(self.R_leg)
-        self.ALL_MODULES.append(self.R_leg)
-
-        if self.R_leg.buildFootStatus:
-            self.ALL_MODULES.append(self.R_leg.FootRig)
-
         # ARMS
         self.L_arm = LimbArm.LimbArm(module_name='L__Arm', config=ROLLERGIRL_CONFIG)
         self.L_arm.start(buildShoulderStatus=True)
@@ -164,9 +149,26 @@ class BuipedBuildTemplate(object):
         if self.R_arm.buildShoulderStatus:
             self.ALL_MODULES.append(self.R_arm.ShoulderRig)
 
+        # LEGS
+        self.L_leg = LimbLeg.LimbLeg(module_name='L__Leg', config=ROLLERGIRL_CONFIG)
+        self.L_leg.start(buildFootStatus=True)
+        self.ALL_BUILD_MODULES.append(self.L_leg)
+        self.ALL_MODULES.append(self.L_leg)
+
+        if self.L_leg.buildFootStatus:
+            self.ALL_MODULES.append(self.L_leg.FootRig)
+
+        self.R_leg = LimbLeg.LimbLeg(module_name='R__Leg', config=ROLLERGIRL_CONFIG)
+        self.R_leg.start(buildFootStatus=True)
+        self.ALL_BUILD_MODULES.append(self.R_leg)
+        self.ALL_MODULES.append(self.R_leg)
+
+        if self.R_leg.buildFootStatus:
+            self.ALL_MODULES.append(self.R_leg.FootRig)
+
         # SPINE
         self.C_spine = LimbSpine.LimbSpine(module_name='C__Spine', config=ROLLERGIRL_CONFIG)
-        self.C_spine.start(jointNumber=7)
+        self.C_spine.start(jointNumber=5)
         self.ALL_BUILD_MODULES.append(self.C_spine)
         self.ALL_MODULES.append(self.C_spine)
 
@@ -246,7 +248,7 @@ class BuipedBuildTemplate(object):
                 weightData = rb.read()
                 weightLines = weightData.split('\n')
                 ctrl = weightLines[0].replace('[','').replace(']','')
-                loadShape(control=ctrl, path=path + FILE_NAME)
+                Control.loadShape(control=ctrl, path=path + FILE_NAME)
 
 # ====================================================
 # BUILD
@@ -259,7 +261,9 @@ RollerGirlRig.build()
 RollerGirlRig.connect()
 
 RollerGirlRig.loadSkinClustersWeights()
-RollerGirlRig.loadControlShapes()
+# RollerGirlRig.loadControlShapes()
+
+sys.stdout.write('// Result: Completed! \n')
 
 
 # ====================================================
@@ -269,8 +273,7 @@ def exportStartersData():
     """
     Export All Starters Data
     """
-
-    RollerGirlRig.RIGBASE.vosGuide.exportData(RIGBASE.DATA_PATH)
+    RollerGirlRig.RIGBASE.vosGuide.exportData(RollerGirlRig.RIGBASE.DATA_PATH)
     RollerGirlRig.L_leg.legGuides.exportData()
     RollerGirlRig.R_leg.legGuides.exportData()
 
@@ -283,8 +286,7 @@ def exportStartersData():
     RollerGirlRig.L_arm.ShoulderRig.shoulderGuides.exportData()
     RollerGirlRig.R_arm.ShoulderRig.shoulderGuides.exportData()
 
-    RollerGirlRig.C_spine.spineGuides.exportData()
-
+    Control.exportShape(control=str(RollerGirlRig.C_spine.spineCurve), path=RollerGirlRig.RIGBASE.DATA_PATH + (RollerGirlRig.C_spine.NAME.upper() + '_DATA'))
     sys.stdout.write('// Result: Data exported! \n')
 
 
@@ -294,7 +296,7 @@ def exportControlsShapes(controlList=[], path = DATA_SHAPES_PATH):
 
 
 
-# exportStartersData()
+exportStartersData()
 # exportControlsShapes(controlList=['C__Chest__CTRL', 'C__Spine_Belly__CTRL', 'C__Spine_Hips__CTRL', 'C__Hips__CTRL'])
 
 

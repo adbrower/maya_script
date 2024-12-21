@@ -167,7 +167,7 @@ def makeroot(suf='root', forceNameConvention = True):
                 else:
                     groupName = each.name() + '__' + suf + '__{}'.format(NC.GRP)
                 oRoot = pm.group(n=groupName, em=True)
-                for i in xrange(4):
+                for i in range(4):
                     oRoot.rename(oRoot.name().replace('___', '__'))
                 oRoot.setTranslation(each.getRotatePivot(space='world'))
                 oRoot.setRotation(each.getRotation(
@@ -371,7 +371,7 @@ class Adbrower(object):
             else:
                 groupName = each.name() + '__' + suff + '__{}'.format(NC.GRP)
             oRoot = pm.group(n=groupName, em=True)
-            for i in xrange(4):
+            for i in range(4):
                 oRoot.rename(oRoot.name().replace('___', '__'))
             oRoot.setTranslation(each.getRotatePivot(space='world'))
             oRoot.setRotation(each.getRotation(
@@ -1750,7 +1750,6 @@ class Adbrower(object):
             pm.PyNode(subject).setAttr(att, lock=True, channelBox=False, keyable=False)
         return subject
 
-
     @staticmethod
     @undo
     def unlockAttr_func(subject, attributes=['tx', 'ty', 'tz', 'rx', 'ry', 'rx', 'rz', 'sx', 'sy', 'sz']):
@@ -1950,7 +1949,7 @@ class Adbrower(object):
         for each in pm.selected():
             new_name = each.replace(each.split(
                 symbol)[index_to_split], replacement)
-            printnew_name
+            print(new_name)
             each.rename(new_name)
 
 

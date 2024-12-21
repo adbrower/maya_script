@@ -271,7 +271,7 @@ class Skinning(object):
             skclsFn.influenceObjects(infDags)
             infIds = {}
             infs = {}
-            for index in xrange(infDags.length()):
+            for index in range(infDags.length()):
                 infPath = infDags[index].fullPathName()
                 infId = int(skclsFn.indexForInfluenceObject(infDags[index]))
                 infIds[infId] = index
@@ -284,7 +284,7 @@ class Skinning(object):
             weightsInfIds = om.MIntArray()
 
             weights = {}
-            for vId in xrange(weightListPlug.numElements()):
+            for vId in range(weightListPlug.numElements()):
                 vWeights = {}
                 weightsPlug.selectAncestorLogicalIndex(vId, weightListAttr)
                 weightsPlug.getExistingArrayAttributeIndices(weightsInfIds)

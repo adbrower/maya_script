@@ -62,7 +62,7 @@ import adb_rigModules.adb_biped.Class__LimbFoot as LimbFoot
 # reload(rigBase)
 # reload(moduleBase)
 # reload(moduleGuides)
-reload(LimbFoot)
+# reload(LimbFoot)
 
 #-----------------------------------
 #  DECORATORS
@@ -138,13 +138,12 @@ class LimbLeg(rigBase.RigBase):
                 for attribute in _registeredAttributes:
                     try:
                         pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.loadData.get(str(guide), str(attribute))))
-                    except NoSectionError:
+                    except:
                         pass
 
         if self.buildFootStatus:
             self.FootRig = LimbFoot.LimbFoot(module_name='{}__Foot'.format(*self.side), config=self.config)
             self.FootRig.start()
-
 
         pm.select(None)
 
@@ -546,7 +545,7 @@ class LimbLeg(rigBase.RigBase):
 
         def makeConnections():
             self.Ik_FK_attributeName = self.setup_SpaceGRP(self.SPACES_GRP, Ik_FK_attributeName ='{Side}_{Basename}_IK_FK'.format(**self.nameStructure))
-            for index, part in zip(xrange(3), self.nameStructure['Parts']):
+            for index, part in zip(range(3), self.nameStructure['Parts']):
                 self.nameStructure['Suffix'] = part
                 legSpaceSwitch = SpaceSwitch.SpaceSwitch('{Side}__{Basename}_{Suffix}IKFK'.format(**self.nameStructure),
                                  spacesInputs =[self.ik_leg_joints[index], self.fk_leg_joints[index]],

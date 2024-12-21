@@ -307,7 +307,7 @@ class Folli(moduleBase.ModuleBase):
         """
         mesh = self.subject
 
-        for index in xrange(add_value):
+        for index in range(add_value):
             mesh_shape = pm.PyNode(mesh).getShape()
 
             plugs = pm.listConnections(str(mesh_shape) + '.outMesh', d=True, sh=True)

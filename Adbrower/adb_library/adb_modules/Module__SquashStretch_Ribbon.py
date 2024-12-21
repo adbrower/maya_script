@@ -51,7 +51,7 @@ class SquashStrech(moduleBase.ModuleBase):
                         ExpCtrl="cog_ctrl",
                         ribbon_ctrl=['L__Leg_Base_Hips__JNT', 'L__Leg_Base_Knee__JNT'],
 
-                        jointList=['L__Leg_upper_proxy_plane_end_0{}__GRP'.format(x + 1) for x in xrange(5)],
+                        jointList=['L__Leg_upper_proxy_plane_end_0{}__GRP'.format(x + 1) for x in range(5)],
                         jointListA = ['L__Leg_upper_proxy_plane_end_01__GRP'],
                         jointListB = ['L__Leg_upper_proxy_plane_end_02__GRP', 'L__Leg_upper_proxy_plane_end_03__GRP', 'L__Leg_upper_proxy_plane_end_04__GRP'],
                         jointListC = ['L__Leg_upper_proxy_plane_end_05__GRP'],

@@ -611,7 +611,7 @@ class JointGeneratorTool(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                     suffix, cutsuffix = '', ''
                 oRoot = pm.group(n=each.name().replace(cutsuffix, '') + '_{}__{}__'.format(suffix, newSuffix), em=True)
 
-                for i in xrange(4):
+                for i in range(4):
                     oRoot.rename(oRoot.name().replace('___', '__'))
                 oRoot.setTranslation(each.getTranslation(space='world'), space='world')
                 oRoot.setRotation(each.getRotation(space='world'), space='world')

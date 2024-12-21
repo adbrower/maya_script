@@ -406,7 +406,7 @@ class AudreyToolBox():
         pm.setParent('..')
 
         pm.separator(h=3)
-        pm.button(l="Conform Weights", w=200, h=30, backgroundColor=colordic['grey'], c=lambda *args: skin.Skinning().conform_weights())
+        pm.button(l="Conform Weights", w=200, h=30, backgroundColor=colordic['grey'], c=lambda *args: skin.Skinning.conform_weights())
         pm.separator(h=2)
         pm.button(l="Hammer Wieghts", w=200, backgroundColor=colordic['grey'], c=lambda *args: mel.eval("weightHammerVerts;"))
         pm.setParent('..')
