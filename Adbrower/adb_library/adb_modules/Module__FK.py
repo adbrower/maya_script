@@ -8,8 +8,8 @@
 
 import sys
 import os
-import ConfigParser
 import ast
+import importlib
 
 import pymel.core as pm
 import maya.cmds as mc
@@ -32,11 +32,11 @@ from adb_core.Class__Transforms import Transform
 import adb_rigModules.ModuleGuides as moduleGuides
 
 
-reload(moduleBase)
-reload(moduleGuides)
-reload(Joint)
-reload(adbAttr)
-reload(Locator)
+importlib.reload(moduleBase)
+importlib.reload(moduleGuides)
+importlib.reload(Joint)
+importlib.reload(adbAttr)
+importlib.reload(Locator)
 
 # =========================
 # CLASS
@@ -62,7 +62,10 @@ class Fk(moduleBase.ModuleBase):
             parent ([type], optional): [description]. Defaults to None.
 
         Example:
-            FK = Fk('audrey', count = 8)
+            import adb_library.adb_modules.Module__FK as Module__FK
+            reload(Module__FK)
+
+            FK = Module__FK.Fk('audrey', count = 8)
 
             # FK.start()
             # FK.build()
@@ -85,22 +88,22 @@ class Fk(moduleBase.ModuleBase):
 # =========================
 
 
-    def start(self, metaDataNode = None):
+    def start(self, metaDataNode = None, path=None):
         super(Fk, self)._start(self.NAME, _metaDataNode = metaDataNode)
 
-        FkGuide = [moduleGuides.ModuleGuides.createFkGuide(prefix='{}_{:02d}'.format(self.NAME, guide+1)).guides[0] for guide in xrange(self.count)]
+        FkGuide = [moduleGuides.ModuleGuides.createFkGuide(prefix='{}_{:02d}'.format(self.NAME, guide+1)).guides[0] for guide in range(self.count)]
         for index, guide in enumerate(FkGuide):
             pm.parent(guide, self.STARTERS_GRP)
             pm.move(guide, (0+(index), 0, 0), r=0, os=1)
-            pm.makeIdentity(guide, n=0, s=1, r=1, t=1, apply=True, pn=1)
 
         for _guide, guide in zip(FkGuide[0:-1], FkGuide[1:]):
             self.curve_setup(_guide, guide)
 
-        self.FkGuides = moduleGuides.ModuleGuides(self.NAME.upper(), FkGuide, path='C:/Users/Audrey/Desktop/')
+        self.FkGuides = moduleGuides.ModuleGuides(self.NAME.upper(), FkGuide, path=path)
         readPath = self.FkGuides.DATA_PATH + '/' + self.FkGuides.RIG_NAME + '__GLOC.ini'
         if os.path.exists(readPath):
             try:
+                sys.stdout.write('load from : {}'.format(readPath))
                 self.loadData = self.FkGuides.loadData(readPath)
                 for guide in self.FkGuides.guides:
                     _registeredAttributes = ast.literal_eval(self.loadData.get(str(guide), 'registeredAttributes'))
@@ -116,7 +119,6 @@ class Fk(moduleBase.ModuleBase):
                     pm.setAttr('{}.Color'.format(guide), index)
             except:
                 pass
-
 
 
 

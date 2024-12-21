@@ -1,7 +1,8 @@
 import sys
 import os
-import ConfigParser
+import configparser
 import pymel.core as pm
+import importlib
 
 from CollDict import indexColor, attrDic
 from adbrower import lockAttr, makeroot, changeColor
@@ -15,7 +16,7 @@ import adb_core.Class__Control as Control
 import adbrower
 adb = adbrower.Adbrower()
 
-reload(Locator)
+importlib.reload(Locator)
 
 
 PROJECT_DATA_PATH = '/'.join(pm.sceneName().split('/')[:-2]) + '/data/'
@@ -103,10 +104,11 @@ class ModuleGuides(object):
 
                 wf.write('registeredAttributes' + '=' + str(list(set(self.registeredAttributes))) + '\n')
         wf.close()
+        return self.DATA_PATH
 
 
     def loadData(self, path=None):
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.read(path)
         return config
 

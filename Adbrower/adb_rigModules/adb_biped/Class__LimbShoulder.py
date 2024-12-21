@@ -10,7 +10,8 @@ import json
 import sys
 import os
 import adb_core.NameConv_utils as NC
-import ConfigParser
+import configparser
+import importlib
 import ast
 
 import pymel.core as pm
@@ -39,11 +40,11 @@ import adb_rigModules.ModuleGuides as moduleGuides
 # reload(sl)
 # reload(Joint)
 # reload(adbAttr)
-reload(NC)
+importlib.reload(NC)
 # reload(Control)
 # reload(Locator)
 # reload(SpaceSwitch)
-reload(PoseReader)
+importlib.reload(PoseReader)
 # reload(rigBase)
 # reload(moduleBase)
 # reload(moduleGuides)
@@ -412,7 +413,8 @@ class LimbShoudler(rigBase.RigBase):
             if self.side == NC.LEFT_SIDE_PREFIX:
                self.shoulderChoice.output >> targetPoseReaderGrp.rotate
             else:
-                shoulderTemp = pm.group(n='{}__ShoulderTemp__GRP'.format(NC.RIGTH_SIDE_PREFIX), em=1)
+                shoulderTemp = pm.spaceLocator(n='{}__ShoulderTemp__GRP'.format(NC.RIGTH_SIDE_PREFIX))
+                pm.parent(shoulderTemp, self.AUTO_CLAVICULE_MOD.MOD_GRP)
                 self.shoulderChoice.output >> shoulderTemp.rotate
                 mult = pm.createNode('multiplyDivide', n='{}__inverseShoulder__{}'.format(NC.RIGTH_SIDE_PREFIX, NC.MULTIPLY_DIVIDE_SUFFIX))
                 mult.input2X.set(-1)

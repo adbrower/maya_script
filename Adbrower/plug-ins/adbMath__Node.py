@@ -28,7 +28,7 @@ class adbMath(OpenMayaMPx.MPxNode):
             dataHandleInput2 = dataBlock.inputArrayValue(adbMath.input2)
             dataHandleOutput = dataBlock.outputArrayValue(adbMath.output)
 
-            for i in xrange(dataHandleInput1.elementCount()):
+            for i in range(dataHandleInput1.elementCount()):
                 dataHandleInput1.jumpToElement(i)
                 inInput1Val = dataHandleInput1.inputValue()
 

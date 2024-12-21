@@ -41,13 +41,13 @@ def mirrorWeightsMap(center_edge, deformer ='', toSide='RIGHT'):
 
     currentWeights = {}
     weightPlugs = {}
-    for i in xrange(weightsPlug.numElements()):
+    for i in range(weightsPlug.numElements()):
         weightlistIdxPlug = weightsPlug.elementByPhysicalIndex(i)
 
-        for j in xrange(weightlistIdxPlug.numChildren()):
+        for j in range(weightlistIdxPlug.numChildren()):
             weights = weightlistIdxPlug.child(j)
 
-        for index in xrange(numVerts):
+        for index in range(numVerts):
             weightVtxPlug = weights.elementByLogicalIndex(index)
             weightPlugs[index] = weightVtxPlug
             weightVtxValue = weightVtxPlug.asFloat()

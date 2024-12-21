@@ -146,11 +146,11 @@ class ResetDeltaDeformerCmd(OpenMayaMPx.MPxCommand):
         argData = om.MArgParser(self.syntax(), argList)
 
         if argData.isFlagSet(ResetDeltaDeformerCmd.HELP_FLAG[0]):
-            print self.__class__.__doc__
+            print (self.__class__.__doc__)
             return None
 
         if argData.isFlagSet(ResetDeltaDeformerCmd.HELP_FLAG[1]):
-            print self.__class__.__doc__
+            print (self.__class__.__doc__)
             return None
 
         else:

@@ -114,7 +114,7 @@ class LimbFoot(rigBase.RigBase):
                 for attribute in _registeredAttributes:
                     try:
                         pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.loadData.get(str(guide), str(attribute))))
-                    except NoSectionError:
+                    except :
                         pass
 
         pm.select(None)

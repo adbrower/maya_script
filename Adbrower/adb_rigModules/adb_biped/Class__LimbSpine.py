@@ -134,32 +134,22 @@ class LimbSpine(rigBase.RigBase):
         cluster = pm.cluster(spineGuideCurve)
         pm.delete(cluster)
 
+        self.spineCurve = spineGuideCurve[0]
+        
+        ## Load Curve Data
+        readPath = self.DATA_PATH + self.NAME.upper() + '_DATA/'
+        if os.path.exists(readPath):
+            Control.loadShape(control=str(self.spineCurve), path=readPath + self.spineCurve + '_Shape_DATA.ini')
+        
+        ## add joints on curve        
         pointOnCurveJoint = pointOnCurve.PointToCurveJnt('{}_PointOnCurve'.format(self.NAME), jointNumber, spineGuideCurve)
         pointOnCurveJoint.start()
         pointOnCurveJoint.build()
 
+        self.spineGuides = pointOnCurveJoint.getJoints
+        
         pm.parent(pointOnCurveJoint.MOD_GRP, self.STARTERS_GRP)
         [pm.delete(grp) for grp in [pointOnCurveJoint.VISRULE_GRP, pointOnCurveJoint.OUTPUT_GRP]]
-
-        Gspine = [moduleGuides.ModuleGuides.createFkGuide(prefix='{}_{}'.format(self.NAME, joint+1)).guides[0] for joint in xrange(jointNumber)]
-        for guide in Gspine:
-            pm.parent(guide, self.STARTERS_GRP)
-
-        for guide, joint in zip(Gspine, pointOnCurveJoint.getJoints):
-            pm.matchTransform(guide, joint, pos=1, rot=0)
-
-        self.spineGuides = moduleGuides.ModuleGuides(self.NAME.upper(), Gspine, self.DATA_PATH)
-        readPath = self.spineGuides.DATA_PATH + '/' + self.spineGuides.RIG_NAME + '__GLOC.ini'
-        if os.path.exists(readPath):
-            self.loadData = self.spineGuides.loadData(readPath)
-            for guide in self.spineGuides.guides:
-                _registeredAttributes = ast.literal_eval(self.loadData.get(str(guide), 'registeredAttributes'))
-                for attribute in _registeredAttributes:
-                    try:
-                        pm.setAttr('{}.{}'.format(guide, attribute), ast.literal_eval(self.loadData.get(str(guide), str(attribute))))
-                    except NoSectionError:
-                        pass
-
         pm.select(None)
 
     def build(self, GUIDES=None):
@@ -168,7 +158,7 @@ class LimbSpine(rigBase.RigBase):
         super(LimbSpine, self)._build()
 
         if GUIDES is None:
-            GUIDES = self.spineGuides.guides
+            GUIDES = self.spineGuides
 
         self.starter_Spine = GUIDES
         self.side = 'C'

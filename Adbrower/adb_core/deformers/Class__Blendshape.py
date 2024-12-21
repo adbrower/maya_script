@@ -15,7 +15,7 @@ import maya.mel as mel
 import pymel.core as pm
 from adbrower import flatList, undo
 
-
+import maya.OpenMaya as om
 from maya.api import OpenMaya as om2
 import maya.OpenMayaAnim as oma
 
@@ -70,6 +70,10 @@ def findBlendShape(_tranformToCheck):
 # -----------------------------------
 
 class Blendshape(object):
+    """
+    import adb_core.deformers.Class__Blendshape as adbBLS
+    bls = adbBLS.Blendshape(selectedBlsNode)
+    """
     def __init__(self,
                  bs_node=None,
                  ):
@@ -150,20 +154,20 @@ class Blendshape(object):
         return len(self.getTargets)
 
     @property
-    def right_targets(self):
+    def right_targets(self, startsWith='R_'):
         right_targets = dict()
         _targetDict = self.init_targets()
-        for index, alias in _targetDict.items():
-            if alias[:2] == 'R_':
+        for alias, indexPlug in _targetDict.items():
+            if alias.startsWith(startsWith):
                 right_targets[index] = alias
         return right_targets
 
     @property
-    def left_targets(self):
+    def left_targets(self, startsWith='L_'):
         left_targets = dict()
         _targetDict = self.init_targets()
-        for index, alias in _targetDict.items():
-            if alias[:2] == 'L_':
+        for alias, indexPlug in _targetDict.items():
+            if alias.startsWith(startsWith):
                 left_targets[index] = alias
         return left_targets
 
@@ -176,11 +180,16 @@ class Blendshape(object):
 
     def init_targets(self):
         if pm.objExists(self.bs_node):
-            if pm.PyNode(self.bs_node).getTarget():
-                return {i: pm.aliasAttr('{}.w[{}]'.format(self.bs_node, i), q=1) for i in
-                        pm.getAttr('{}.w'.format(self.bs_node), multiIndices=1)}
+            bls = pm.PyNode(bs_node)
+            allTargets = pm.PyNode(bls).listAliases() or None
+            if allTargets:
+                for target in allTargets:
+                    poseName, taretIndex = target
+                    targetDict[poseName] = targetIndex
+                    return targetDict
             else:
                 return None
+
 
     def get_target_index_by_alias(self, alias_name):
         for index, alias in self.targets.items():
@@ -236,6 +245,7 @@ class Blendshape(object):
             self.targets[int(new_index)] = self.targets[target_index].replace('L_', 'R_')
             self.flip_target(new_index, sa=sa, ss=ss)
 
+
     def get_weight_connection(self, index):
         return pm.listConnections('{}.w[{}]'.format(self.bs_node, index), s=1)
 
@@ -258,7 +268,7 @@ class Blendshape(object):
                     combination_node = pm.createNode('combinationShape', n='{}_CS'.format(combo_target_alias))
                     [pm.connectAttr(combo_data[combo_target_alias][i],
                                     '{}.inputWeight[{}]'.format(combination_node, i), f=1) for i in
-                     xrange(len(combo_data[combo_target_alias]))]
+                     range(len(combo_data[combo_target_alias]))]
                     pm.connectAttr('{}.outputWeight'.format(combination_node),
                                    '{}.{}'.format(self.bs_node, self.targets[target_index]), f=1)
 
@@ -272,7 +282,6 @@ class Blendshape(object):
         Returns:
             List -- all weights values per vertex for the Base Weights Map and the Paint Target Weights
         """
-
         mObj = getMObject(str(self.bs_node))
         MeshDag = getMDagPath(str(self.mesh))
         blsDNode = om2.MFnDependencyNode(mObj)
@@ -305,7 +314,7 @@ class Blendshape(object):
         baseWeights = weightlistIdxPlug.child(1)
 
         if baseWeights.numElements() > 2:
-            for j in xrange(baseWeights.numElements()):
+            for j in range(baseWeights.numElements()):
                 baseWeightsPlugs = baseWeights.elementByLogicalIndex(j)
                 baseWeightsValue =  baseWeightsPlugs.asFloat()
                 baseWeigthtsList.append(baseWeightsValue)
@@ -318,7 +327,7 @@ class Blendshape(object):
         targetWeights = weightlistIdxPlug.child(3)
 
         if targetWeights.numElements() > 2:
-            for j in xrange(targetWeights.numElements()):
+            for j in range(targetWeights.numElements()):
                 targetWeightsPlugs = targetWeights.elementByLogicalIndex(j)
                 targetWeightsValue =  targetWeightsPlugs.asFloat()
                 targetWeightList.append(targetWeightsValue)
@@ -369,7 +378,7 @@ class Blendshape(object):
         baseWeights = weightlistIdxPlug.child(1)
 
         if baseWeights.numElements() > 2:
-            for j in xrange(baseWeights.numElements()):
+            for j in range(baseWeights.numElements()):
                 baseWeightsPlugs = baseWeights.elementByLogicalIndex(j)
                 basePlugs.append(baseWeightsPlugs)
         else:
@@ -380,7 +389,7 @@ class Blendshape(object):
         targetWeights = weightlistIdxPlug.child(3)
 
         if targetWeights.numElements() > 2:
-            for j in xrange(targetWeights.numElements()):
+            for j in range(targetWeights.numElements()):
                 targetWeightsPlugs = targetWeights.elementByLogicalIndex(j)
                 targetPlugs.append(targetWeightsPlugs)
         else:
@@ -390,15 +399,42 @@ class Blendshape(object):
         return basePlugs, targetPlugs
 
 
-    def setWeightMap(self, allPlugs, allWeights):
-        """ Set new values to a map
-
+    def setWeightMap(self, allWeights, baseWeight=True):
+        """ 
+        Set new values to a map. Mainly Works on the baseWeight Level
         Arguments:
-            allPlugs {List} -- Mplugs
             allWeights {List} -- Weights Values
         """
-        for plug, value in zip(allPlugs, allWeights):
-            plug.setFloat(value)
+        mObj = getMObject(str(self.bs_node))
+        MeshDag = getMDagPath(str(self.mesh))
+        blsDNode = om2.MFnDependencyNode(mObj)
+        weightsPlug  = blsDNode.findPlug('inputTarget', True)
+        numVerts = om2.MItMeshVertex(MeshDag).count()
+
+        sl = om2.MSelectionList()
+        sl.add("{}.inputTarget[0]".format(self.bs_node))
+        weightlistIdxPlug = sl.getPlug(0)
+
+        sl1 = om2.MSelectionList()
+        sl1.add("{}.inputTarget[0].paintTargetWeights".format(self.bs_node))
+        paintTargetWeightsPlug = sl1.getPlug(0)
+
+        if baseWeight:
+            baseWeightValue = mc.getAttr('{0}.inputTarget[0].baseWeights[0:{1}]'.format(self.bs_node, numVerts))
+            baseWeights = weightlistIdxPlug.child(1)
+
+            for index, weight in zip(range(numVerts), allWeights):
+                baseWeightsPlugs = baseWeights.elementByLogicalIndex(index)
+                baseWeightsValue =  baseWeightsPlugs.asFloat()
+                baseWeightsPlugs.setFloat(weight)
+        else:
+            ## GET PAINT TARGET WEIGHT ATTRIBUTE
+            targetWeights = weightlistIdxPlug.child(3)
+
+            for index, weight in zip(range(numVerts), allWeights):
+                targetWeightsPlugs = targetWeights.elementByLogicalIndex(index)
+                targetWeightsValue =  targetWeightsPlugs.asFloat()
+                targetWeightsPlugs.setFloat(weight)
 
 
     def invertWeight(self, baseWeight=False):
@@ -420,8 +456,7 @@ class Blendshape(object):
         sl1 = om2.MSelectionList()
         sl1.add("{}.inputTarget[0].paintTargetWeights".format(self.bs_node))
         paintTargetWeightsPlug = sl1.getPlug(0)
-
-        mc.getAttr('{0}.inputTarget[0].baseWeights[0:{1}]'.format(self.bs_node, numVerts))
+        baseWeight = mc.getAttr('{0}.inputTarget[0].baseWeights[0:{1}]'.format(self.bs_node, numVerts))
 
         if paintTargetWeightsPlug.numElements() == 0:
             self.floodBls(self.mesh)
@@ -430,7 +465,7 @@ class Blendshape(object):
             ## GET BASE WEIGHTS ATTRIBUTE
             baseWeights = weightlistIdxPlug.child(1)
 
-            for j in xrange(numVerts):
+            for j in range(numVerts):
                 baseWeightsPlugs = baseWeights.elementByLogicalIndex(j)
                 baseWeightsValue =  baseWeightsPlugs.asFloat()
                 baseWeightsPlugs.setFloat(1-baseWeightsValue)
@@ -438,7 +473,7 @@ class Blendshape(object):
             ## GET PAINT TARGET WEIGHT ATTRIBUTE
             targetWeights = weightlistIdxPlug.child(3)
 
-            for j in xrange(numVerts):
+            for j in range(numVerts):
                 targetWeightsPlugs = targetWeights.elementByLogicalIndex(j)
                 targetWeightsValue =  targetWeightsPlugs.asFloat()
                 targetWeightsPlugs.setFloat(1-targetWeightsValue)
@@ -582,7 +617,7 @@ class PI(object):
             command.replace("''", '"')
             mirrored_pose_interpolator = PI(mel.eval(command))
             mirrored_pose_interpolator.interpolation = self.interpolation
-            for i in xrange(len(self.drivers)):
+            for i in range(len(self.drivers)):
                 mirrored_pose_interpolator.set_driver_twist_axis(i, self.get_driver_twist_axis(i))
 
         elif self.side == 'R':
@@ -656,3 +691,20 @@ def mirror_left_to_right_poses(bs_node):
     bs.set_combo_targets(combo_data)
 
 
+def getShapePoints():
+    """
+    Utiliser sur la shape qui est belle
+    """
+    dgSource = om2.MSelectionList().add(mc.ls(sl=1)[0]).getDagPath(0).extendToShape()
+    fnSource = om2.MFnMesh(dgSource)
+    mc._points = fnSource.getPoints()
+    
+
+def setShapePoint():
+    """
+    Appliquer sur la shape a editer
+    """
+    tgt = mc.ls(sl=1)[0]
+    dgTarget = om.MSelectionList().add(tgt).getDagPath(0).extendToShape()
+    fnTarget = om.MFnMesh(dgTarget)
+    fnTarget.setPoints(mc._points)

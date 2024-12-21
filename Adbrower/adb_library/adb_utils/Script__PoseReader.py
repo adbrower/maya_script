@@ -6,7 +6,6 @@ import adb_core.NameConv_utils as NC
 import adb_core.Class__Locator as Locator
 import adb_core.Class__AddAttr as adbAttr
 
-from adbrower import changeColor
 import adbrower
 
 adb = adbrower.Adbrower()
@@ -21,7 +20,6 @@ getAxis = {
 }
 
 
-@changeColor('index', 3)
 def poseReader(name = '', driver='joint1__CTRL', target = 'joint2__CTRL', upPostion = (0,10,0), targetPosition = (10,0,0), twistPosition = (0,0,10), twist=False):
     """
     Create a Pose Reader
@@ -107,7 +105,13 @@ def poseReader(name = '', driver='joint1__CTRL', target = 'joint2__CTRL', upPost
 
 
     poseReaderGrp.v.set(0)
-    return mainPoseReaderOutput.locators, upPoseReader.locators, targetPoseReader.locators
+
+    return {
+        'mainPoseReaderOutput' : mainPoseReaderOutput.locators,
+        'upPoseReader' : upPoseReader.locators,
+        'targetPoseReader' : targetPoseReader.locators,
+        'targetGrp' : targetGrp
+        }
 
 
 

@@ -59,7 +59,7 @@ class Locator(adbTransform.Transform):
     @classmethod
     def create(cls, numb=1, name = '', padding=None):
         loc_created = []
-        for number in xrange(numb):
+        for number in range(numb):
             if padding:
                 loc = pm.spaceLocator(n='{}_{:0{}d}'.format(name, number+1, padding))
             else:

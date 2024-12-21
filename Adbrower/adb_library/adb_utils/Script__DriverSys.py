@@ -54,21 +54,21 @@ def create_driver_setup(driver=None,
     if show_attributes:
         mc.setAttr('{}.___SETTINGS___'.format(attributes_control), edit=1, cb=1)
 
-    for i in xrange(len(driven_channels)):
+    for i in range(len(driven_channels)):
         for axis in ((driver_axis[i])):
             cond_switch = pm.createNode('condition', n='{}_{}_condition_switch'.format(driven, axis))
 
         for channel in driver_channels:
             mc.connectAttr('{}.{}{}'.format(driver, channel, axis), '{}.colorIfTrueR'.format(cond_switch))
 
-    for i in xrange(len(driven_channels)):
+    for i in range(len(driven_channels)):
 
         mc.addAttr(attributes_control, ln='{}_SETTINGS'.format(driven_channels[i]), at='enum', en='___')
         if show_attributes:
             mc.setAttr('{}.{}_SETTINGS'.format(attributes_control, driven_channels[i]), edit=1, cb=1)
 
         remaps = []
-        for j in xrange(len(driven_axis[i])):
+        for j in range(len(driven_axis[i])):
 
             remap = pm.createNode('remapValue', n='{}_{}_{}_remap'.format(driven, driven_channels[i], driven_axis[i][j]))
             remaps.append(remap)
@@ -102,7 +102,7 @@ def create_driver_setup(driver=None,
 
         if min:
             value = []
-            for i in xrange(len(min)):
+            for i in range(len(min)):
                 _value =min[i]
                 value.append(_value)
             for remap ,val in zip(remaps, value):
@@ -111,7 +111,7 @@ def create_driver_setup(driver=None,
 
         if max:
             value = []
-            for i in xrange(len(max)):
+            for i in range(len(max)):
                 _value =max[i]
                 value.append(_value)
             for remap ,val  in zip(remaps, value):

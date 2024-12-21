@@ -77,7 +77,7 @@ def locGenerator(intervals, obj1, obj2):
     
         return str(GuideLoc)
         
-    locsList = [str(myGuideLocs()) for x in xrange(intervals)]
+    locsList = [str(myGuideLocs()) for x in range(intervals)]
 
     for count, middleTransf in enumerate(locsList):
         mSLMiddle = om.MSelectionList()

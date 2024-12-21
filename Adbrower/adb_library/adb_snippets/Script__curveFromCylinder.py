@@ -1,79 +1,60 @@
+import maya.cmds as cmds
 
-import maya.cmds as mc
-import pymel.core as pm
-
-def curveFromCylinder(mesh = pm.selected()):
+def curve_from_cylinder():
     """
-    Creates a curve from the middle point from every loops    
-    @param mesh: List. By default is pm.selected()
+    Creates a curve from a single edge of a cylinder
     """
-    
-    def createCurveFrom(selection = pm.selected(), curve_name = 'curve'):
-        """ 
-        Creates a curve from the position values of the selection 
-        """
-        def createLocs(subject):                         
-            loc_align = pm.spaceLocator()
-            pm.matchTransform(loc_align,subject, rot=True, pos=True)
-            return loc_align
-        starting_locs = [createLocs(x) for x in selection]
-        pos = [pm.xform(x, ws=True, q=True, t=True) for x in starting_locs]
-        knot = []
-        for i in range(len(selection)):
-            knot.append(i)
-        _curve = pm.curve(p = pos, k =knot, d=1, n=curve_name)
-        pm.rebuildCurve(_curve, rt=0, ch=0, end=1, d=3, kr=0, s=len(selection), kcp=0, tol=0.1, kt=0, rpo=1, kep=1)    
-        pm.delete(starting_locs)
-        return(_curve)
 
-    def centre_joint():
-        """
-        Creates a joint in the centre of the selection. You can select objects, components...
-        """
-        sel = pm.ls(sl=1, fl=1)
+    _selection = cmds.ls(sl=True)[0]
+    if not cmds.filterExpand(selectionMask=32):
+        raise RuntimeError("You must select an edge or edgeloop!")
 
-        bb = [0, 0, 0, 0, 0, 0]
-        for obj in sel:
-            pos = pm.xform(obj, q=1, ws=1, bb=1)
-            for i in range(6):
-                bb[i] += pos[i]
-        for i in range(6):
-            bb[i] /= len(sel)
-        pm.select(cl=True)
-        return pm.joint(p=((bb[0] + bb[3]) / 2, (bb[1] + bb[4]) / 2, (bb[2] + bb[5]) / 2))
-    
-    
-    for mesh_name in mesh:         
-        border_loop = pm.polySelect(mesh_name,  eb = 1) or []        
-        pm.polySelect(mesh_name,  edgeRing = 1)        
-        edgeLoop_num = len(pm.selected()) 
-        pm.polySelect(mesh_name,  el = 1)
-        
-        if border_loop:
-            [pm.pickWalk(type='edgeloop', d='left') for x in range(1)]
-            
-            temp_all_jnts = []
-            for index in range(edgeLoop_num): 
-                pm.polySelect(mesh_name,edgeLoopPattern=(1,1))
-                [pm.pickWalk(type='edgeloop', d='left') for x in range(index)]
-                joint = centre_joint()
-                temp_all_jnts.append(joint)
-                
-            all_jnts = [x for x in temp_all_jnts[1:]]
-            pm.delete(temp_all_jnts[0])
-                
-        else:                   
-            all_jnts = []
-            for index in range(edgeLoop_num): 
-                pm.polySelect(mesh_name,edgeLoopPattern=(1,1))
-                [pm.pickWalk(type='edgeloop', d='left') for x in range(index)]
-                joint = centre_joint()
-                all_jnts.append(joint)
-         
-     
-        createCurveFrom(all_jnts)
-        pm.delete(all_jnts)
-        
-    
-curveFromCylinder()
+    _cylinder = _selection.split(".")[0]
+    _curveName = _cylinder.replace(_cylinder.split("_")[-1], "curve")
+    _firstEdge = int(_selection.replace(_cylinder, "")[3:-1])
 
+    _ringIDs = cmds.polySelect(_cylinder, edgeRing=_firstEdge)
+    _cvPositions = []
+
+    for _ringID in _ringIDs:
+        cmds.select(clear=True)
+        cmds.polySelect(_cylinder, edgeLoopOrBorder=_ringID)
+        _loopCurve = cmds.polyToCurve(
+            form=2, degree=1, constructionHistory=False
+        )[0]
+        cmds.xform(_loopCurve, centerPivots=True)
+        _centrePos = cmds.xform(
+            _loopCurve, query=True, worldSpace=True, rotatePivot=True
+        )
+        _cvPositions.append(_centrePos)
+        cmds.delete(_loopCurve)
+
+    _knots = []
+    for i in range(len(_ringIDs)):
+        _knots.append(i / (len(_ringIDs) - 1))
+    _extractedCurve = cmds.curve(
+        name=_curveName, degree=1, p=_cvPositions, k=_knots
+    )
+    cmds.xform(_extractedCurve, centerPivots=True)
+    centrePos = cmds.xform(
+        _extractedCurve, query=True, worldSpace=True, rotatePivot=True
+    )
+    cmds.move(
+        _centrePos[0],
+        _centrePos[1],
+        _centrePos[2],
+        _extractedCurve,
+        absolute=True,
+        worldSpace=True,
+    )
+    cmds.move(
+        (_centrePos[0] * -1),
+        (_centrePos[1] * -1),
+        (_centrePos[2] * -1),
+        _extractedCurve + ".cv[*]",
+        relative=True,
+        worldSpace=True,
+    )
+    cmds.xform(_extractedCurve, centerPivots=True)
+
+    return _extractedCurve

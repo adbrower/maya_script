@@ -8,3 +8,4 @@ Archives
 *.xml
 config.py
 objectdb
+test*.py

@@ -58,9 +58,12 @@ class MainRigBase(object):
             readPath = self.DATA_PATH + '{}_DATA/'.format(self.vosGuide.RIG_NAME) + self.vosGuide.RIG_NAME + '__GLOC.ini'
             if os.path.exists(readPath):
                 self.loadData = self.vosGuide.loadData(readPath)
-                _registeredAttributes = ast.literal_eval(self.loadData.get(str(self.vosGuide.guides[0]), 'registeredAttributes'))
-                for attribute in _registeredAttributes:
-                    pm.setAttr('{}.{}'.format(self.vosGuide.guides[0], attribute), ast.literal_eval(self.loadData.get(str(self.vosGuide.guides[0]), str(attribute))))
+                try:
+                    _registeredAttributes = ast.literal_eval(self.loadData.get(str(self.vosGuide.guides[0]), 'registeredAttributes'))
+                    for attribute in _registeredAttributes:
+                        pm.setAttr('{}.{}'.format(self.vosGuide.guides[0], attribute), ast.literal_eval(self.loadData.get(str(self.vosGuide.guides[0]), str(attribute))))
+                except:
+                    pass
             else:
                 pass
 

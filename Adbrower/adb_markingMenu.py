@@ -129,7 +129,7 @@ class markingMenu():
         mc.menuItem(p=SkinMenu, l="UNLOCK All Weights", c=pm.Callback(self.lock_unlock_All_Weight, lock=0))
         mc.menuItem(p=SkinMenu, l="Mirror Weight", c=lambda *args: adb.quickMirrorWeights(), rp='N')
         mc.menuItem(p=SkinMenu,  d=True)
-        mc.menuItem(p=SkinMenu, l="Solve Btw", c=lambda *args: skin.Skinning(pm.selected()[0]).solveBtwn())
+        mc.menuItem(p=SkinMenu, l="Solve Btw", c=lambda *args: skin.Skinning.solveBtwn())
         mc.menuItem(p=SkinMenu, l="Conform Weights", c=pm.Callback(self.conform_weights))
         mc.menuItem(p=SkinMenu, l="Label Joints", c=pm.Callback(self.label_jnts))
 
@@ -340,11 +340,11 @@ class markingMenu():
 
     def MatchTransformRT(self, pos=True, rot=True):
         """Match the Rotation and Position of 2 objects """
-        mylist = mc.ls(sl=True)
+        mylist = pm.selected()
         Driver = mylist[0]  # mon controleur mere
         targets = mylist[1:]
         for each in targets:
-            mc.matchTransform(targets, Driver, rot=rot, pos=pos)
+            pm.matchTransform(targets, Driver, rot=rot, pos=pos)
         sys.stdout.write('Match Transformed ')
 
 
@@ -384,7 +384,7 @@ class markingMenu():
                 suffix, cutsuffix = '', ''
             oRoot = pm.group(n=each.name().replace(cutsuffix, '') + '_{}__{}__'.format(suffix, newSuffix), em=True)
 
-            for i in xrange(4):
+            for i in range(4):
                 oRoot.rename(oRoot.name().replace('___', '__'))
             oRoot.setTranslation(each.getTranslation(space='world'), space='world')
             oRoot.setRotation(each.getRotation(space='world'), space='world')
